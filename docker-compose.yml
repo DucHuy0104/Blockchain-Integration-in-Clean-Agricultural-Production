@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # 1. Database Service (SQL Server)
+  sql_server:
+    container_name: bicap_sql_server
+    image: mcr.microsoft.com/azure-sql-edge
+    user: root
+    environment:
+      ACCEPT_EULA: "1"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD} # Mật khẩu
+    ports:
+      - "1433:1433"
+    volumes:
+      # Lưu dữ liệu ra thư mục .docker_data để không bị mất khi tắt container
+      - ./.docker_data/sql:/var/opt/mssql/data
+    restart: always
+
+  # Sau này sẽ thêm redis, backend, vechain node vào đây...

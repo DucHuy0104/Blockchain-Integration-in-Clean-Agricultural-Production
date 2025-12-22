@@ -70,11 +70,12 @@ coverage/
 # Docker
 # ===================================
 
-# Ignore các file compose chỉ dùng local / cá nhân
+# Docker override / local-only compose
+docker-compose.override.yml
 docker-compose.*.local.yml
 **/docker-compose.*.local.yml
 
-# Ignore data volume (DB files)
+# Docker runtime / data
 .docker_data/
 docker-data/
 **/.docker_data/
