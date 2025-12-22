@@ -67,9 +67,15 @@ coverage/
 **/coverage/
 
 # ===================================
-# Docker Data (Database files)
+# Docker
 # ===================================
+
+# Ignore các file compose chỉ dùng local / cá nhân
 docker-compose.*.local.yml
+**/docker-compose.*.local.yml
+
+# Ignore data volume (DB files)
+.docker_data/
+docker-data/
 **/.docker_data/
 **/docker-data/
-**/docker-compose.*.local.yml
