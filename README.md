@@ -38,7 +38,8 @@
 
 ---
 
-📂 Cấu trúc Tổng thể (Project Root)
+### 📂 Cấu trúc Tổng thể (Project Root)
+```
 BICAP-System/
 │
 ├── 📂 bicap-backend/           # Server NodeJS + SQL Server + Blockchain Logic
@@ -46,12 +47,12 @@ BICAP-System/
 ├── 📂 bicap-mobile-driver/     # App Mobile (React Native) cho Tài xế
 ├── 📂 bicap-smart-contracts/   # (Optional) Chứa code Solidity & Script deploy VeChain
 └── README.md                   # Hướng dẫn chạy toàn bộ dự án
-
+```
 ---
 
-1. 📂 Backend (Node.js + Express + Sequelize)
+### 1. 📂 Backend (Node.js + Express + Sequelize)
 Đây là "bộ não" xử lý dữ liệu, kết nối SQL Server và ghi hash lên Blockchain.
-
+```
 bicap-backend/
 ├── .env                        # Cấu hình: DB_HOST, JWT_SECRET, VECHAIN_URL
 ├── package.json
@@ -90,7 +91,7 @@ bicap-backend/
 │   │
 │   └── 📂 services/            # (Optional) Tách logic phức tạp khỏi Controller
 │       └── cronJobService.js   # Tự động quét trạng thái Blockchain
-
+```
 📌 Blockchain Usage
 
 Dữ liệu chi tiết được lưu off-chain (SQL Database)
@@ -103,7 +104,7 @@ Transaction Hash (TxHash) được lưu ngược lại vào Database để đố
 
 2. 📂 Web Client (Next.js + TypeScript)
 Giao diện cho các đối tượng sử dụng trên máy tính/trình duyệt.
-
+```
 bicap-web-client/
 ├── .env.local                  # Biến môi trường: NEXT_PUBLIC_API_URL
 ├── package.json
@@ -148,7 +149,7 @@ bicap-web-client/
     │
     └── utils/                  # Hàm phụ trợ
         └── format.ts           # Format tiền tệ, ngày tháng
-
+```
 Chức năng chính
 
 Quản lý người dùng & phân quyền
@@ -161,9 +162,11 @@ Truy xuất nguồn gốc qua QR Code
 
 Hiển thị biểu đồ dữ liệu môi trường (IoT)
 
+---
+
 3. 📂 Mobile App (React Native - Expo)
 Dành riêng cho Tài xế (Ship Driver) để tiện di chuyển và quét mã.
-
+```
 bicap-mobile-driver/
 ├── App.js                      # Entry point
 ├── app.json                    # Cấu hình Expo
@@ -185,7 +188,7 @@ bicap-mobile-driver/
 │   │   └── api.js
 │   │
 │   └── 📂 utils/               # Hàm định dạng ngày tháng, tiền tệ
-
+```
 Chức năng
 Nhận danh sách đơn hàng cần giao
 
@@ -195,10 +198,11 @@ Quét QR khi nhận và giao hàng
 
 Xác nhận trạng thái vận chuyển
 
+---
 
 4. 📂 Smart Contracts (VeChain/Solidity)
 Phần này chứa mã nguồn Blockchain (nếu bạn tự viết contract thay vì dùng API có sẵn).
-
+```
 bicap-smart-contracts/
 ├── contracts/
 │   ├── BicapTraceability.sol   # Contract lưu vết sản phẩm
@@ -207,6 +211,8 @@ bicap-smart-contracts/
 │   └── deploy.js               # Script deploy lên VeChain Testnet
 ├── test/                       # Test case cho Smart Contract
 └── hardhat.config.js           # Hoặc truffle-config.js
+```
+---
 
 ## Hướng dẫn chạy dự án (Local)
 
