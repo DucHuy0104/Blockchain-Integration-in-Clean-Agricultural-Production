@@ -1,0 +1,73 @@
+# ===================================
+# Dependencies
+# ===================================
+node_modules/
+**/node_modules/
+
+# ===================================
+# Environment variables (Sensitive)
+# ===================================
+.env
+.env.*
+*.env
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Cho phép commit file mẫu
+!*.env.example
+
+# ===================================
+# Build / Output
+# ===================================
+dist/
+build/
+web-build/
+**/dist/
+**/build/
+**/web-build/
+
+# Next.js
+.next/
+**/.next/
+
+# Expo / React Native
+.expo/
+**/.expo/
+
+# ===================================
+# Logs
+# ===================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===================================
+# OS generated files
+# ===================================
+.DS_Store
+Thumbs.db
+**/.DS_Store
+**/Thumbs.db
+
+# ===================================
+# IDE / Editor
+# ===================================
+.idea/
+.vscode/
+**/.idea/
+**/.vscode/
+
+# ===================================
+# Misc
+# ===================================
+coverage/
+**/coverage/
+
+# ===================================
+# Docker Data (Database files)
+# ===================================
+.docker_data/
+docker-data/
