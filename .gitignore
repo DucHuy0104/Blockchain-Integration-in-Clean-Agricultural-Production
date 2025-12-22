@@ -69,5 +69,7 @@ coverage/
 # ===================================
 # Docker Data (Database files)
 # ===================================
-.docker_data/
-docker-data/
+docker-compose.*.local.yml
+**/.docker_data/
+**/docker-data/
+**/docker-compose.*.local.yml
