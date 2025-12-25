@@ -4,16 +4,18 @@ const { Farm } = require('../models');
 // 1. Tạo trang trại mới
 exports.createFarm = async (req, res) => {
   try {
-    const { name, address, description } = req.body;
+    const { name, address, description, certification, location_coords } = req.body;
 
     // Lấy ID người dùng từ Token (do Middleware giải mã)
     // Đây là bước quan trọng để biết "Ai là chủ trang trại này"
-    const ownerId = req.user.id; 
+    const ownerId = req.user.id;
 
     const newFarm = await Farm.create({
       name,
       address,
       description,
+      certification,
+      location_coords,
       ownerId
     });
 

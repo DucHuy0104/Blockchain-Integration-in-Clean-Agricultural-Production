@@ -1,89 +1,75 @@
 // src/controllers/authController.js
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-// 1. Đăng ký tài khoản mới
-exports.register = async (req, res) => {
+// @desc    Sync user from Firebase to SQL Server (Login/Register)
+// @route   POST /api/auth/sync-user
+// @access  Private (Valid Firebase Token required)
+exports.syncUser = async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body;
+    // req.userFirebase được populate từ middleware verifyToken
+    const { uid, email, name, picture } = req.userFirebase;
 
-    // Kiểm tra email đã tồn tại chưa
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email này đã được sử dụng!' });
+    // Client có thể gửi thêm role nếu là đăng ký mới (Optional)
+    const { role, fullName } = req.body;
+
+    // 1. Tìm user trong DB theo firebaseUid
+    let user = await User.findOne({ where: { firebaseUid: uid } });
+
+    if (user) {
+      // User đã tồn tại -> Trả về thông tin
+      return res.status(200).json({
+        message: 'Đăng nhập thành công!',
+        user: user
+      });
     }
 
-    // Mã hóa mật khẩu
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // 2. Nếu chưa có firebaseUid, check xem email đã tồn tại chưa (Trường hợp migrate từ hệ thống cũ)
+    user = await User.findOne({ where: { email } });
 
-    // Tạo user mới
+    if (user) {
+      // Cập nhật firebaseUid cho user cũ
+      user.firebaseUid = uid;
+      await user.save();
+      return res.status(200).json({
+        message: 'Đồng bộ tài khoản cũ thành công!',
+        user: user
+      });
+    }
+
+    // 3. Nếu chưa có gì cả -> Tạo User mới
     const newUser = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-      role: role || 'retailer' // Mặc định là retailer nếu không chọn
+      firebaseUid: uid,
+      email: email,
+      fullName: fullName || name || 'New User',
+      role: role || 'retailer', // Default role
+      status: 'active'
     });
 
     res.status(201).json({
-      message: 'Đăng ký thành công!',
-      user: {
-        id: newUser.id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        role: newUser.role
-      }
+      message: 'Đăng ký tài khoản mới thành công!',
+      user: newUser
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server', error: error.message });
+    console.error('Sync User Error:', error);
+    res.status(500).json({ message: 'Lỗi đồng bộ User', error: error.message });
   }
 };
 
-// 2. Đăng nhập (Sẽ làm ở bước sau, tạm thời để hàm rỗng)
-exports.login = async (req, res) => {
+// @desc    Get current user profile
+// @route   GET /api/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { uid } = req.userFirebase;
+    const user = await User.findOne({ where: { firebaseUid: uid } });
 
-    // Kiểm tra xem có gửi đủ email/pass không
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Vui lòng nhập email và mật khẩu' });
-    }
-
-    // Tìm user trong database
-    const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ message: 'Email không tồn tại' });
+      return res.status(404).json({ message: 'User not found in SQL Database' });
     }
 
-    // So sánh mật khẩu (User nhập vào vs Mật khẩu mã hóa trong DB)
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Sai mật khẩu' });
-    }
-
-    // Nếu đúng hết -> Tạo Token (Vé thông hành)
-    const token = jwt.sign(
-      { id: user.id, role: user.role }, // Gói thông tin vào token
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '30d' }
-    );
-
-    res.status(200).json({
-      message: 'Đăng nhập thành công!',
-      token: token, // <--- Đây là thứ quan trọng nhất
-      user: {
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role
-      }
-    });
-
+    res.json(user);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server' });
+    res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };

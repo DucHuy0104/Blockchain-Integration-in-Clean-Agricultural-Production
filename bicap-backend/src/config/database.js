@@ -27,7 +27,7 @@ const connectDB = async () => {
   } catch (error) {
     console.error('❌ KẾT NỐI DATABASE THẤT BẠI:', error);
     // In chi tiết lỗi để dễ debug nếu sai password
-    console.error('Chi tiết lỗi:', error.original || error); 
+    console.error('Chi tiết lỗi:', error.original || error);
   }
 };
 

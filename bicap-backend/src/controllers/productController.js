@@ -1,5 +1,6 @@
 // src/controllers/productController.js
 const { Product, Farm } = require('../models');
+const blockchainHelper = require('../utils/blockchainHelper');
 
 // 1. Tạo lô sản phẩm mới
 exports.createProduct = async (req, res) => {
@@ -17,11 +18,20 @@ exports.createProduct = async (req, res) => {
       return res.status(403).json({ message: 'Bạn không có quyền thêm sản phẩm vào trại này' });
     }
 
-    const newProduct = await Product.create({
+    const newProductData = {
       name,
       batchCode,
       quantity,
-      farmId
+      farmId,
+      status: 'cultivating'
+    };
+
+    // Ghi dữ liệu lên Blockchain (Mock)
+    const txHash = await blockchainHelper.writeToBlockchain(newProductData);
+
+    const newProduct = await Product.create({
+      ...newProductData,
+      txHash // Lưu hash vào DB
     });
 
     res.status(201).json({
@@ -39,7 +49,7 @@ exports.createProduct = async (req, res) => {
 exports.getProductsByFarm = async (req, res) => {
   try {
     const { farmId } = req.params;
-    
+
     const products = await Product.findAll({
       where: { farmId }
     });

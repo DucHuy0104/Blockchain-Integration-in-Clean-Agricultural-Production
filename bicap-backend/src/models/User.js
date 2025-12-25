@@ -20,27 +20,42 @@ const User = sequelize.define('User', {
       isEmail: true
     }
   },
-  password: {
+  firebaseUid: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: true, // Allow null initially for migration or errors, but should be unique
+    unique: true
   },
   role: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'retailer', 
-    // Các role dự kiến: 'admin', 'farm', 'driver', 'retailer'
+    defaultValue: 'retailer',
+    // Các role: 'admin', 'farm', 'driver', 'retailer', 'shipping_manager'
     validate: {
-      isIn: [['admin', 'farm', 'driver', 'retailer']]
+      isIn: [['admin', 'farm', 'driver', 'retailer', 'shipping_manager']]
     }
   },
   walletAddress: {
     type: DataTypes.STRING,
-    allowNull: true,
-    comment: 'Địa chỉ ví Blockchain VeChain'
+    allowNull: true
   },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  businessLicense: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  address: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  status: {
+    type: DataTypes.STRING,
+    defaultValue: 'active', // active, pending, blocked
+    validate: {
+      isIn: [['active', 'pending', 'blocked']]
+    }
   }
 }, {
   timestamps: true, // Tự động tạo cột createdAt, updatedAt

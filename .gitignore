@@ -80,3 +80,9 @@ docker-compose.*.local.yml
 docker-data/
 **/.docker_data/
 **/docker-data/
+
+
+# ===================================
+# Firebase
+# ===================================
+serviceAccountKey.json

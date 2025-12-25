@@ -10,14 +10,12 @@ const Product = sequelize.define('Product', {
   },
   name: {
     type: DataTypes.STRING,
-    allowNull: false,
-    comment: 'Tên sản phẩm (Vd: Dâu tây giống Nhật)'
+    allowNull: false
   },
   batchCode: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
-    comment: 'Mã lô hàng (Vd: DT-2024-001)'
+    unique: true
   },
   quantity: {
     type: DataTypes.INTEGER,
@@ -26,7 +24,7 @@ const Product = sequelize.define('Product', {
   },
   status: {
     type: DataTypes.STRING,
-    defaultValue: 'cultivating', 
+    defaultValue: 'cultivating',
     // cultivating: đang trồng, harvested: đã thu hoạch, processing: đang sơ chế, distributed: đã phân phối
     validate: {
       isIn: [['cultivating', 'harvested', 'processing', 'distributed']]
@@ -35,6 +33,10 @@ const Product = sequelize.define('Product', {
   farmId: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+  txHash: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   timestamps: true

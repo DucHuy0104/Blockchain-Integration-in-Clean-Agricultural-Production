@@ -20,6 +20,14 @@ const Farm = sequelize.define('Farm', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  certification: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  location_coords: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   // Mỗi trang trại thuộc về một User (Chủ trại)
   ownerId: {
     type: DataTypes.INTEGER,
