@@ -4,9 +4,10 @@ require('dotenv').config();
 
 // SỬA DÒNG NÀY: Import từ models/index thay vì config/database
 const { connectDB } = require('./src/config/database');
-const { initModels } = require('./src/models'); 
+const { initModels } = require('./src/models');
 const authRoutes = require('./src/routes/authRoutes');
 const farmRoutes = require('./src/routes/farmRoutes');
+const seasonRoutes = require('./src/routes/seasonRoutes');
 const productRoutes = require('./src/routes/productRoutes');
 
 const app = express();
@@ -19,7 +20,7 @@ const startServer = async () => {
   try {
     // 1. Kết nối Database
     await connectDB();
-    
+
     // 2. Đồng bộ bảng (Tạo bảng Users nếu chưa có)
     await initModels();
 
@@ -43,4 +44,5 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/farms', farmRoutes);
+app.use('/api/seasons', seasonRoutes);
 app.use('/api/products', productRoutes);
