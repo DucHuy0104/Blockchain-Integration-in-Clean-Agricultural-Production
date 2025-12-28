@@ -12,8 +12,17 @@ const productRoutes = require('./src/routes/productRoutes');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
+
+// Debug Middleware: Log all requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 // Hàm khởi tạo hệ thống
 const startServer = async () => {
