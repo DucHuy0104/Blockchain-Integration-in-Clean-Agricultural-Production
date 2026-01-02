@@ -10,6 +10,7 @@ const Shipment = require('./Shipment');
 const Notification = require('./Notification');
 const Report = require('./Report');
 const Subscription = require('./Subscription');
+const SeasonTask = require('./SeasonTask');
 
 // --- Define Associations ---
 
@@ -60,8 +61,15 @@ Report.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 User.hasMany(Subscription, { foreignKey: 'userId', as: 'subscriptions' });
 Subscription.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-// 9. Task Associations
-// NONE
+// 9. SeasonTask Associations
+User.hasMany(SeasonTask, { foreignKey: 'userId', as: 'tasks' });
+SeasonTask.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Farm.hasMany(SeasonTask, { foreignKey: 'farmId', as: 'tasks' });
+SeasonTask.belongsTo(Farm, { foreignKey: 'farmId', as: 'farm', onDelete: 'NO ACTION' });
+
+FarmingSeason.hasMany(SeasonTask, { foreignKey: 'seasonId', as: 'tasks' });
+SeasonTask.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season', onDelete: 'CASCADE' });
 
 const initModels = async () => {
   try {
@@ -121,5 +129,6 @@ module.exports = {
   Shipment,
   Notification,
   Report,
-  Subscription
+  Subscription,
+  SeasonTask
 };

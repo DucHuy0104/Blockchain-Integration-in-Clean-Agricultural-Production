@@ -113,10 +113,16 @@ exports.addProcess = async (req, res) => {
 exports.getSeasonsByFarm = async (req, res) => {
     try {
         const { farmId } = req.params;
-        console.log(`[DEBUG] getSeasonsByFarm: Fetching seasons for Farm ID = ${farmId}`);
+        const { status } = req.query; // Get status from query params
+        console.log(`[DEBUG] getSeasonsByFarm: Fetching seasons for Farm ID = ${farmId}, Status = ${status || 'ALL'}`);
+
+        const whereClause = { farmId };
+        if (status) {
+            whereClause.status = status;
+        }
 
         const seasons = await FarmingSeason.findAll({
-            where: { farmId },
+            where: whereClause,
             include: [{ model: FarmingProcess, as: 'processes' }],
             order: [['createdAt', 'DESC']]
         });

@@ -66,3 +66,4 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/monitoring', monitoringRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/tasks', require('./src/routes/seasonTaskRoutes'));

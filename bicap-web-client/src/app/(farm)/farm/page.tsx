@@ -19,10 +19,21 @@ interface Farm {
     name: string;
 }
 
-interface Task {
+
+
+interface SeasonTask {
     id: number;
     title: string;
     isCompleted: boolean;
+    seasonId: number;
+    season?: { name: string };
+    priority: string;
+}
+
+interface SeasonWithTasks {
+    id: number;
+    name: string;
+    tasks: SeasonTask[];
 }
 
 export default function FarmPage() {
@@ -31,6 +42,9 @@ export default function FarmPage() {
     const [farms, setFarms] = useState<Farm[]>([]);
     const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
     const [stats, setStats] = useState({ activeSeasons: 0, todayProcesses: 0, totalOutput: 0 });
+
+    // Grouped Tasks State
+    const [seasonTasks, setSeasonTasks] = useState<SeasonWithTasks[]>([]);
 
     const [loading, setLoading] = useState(true);
     const [userName, setUserName] = useState('');
@@ -109,6 +123,52 @@ export default function FarmPage() {
         fetchStats();
     }, [selectedFarm]);
 
+    // Fetch Tasks Grouped by Season
+    useEffect(() => {
+        const fetchGroupedTasks = async () => {
+            if (!selectedFarm) return;
+            try {
+                const token = await auth.currentUser?.getIdToken();
+                // 1. Fetch Active Seasons
+                const seasonRes = await axios.get(`http://localhost:5001/api/seasons/farm/${selectedFarm.id}?status=active`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const activeSeasons = seasonRes.data || [];
+
+                // 2. Fetch Tasks for ALL these seasons
+                // Optimization: Backend could support include=tasks, but for now we parallel fetch or fetch all my tasks and group
+                // Better: Fetch all tasks for this user, then filter/group by the active season IDs
+                const taskRes = await axios.get(`http://localhost:5001/api/tasks`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const allTasks = taskRes.data.tasks as SeasonTask[];
+
+                // 3. Group
+                const grouped: SeasonWithTasks[] = activeSeasons.map((s: any) => ({
+                    id: s.id,
+                    name: s.name,
+                    tasks: allTasks.filter(t => t.seasonId === s.id && !t.isCompleted) // Only show uncompleted for "To Do"
+                })).filter((g: SeasonWithTasks) => g.tasks.length > 0); // Only show seasons with pending tasks? Or show all active? User said "list tasks of that season".
+
+                // If user wants to see seasons even if empty tasks, remove filter. 
+                // But "liệt kê công việc", implying if no work, maybe don't list? 
+                // Let's keep filter to keep dashboard clean, or show "No tasks" under season.
+                // Better to show Season Name -> No tasks.
+                const groupedAll: SeasonWithTasks[] = activeSeasons.map((s: any) => ({
+                    id: s.id,
+                    name: s.name,
+                    tasks: allTasks.filter(t => t.seasonId === s.id && !t.isCompleted)
+                }));
+
+                setSeasonTasks(groupedAll);
+
+            } catch (error) {
+                console.error("Fetch Grouped Tasks Error:", error);
+            }
+        };
+        fetchGroupedTasks();
+    }, [selectedFarm]);
+
 
     const getTimeGreeting = () => {
         const hour = new Date().getHours();
@@ -124,7 +184,7 @@ export default function FarmPage() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto p-4 space-y-8">
+        <div className="max-w-6xl mx-auto p-4 space-y-8 flex flex-col">
             {/* 1. Hero / Welcome Section */}
             <div className="bg-gradient-to-r from-green-600 to-teal-500 rounded-2xl p-8 shadow-lg flex justify-between items-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
                 <div>
@@ -166,7 +226,6 @@ export default function FarmPage() {
                     🚜
                 </div>
             </div>
-
             {/* 2. Overview Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Link href="/farm/seasons">
@@ -187,13 +246,13 @@ export default function FarmPage() {
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Công Việc Hôm Nay</p>
-                            <h3 className="text-4xl font-extrabold text-gray-800 dark:text-white mt-2">{stats.todayProcesses}</h3>
+                            <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Công Việc Đang Chờ</p>
+                            <h3 className="text-4xl font-extrabold text-gray-800 dark:text-white mt-2"> {seasonTasks.reduce((acc, s) => acc + s.tasks.length, 0)}</h3>
                         </div>
-                        <span className="bg-green-100 text-green-600 p-3 rounded-lg text-2xl">✅</span>
+                        <span className="bg-orange-100 text-orange-600 p-3 rounded-lg text-2xl">📋</span>
                     </div>
-                    <div className="mt-4 text-sm text-green-600 font-medium">
-                        Đã hoàn thành
+                    <div className="mt-4 text-sm text-orange-600 font-medium">
+                        Cần thực hiện
                     </div>
                 </div>
 
@@ -208,6 +267,68 @@ export default function FarmPage() {
                     <div className="mt-4 text-sm text-blue-600 font-medium">
                         Tổng tích lũy
                     </div>
+                </div>
+            </div>
+
+            {/* 3. Task List Section (New - Standard Layout) */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        📋 Danh sách công việc theo mùa vụ
+                    </h3>
+                </div>
+                <div className="p-6">
+                    {seasonTasks.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            Không có công việc nào cần hoàn thành. Tuyệt vời!
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {seasonTasks.map(season => (
+                                <div key={season.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition bg-gray-50">
+                                    <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
+                                        <Link href={`/farm/seasons/${season.id}`} className="font-bold text-green-700 hover:text-green-800 flex items-center gap-2">
+                                            🌱 {season.name}
+                                        </Link>
+                                        <span className="text-xs bg-white border border-gray-200 px-2 py-1 rounded text-gray-500">
+                                            {season.tasks.length} việc
+                                        </span>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {season.tasks.map(task => (
+                                            <li key={task.id} className="flex items-start bg-white p-3 rounded shadow-sm">
+                                                <input
+                                                    type="checkbox"
+                                                    className="mt-1 w-4 h-4 text-green-600 rounded focus:ring-green-500 cursor-pointer"
+                                                    checked={false}
+                                                    onChange={async () => {
+                                                        setSeasonTasks(prev => prev.map(s =>
+                                                            s.id === season.id ? { ...s, tasks: s.tasks.filter(t => t.id !== task.id) } : s
+                                                        ));
+                                                        try {
+                                                            const token = await auth.currentUser?.getIdToken();
+                                                            await axios.put(`http://localhost:5001/api/tasks/${task.id}/toggle`, {}, {
+                                                                headers: { Authorization: `Bearer ${token}` }
+                                                            });
+                                                            setStats(prev => ({ ...prev, todayProcesses: prev.todayProcesses + 1 }));
+                                                        } catch (e) {
+                                                            console.error(e);
+                                                        }
+                                                    }}
+                                                />
+                                                <div className="ml-3">
+                                                    <span className={`block text-sm text-gray-700 font-medium ${task.priority === 'high' ? 'text-red-700' : ''}`}>
+                                                        {task.title}
+                                                    </span>
+                                                    {task.priority === 'high' && <span className="text-[10px] text-red-500 font-bold bg-red-50 px-1 rounded">Quan trọng</span>}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -228,7 +349,7 @@ export default function FarmPage() {
                 </div>
             </div>
 
-            {/* 4. Monitoring Widget (Mini) - Could also depend on Selected Farm if we had farmId in context for it */}
+            {/* 4. Monitoring Widget (Mini) */}
             <div className="bg-indigo-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div className="relative z-10 flex justify-between items-end">
                     <div>
@@ -241,7 +362,6 @@ export default function FarmPage() {
                         </Link>
                     </div>
                     <div className="text-right">
-                        {/* Mock Mini Values - Ideally this should also fetch per farm */}
                         <div className="flex space-x-6">
                             <div className="text-center">
                                 <span className="block text-2xl font-bold">28°C</span>
@@ -254,7 +374,6 @@ export default function FarmPage() {
                         </div>
                     </div>
                 </div>
-                {/* Decoration Circles */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-700 rounded-full opacity-50 blur-2xl"></div>
                 <div className="absolute bottom-10 left-10 w-20 h-20 bg-purple-600 rounded-full opacity-30 blur-xl"></div>
             </div>

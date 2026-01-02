@@ -26,6 +26,13 @@ interface Season {
     processes: Process[];
 }
 
+interface SeasonTask {
+    id: number;
+    title: string;
+    isCompleted: boolean;
+    priority: string;
+}
+
 export default function SeasonDetailPage() {
     // Wrapper to handle client-side params if needed, but here we can just use the content component
     return <SeasonDetailContent />;
@@ -45,6 +52,11 @@ function SeasonDetailContent() {
     const [processDesc, setProcessDesc] = useState('');
     const [adding, setAdding] = useState(false);
 
+    // Season Task State
+    const [tasks, setTasks] = useState<SeasonTask[]>([]);
+    const [newTaskTitle, setNewTaskTitle] = useState('');
+    const [taskPriority, setTaskPriority] = useState('normal');
+
     // Export State
     const [exporting, setExporting] = useState(false);
     const [qrData, setQrData] = useState<string | null>(null);
@@ -57,10 +69,51 @@ function SeasonDetailContent() {
         try {
             const res = await axios.get(`http://localhost:5001/api/seasons/${id}`);
             setSeason(res.data);
+
+            // Also fetch tasks for this season
+            const taskRes = await axios.get(`http://localhost:5001/api/tasks?seasonId=${id}`, {
+                headers: { Authorization: `Bearer ${await auth.currentUser?.getIdToken()}` }
+            });
+            setTasks(taskRes.data.tasks);
+
         } catch (error) {
             console.error("Error fetching season:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAddTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            const res = await axios.post('http://localhost:5001/api/tasks', {
+                title: newTaskTitle,
+                seasonId: id,
+                farmId: (season as any)?.farmId || 1, // Safe fallback
+                priority: taskPriority
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setTasks([res.data.task, ...tasks]);
+            setNewTaskTitle('');
+        } catch (error) {
+            alert('Lỗi thêm công việc');
+        }
+    };
+
+    const handleToggleTask = async (taskId: number) => {
+        // Optimistic
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t));
+
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            await axios.put(`http://localhost:5001/api/tasks/${taskId}/toggle`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } catch (error) {
+            alert('Lỗi cập nhật');
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t));
         }
     };
 
@@ -176,6 +229,71 @@ function SeasonDetailContent() {
                                 </a>
                             </div>
                         )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Task Management Section (NEW) */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8 border border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    📋 Danh sách công việc dự kiến
+                </h3>
+
+                {/* Add Task Form */}
+                {season.status === 'active' && (
+                    <form onSubmit={handleAddTask} className="flex gap-2 mb-6">
+                        <select
+                            value={taskPriority}
+                            onChange={(e) => setTaskPriority(e.target.value)}
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                        >
+                            <option value="high">🔴 Gấp</option>
+                            <option value="normal">🔵 Bình thường</option>
+                            <option value="low">🟢 Thấp</option>
+                        </select>
+                        <input
+                            type="text"
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            placeholder="Nhập tên công việc cần làm..."
+                            required
+                            value={newTaskTitle}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                        />
+                        <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Thêm</button>
+                    </form>
+                )}
+
+                {/* Task List */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Incomplete */}
+                    <div className="bg-orange-50 p-4 rounded-lg">
+                        <h4 className="font-bold text-orange-800 mb-3 border-b border-orange-200 pb-2">Chưa hoàn thành</h4>
+                        <ul className="space-y-2">
+                            {tasks.filter(t => !t.isCompleted).map(task => (
+                                <li key={task.id} className="flex items-center justify-between bg-white p-2 rounded shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <input type="checkbox" checked={false} onChange={() => handleToggleTask(task.id)} className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
+                                        <span className={task.priority === 'high' ? 'font-bold text-red-600' : ''}>{task.title}</span>
+                                    </div>
+                                    <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">{task.priority}</span>
+                                </li>
+                            ))}
+                            {tasks.filter(t => !t.isCompleted).length === 0 && <p className="text-sm text-gray-500 italic">Không có công việc nào.</p>}
+                        </ul>
+                    </div>
+
+                    {/* Completed */}
+                    <div className="bg-green-50 p-4 rounded-lg">
+                        <h4 className="font-bold text-green-800 mb-3 border-b border-green-200 pb-2">Đã hoàn thành</h4>
+                        <ul className="space-y-2">
+                            {tasks.filter(t => t.isCompleted).map(task => (
+                                <li key={task.id} className="flex items-center gap-2 bg-white p-2 rounded shadow-sm opacity-70">
+                                    <input type="checkbox" checked={true} onChange={() => handleToggleTask(task.id)} className="w-5 h-5 text-green-600 rounded focus:ring-green-500 cursor-pointer" />
+                                    <span className="line-through text-gray-500">{task.title}</span>
+                                </li>
+                            ))}
+                            {tasks.filter(t => t.isCompleted).length === 0 && <p className="text-sm text-gray-500 italic">Chưa có công việc nào xong.</p>}
+                        </ul>
                     </div>
                 </div>
             </div>
