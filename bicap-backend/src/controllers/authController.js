@@ -52,22 +52,37 @@ exports.syncUser = async (req, res) => {
     }
 
     // 3. Nếu chưa có gì cả -> Tạo User mới
-    const newUser = await User.create({
-      firebaseUid: uid,
-      email: email,
-      fullName: fullName || name || 'New User',
-      role: role || 'retailer', // Default role
-      status: 'active'
-    });
+    try {
+      const newUser = await User.create({
+        firebaseUid: uid,
+        email: email,
+        fullName: fullName || name || 'New User',
+        role: role || 'retailer', // Default role
+        status: 'active'
+      });
 
-    res.status(201).json({
-      message: 'Đăng ký tài khoản mới thành công!',
-      user: newUser
-    });
+      return res.status(201).json({
+        message: 'Đăng ký tài khoản mới thành công!',
+        user: newUser
+      });
+    } catch (createError) {
+      // Handle Race Condition: If unique constraint fails, it means user was created by another parallel request
+      if (createError.name === 'SequelizeUniqueConstraintError') {
+        console.log('Race condition detected: User created by parallel request. Fetching user...');
+        const existingUser = await User.findOne({ where: { firebaseUid: uid } });
+        if (existingUser) {
+          return res.status(200).json({
+            message: 'Đăng nhập thành công (Recovered from race condition)!',
+            user: existingUser
+          });
+        }
+      }
+      throw createError; // Re-throw if it's not a unique constraint error
+    }
 
   } catch (error) {
-    console.error('Sync User Error:', error);
-    res.status(500).json({ message: 'Lỗi đồng bộ User', error: error.message });
+    console.error('Sync User Error Detailed:', error); // Log more detail
+    res.status(500).json({ message: 'Lỗi đồng bộ User', error: error.message, details: error.errors });
   }
 };
 
@@ -100,7 +115,7 @@ exports.getMe = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { id } = req.user; // Get from SQL User ID (populated by requireRole)
-    const { fullName, address, businessLicense } = req.body;
+    const { fullName, address, businessLicense, phone } = req.body;
 
     const user = await User.findByPk(id);
 
@@ -111,6 +126,7 @@ exports.updateProfile = async (req, res) => {
     user.fullName = fullName || user.fullName;
     user.address = address || user.address;
     user.businessLicense = businessLicense || user.businessLicense;
+    user.phone = phone || user.phone;
 
     await user.save();
 

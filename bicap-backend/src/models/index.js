@@ -71,6 +71,8 @@ SeasonTask.belongsTo(Farm, { foreignKey: 'farmId', as: 'farm', onDelete: 'NO ACT
 FarmingSeason.hasMany(SeasonTask, { foreignKey: 'seasonId', as: 'tasks' });
 SeasonTask.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season', onDelete: 'CASCADE' });
 
+
+
 const initModels = async () => {
   try {
     // 1. Sync all tables (Create if not exists, but DO NOT ALTER)
@@ -129,6 +131,7 @@ module.exports = {
   Shipment,
   Notification,
   Report,
+  Subscription,
   Subscription,
   SeasonTask
 };

@@ -7,4 +7,6 @@ const { verifyToken } = require('../middleware/authMiddleware');
 router.get('/', verifyToken, notificationController.getMyNotifications);
 router.put('/:id/read', verifyToken, notificationController.markRead);
 
+router.post('/send', verifyToken, notificationController.sendNotificationToUser);
+
 module.exports = router;

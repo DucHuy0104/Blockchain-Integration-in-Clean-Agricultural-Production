@@ -150,3 +150,107 @@ exports.updateOrderStatus = async (req, res) => {
         res.status(500).json({ message: 'Lỗi cập nhật đơn hàng' });
     }
 };
+
+// 4. Lấy danh sách đơn hàng của Retailer (Cho Retailer)
+exports.getMyOrders = async (req, res) => {
+    try {
+        const userId = req.user.id; // Populated by requireRole
+
+        const orders = await Order.findAll({
+            where: { retailerId: userId },
+            include: [
+                {
+                    model: Product,
+                    as: 'product',
+                    attributes: ['name', 'price', 'batchCode', 'farmId'],
+                    include: [{ model: Farm, as: 'farm', attributes: ['name', 'ownerId'] }]
+                }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json({ orders });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi lấy danh sách đơn hàng' });
+    }
+};
+
+// 5. Hủy đơn hàng (Cho Retailer)
+exports.cancelOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id; // Retailer
+
+        const order = await Order.findByPk(id, {
+            include: [{ model: Product, as: 'product' }]
+        });
+
+        if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
+        if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
+        if (order.status !== 'pending') return res.status(400).json({ message: 'Chỉ có thể hủy đơn hàng đang chờ duyệt' });
+
+        // Hoàn lại số lượng
+        const product = await Product.findByPk(order.productId);
+        product.quantity += order.quantity;
+        if (product.status === 'distributed') product.status = 'available';
+        await product.save();
+
+        order.status = 'cancelled';
+        await order.save();
+
+        // Notify Farm
+        const { createNotificationInternal } = require('./notificationController');
+        const farm = await Farm.findByPk(product.farmId);
+        if (farm) {
+            await createNotificationInternal(
+                farm.ownerId,
+                'Đơn hàng bị hủy',
+                `Đơn hàng #${order.id} đã bị hủy bởi người mua`,
+                'order'
+            );
+        }
+
+        res.json({ message: 'Hủy đơn hàng thành công', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi hủy đơn hàng' });
+    }
+};
+
+// 6. Xác nhận đã nhận hàng (Cho Retailer)
+exports.confirmDelivery = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const order = await Order.findByPk(id, {
+            include: [{ model: Product, as: 'product' }]
+        });
+
+        if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
+        if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
+        if (order.status !== 'shipping') return res.status(400).json({ message: 'Đơn hàng chưa ở trạng thái vận chuyển' });
+
+        // Update status
+        order.status = 'completed';
+        await order.save();
+
+        // Notify Farm
+        const { createNotificationInternal } = require('./notificationController');
+        const farm = await Farm.findByPk(order.product.farmId);
+        if (farm) {
+            await createNotificationInternal(
+                farm.ownerId,
+                'Đơn hàng hoàn tất',
+                `Đơn hàng #${order.id} đã được nhận thành công`,
+                'order'
+            );
+        }
+
+        res.json({ message: 'Xác nhận nhận hàng thành công', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi xác nhận đơn hàng' });
+    }
+};

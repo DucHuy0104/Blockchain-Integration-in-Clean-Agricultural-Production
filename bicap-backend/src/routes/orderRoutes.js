@@ -7,10 +7,17 @@ const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 // Tạo đơn hàng (Cho Retailer/User đã đăng nhập)
 router.post('/', verifyToken, orderController.createOrder);
 
+// Lấy danh sách đơn hàng của Retailer (Cho Retailer đã login)
+router.get('/my-orders', verifyToken, requireRole(['retailer']), orderController.getMyOrders);
+
 // Lấy danh sách đơn hàng của trang trại (Cho chủ trại)
 router.get('/farm/:farmId', verifyToken, requireRole(['farm', 'admin']), orderController.getOrdersByFarm);
 
 // Cập nhật trạng thái đơn hàng (Cho chủ trại)
 router.put('/:id/status', verifyToken, requireRole(['farm', 'admin']), orderController.updateOrderStatus);
+
+// Retailer Actions
+router.put('/:id/cancel', verifyToken, requireRole(['retailer']), orderController.cancelOrder);
+router.put('/:id/confirm-delivery', verifyToken, requireRole(['retailer']), orderController.confirmDelivery);
 
 module.exports = router;

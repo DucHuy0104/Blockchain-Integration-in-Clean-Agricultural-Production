@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Order {
     id: number;
@@ -18,6 +19,7 @@ interface Order {
         batchCode: string;
     };
     retailer: {
+        id: number;
         fullName: string;
         email: string;
         phone: string;
@@ -31,6 +33,7 @@ interface Farm {
 
 export default function FarmOrderManager() {
     const { user } = useAuth();
+    const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [farms, setFarms] = useState<Farm[]>([]);
     const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
@@ -299,7 +302,7 @@ export default function FarmOrderManager() {
                             </div>
                         </div>
 
-                        <div className="mt-8 flex justify-end">
+                        <div className="mt-8 flex justify-end gap-2">
                             <button
                                 onClick={() => setShowRetailerModal(false)}
                                 className="bg-gray-800 text-white font-bold py-2 px-6 rounded hover:bg-gray-900"

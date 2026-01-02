@@ -32,7 +32,7 @@ export default function LoginPage() {
     useEffect(() => {
         if (user) {
             if (user.role === 'farm') router.push('/farm');
-            else if (user.role === 'retailer') router.push('/retailer');
+            else if (user.role === 'retailer') router.push('/retailer/market');
             else if (user.role === 'shipping') router.push('/shipping');
             else if (user.role === 'admin') router.push('/admin');
             else router.push('/guest');

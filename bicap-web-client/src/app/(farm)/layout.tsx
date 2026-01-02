@@ -6,6 +6,8 @@ export const metadata: Metadata = {
     description: 'Farm Management Dashboard',
 }
 
+import RoleGuard from '@/components/RoleGuard';
+
 export default function FarmLayout({
     children,
 }: {
@@ -13,10 +15,12 @@ export default function FarmLayout({
 }) {
     return (
         <div className="flex flex-col min-h-screen bg-green-50 dark:bg-green-950">
-            <FarmHeader />
-            <main className="flex-grow container mx-auto p-4">
-                {children}
-            </main>
+            <RoleGuard allowedRoles={['farm', 'admin']}>
+                <FarmHeader />
+                <main className="flex-grow container mx-auto p-4">
+                    {children}
+                </main>
+            </RoleGuard>
         </div>
     )
 }

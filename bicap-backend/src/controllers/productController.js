@@ -82,7 +82,7 @@ exports.getAllProducts = async (req, res) => {
       where: { status: 'available' },
       include: [
         { model: Farm, as: 'farm', attributes: ['name', 'address', 'certification'] },
-        { model: FarmingSeason, as: 'season', attributes: ['name'] }
+        { model: FarmingSeason, as: 'season', attributes: ['id', 'name'] }
       ],
       order: [['createdAt', 'DESC']]
     });

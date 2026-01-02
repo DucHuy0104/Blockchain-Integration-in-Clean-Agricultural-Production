@@ -25,9 +25,7 @@ export default function FarmHeader() {
                         <NavLink href="/farm/profile" label="Hồ sơ" />
                     </div>
 
-                    <div className="border-l border-green-400 pl-1 ml-1">
-                        <NavLink href="/market" label="Chợ" icon="🏪" highlight target="_blank" />
-                    </div>
+
 
                     <LogoutButton />
                 </div>

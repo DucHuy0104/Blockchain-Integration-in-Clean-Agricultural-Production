@@ -79,3 +79,27 @@ exports.createNotificationInternal = async (userId, title, message, type) => {
         console.error("Error creating notification:", error);
     }
 };
+
+// Gửi thông báo từ Retailer/User đến Farm (Contact)
+exports.sendNotificationToUser = async (req, res) => {
+    try {
+        const { receiverId, title, message } = req.body;
+
+        // Simple validation
+        if (!receiverId || !title || !message) {
+            return res.status(400).json({ message: 'Thiếu thông tin' });
+        }
+
+        const notification = await Notification.create({
+            userId: receiverId, // Receiver
+            title: `[Tin nhắn] ${title}`,
+            message: `${message} (Từ: ${req.user.fullName})`,
+            type: 'message'
+        });
+
+        res.status(201).json({ message: 'Gửi tin nhắn thành công', notification });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi gửi tin nhắn' });
+    }
+};

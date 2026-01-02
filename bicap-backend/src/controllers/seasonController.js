@@ -142,6 +142,10 @@ exports.getSeasonById = async (req, res) => {
         const { seasonId } = req.params;
         console.log(`[DEBUG] getSeasonById: Fetching seasonId = ${seasonId}`);
 
+        if (!seasonId || isNaN(seasonId)) {
+            return res.status(400).json({ message: 'Invalid Season ID' });
+        }
+
         const season = await FarmingSeason.findByPk(seasonId, {
             include: [
                 { model: FarmingProcess, as: 'processes' },

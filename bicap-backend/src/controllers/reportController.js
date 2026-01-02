@@ -32,12 +32,22 @@ exports.createReport = async (req, res) => {
 };
 
 // 2. Lấy danh sách báo cáo (Admin/Farm xem - ở đây logic đơn giản lấy toàn bộ hoặc theo filter)
+// 2. Lấy danh sách báo cáo
 exports.getAllReports = async (req, res) => {
     try {
-        const reports = await Report.findAll({
+        let options = {
             include: [{ model: User, as: 'sender', attributes: ['fullName', 'email', 'role'] }],
             order: [['createdAt', 'DESC']]
-        });
+        };
+
+        // If not admin or farm (manager), only show own reports
+        // Or strictly if role is retailer/driver, filter by senderId
+        const userRole = req.user.role;
+        if (!['admin', 'farm'].includes(userRole)) {
+            options.where = { senderId: req.user.id };
+        }
+
+        const reports = await Report.findAll(options);
         res.json({ reports });
     } catch (error) {
         console.error(error);

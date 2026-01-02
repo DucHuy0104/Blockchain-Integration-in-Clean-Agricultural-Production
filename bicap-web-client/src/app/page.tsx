@@ -17,6 +17,15 @@ export default function Home() {
                         <p className="mt-4 text-green-50 max-w-2xl mx-auto text-sm md:text-base opacity-90">
                             Hệ thống quản lý chuỗi cung ứng nông sản sạch minh bạch, an toàn và hiệu quả ứng dụng công nghệ Blockchain.
                         </p>
+
+                        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                            <Link href="/market" className="px-8 py-3 bg-white text-green-800 font-bold rounded-full shadow-lg hover:bg-green-50 hover:scale-105 transition transform flex items-center justify-center gap-2">
+                                <span>🏪</span> Tham quan Sàn Nông Sản
+                            </Link>
+                            <Link href="/login?role=guest" className="px-8 py-3 bg-green-700/50 backdrop-blur-sm border border-green-400 text-white font-bold rounded-full shadow-lg hover:bg-green-600/50 hover:scale-105 transition transform flex items-center justify-center gap-2">
+                                <span>🔍</span> Truy Xuất Nguồn Gốc
+                            </Link>
+                        </div>
                     </div>
                 </div>
                 {/* Decorative curve */}

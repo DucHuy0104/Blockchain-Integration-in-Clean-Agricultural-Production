@@ -43,6 +43,20 @@ const verifyToken = async (req, res, next) => {
         }
 
         req.userFirebase = decodedToken;
+
+        // Try to fetch SQL user to populate req.user for controllers
+        try {
+            const user = await User.findOne({
+                where: { firebaseUid: decodedToken.uid }
+            });
+            if (user) {
+                req.user = user;
+            }
+        } catch (dbError) {
+            console.error("Error fetching user in verifyToken:", dbError);
+            // Don't block request, user might be syncing
+        }
+
         next();
     } catch (error) {
         console.error("Token verification failed:", error);
@@ -77,6 +91,7 @@ const requireRole = (roles) => {
             }
 
             if (!roles.includes(user.role)) {
+                console.log(`[Auth] 403 Forbidden. User Role: '${user.role}', Allowed: [${roles.join(', ')}]`);
                 return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
             }
 
