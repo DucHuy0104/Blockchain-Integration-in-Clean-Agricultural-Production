@@ -45,6 +45,20 @@ exports.createOrder = async (req, res) => {
         if (product.quantity === 0) product.status = 'distributed'; // Hết hàng
         await product.save();
 
+        // --- NOTIFICATION START ---
+        const { createNotificationInternal } = require('./notificationController');
+        // Get Farm Owner ID
+        const farm = await Farm.findByPk(product.farmId);
+        if (farm) {
+            await createNotificationInternal(
+                farm.ownerId,
+                'Đơn hàng mới',
+                `Bạn có đơn hàng mới #${newOrder.id} cho sản phẩm ${product.name}`,
+                'order'
+            );
+        }
+        // --- NOTIFICATION END ---
+
         res.status(201).json({
             message: 'Đặt hàng thành công!',
             order: newOrder
@@ -118,6 +132,16 @@ exports.updateOrderStatus = async (req, res) => {
 
         order.status = status;
         await order.save();
+
+        // --- NOTIFICATION START ---
+        const { createNotificationInternal } = require('./notificationController');
+        await createNotificationInternal(
+            order.retailerId,
+            'Cập nhật đơn hàng',
+            `Đơn hàng #${order.id} của bạn đã chuyển sang trạng thái: ${status}`,
+            'order'
+        );
+        // --- NOTIFICATION END ---
 
         res.json({ message: 'Cập nhật trạng thái thành công', order });
 

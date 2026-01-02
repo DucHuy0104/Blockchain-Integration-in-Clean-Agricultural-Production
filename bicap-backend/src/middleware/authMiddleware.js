@@ -1,10 +1,14 @@
 const admin = require('../config/firebase');
 const { User } = require('../models');
+const fs = require('fs');
+const path = require('path');
+const debugLogPath = path.join(__dirname, '../../debug_auth.txt');
 
 const verifyToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log("No token provided");
         return res.status(401).json({ message: 'Unauthorized: No token provided' });
     }
 
@@ -29,6 +33,7 @@ const verifyToken = async (req, res, next) => {
                 try {
                     decodedToken = await admin.auth().verifyIdToken(token);
                 } catch (error) {
+                    console.error("Firebase Verify Error:", error.message);
                     throw error;
                 }
             }
@@ -41,6 +46,11 @@ const verifyToken = async (req, res, next) => {
         next();
     } catch (error) {
         console.error("Token verification failed:", error);
+
+        // Log to file to be sure
+        const logMsg = `[${new Date().toISOString()}] Auth Error: ${error.message}\n`;
+        try { fs.appendFileSync(debugLogPath, logMsg); } catch (e) { }
+
         return res.status(401).json({
             message: 'Unauthorized',
             error: error.message,

@@ -86,3 +86,5 @@ docker-data/
 # Firebase
 # ===================================
 serviceAccountKey.json
+create_admin.js
+**/create_admin.js

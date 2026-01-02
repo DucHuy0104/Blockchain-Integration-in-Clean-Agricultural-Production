@@ -18,7 +18,7 @@ const subscriptionRoutes = require('./src/routes/subscriptionRoutes');
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true
 }));
 app.use(express.json());
@@ -66,4 +66,5 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/monitoring', monitoringRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/tasks', require('./src/routes/seasonTaskRoutes'));

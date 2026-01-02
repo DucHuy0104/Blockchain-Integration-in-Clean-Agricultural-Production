@@ -29,6 +29,18 @@ exports.createShipment = async (req, res) => {
         // order.status = 'shipping';
         // await order.save();
 
+        // --- NOTIFICATION START ---
+        const { createNotificationInternal } = require('./notificationController');
+        // order is loaded with include 'product', we need retailerId from order
+        // Reload order to be safe or check if retailerId is simple field (it is)
+        await createNotificationInternal(
+            order.retailerId,
+            'Vận đơn mới',
+            `Đơn hàng #${order.id} đã có vận đơn mới #${shipment.id}. Dự kiến giao: ${pickupTime}`,
+            'shipment'
+        );
+        // --- NOTIFICATION END ---
+
         res.status(201).json({ message: 'Tạo vận đơn thành công', shipment });
 
     } catch (error) {
@@ -100,6 +112,19 @@ exports.updateShipmentStatus = async (req, res) => {
         }
 
         await shipment.save();
+
+        // --- NOTIFICATION START ---
+        const { createNotificationInternal } = require('./notificationController');
+        const orderForNotify = await Order.findByPk(shipment.orderId);
+        if (orderForNotify) {
+            await createNotificationInternal(
+                orderForNotify.retailerId,
+                'Cập nhật vận chuyển',
+                `Vận đơn #${shipment.id} đang ở trạng thái: ${status}`,
+                'shipment'
+            );
+        }
+        // --- NOTIFICATION END ---
 
         res.json({ message: 'Cập nhật trạng thái thành công', shipment });
 

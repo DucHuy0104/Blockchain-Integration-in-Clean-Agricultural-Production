@@ -83,17 +83,17 @@ export default function MarketplacePage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Header */}
-            <nav className="bg-green-600 text-white p-4 shadow-md sticky top-0 z-50">
-                <div className="container mx-auto flex justify-between items-center">
-                    <Link href="/" className="text-xl font-bold flex items-center gap-2">
-                        🌿 BICAP MARKET
-                    </Link>
-                    <div className="space-x-4">
-                        <Link href="/market" className="font-bold border-b-2 border-white">Sàn Nông Sản</Link>
+            {/* Header */}
+            <nav className="bg-green-600 text-white px-4 py-2 sticky top-0 z-50 shadow-md">
+                <div className="w-full flex justify-between items-center gap-2">
+                    <Link href="/" className="text-lg font-bold whitespace-nowrap hidden lg:block">BICAP Market</Link>
+                    <div className="flex items-center gap-1 justify-end w-full lg:w-auto">
+                        <NavLink href="/" label="Trang chủ" icon="🏠" />
+                        <NavLink href="/market" label="Sàn Nông Sản" icon="🏪" highlight />
                         {user ? (
-                            <Link href="/farm" className="hover:text-green-200">Vào Dashboard</Link>
+                            <NavLink href="/farm" label="Vào Dashboard" icon="🚜" />
                         ) : (
-                            <Link href="/login" className="hover:text-green-200">Đăng Nhập</Link>
+                            <NavLink href="/login" label="Đăng Nhập" icon="👤" />
                         )}
                     </div>
                 </div>
@@ -201,5 +201,16 @@ export default function MarketplacePage() {
                 </div>
             )}
         </div>
+    );
+}
+
+function NavLink({ href, label, icon, highlight }: { href: string, label: string, icon?: string, highlight?: boolean }) {
+    return (
+        <Link href={href} className={`flex flex-col items-center hover:bg-green-700 px-2 py-1.5 rounded transition-colors group ${highlight ? 'text-yellow-300' : 'text-white'}`}>
+            <span className={`text-xs font-bold uppercase tracking-wide whitespace-nowrap ${highlight ? 'text-yellow-300' : 'text-white'}`}>
+                {icon && <span className="mr-1">{icon}</span>}
+                {label}
+            </span>
+        </Link>
     );
 }
