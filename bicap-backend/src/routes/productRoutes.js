@@ -7,6 +7,9 @@ const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 // Tạo sản phẩm (Chỉ chủ trại)
 router.post('/', verifyToken, requireRole(['farm', 'admin']), productController.createProduct);
 
+// Xem tất cả sản phẩm (Marketplace - Public)
+router.get('/', productController.getAllProducts);
+
 // Xem sản phẩm của một trang trại cụ thể (Công khai hoặc cần login tùy logic, ở đây để cần login cho chắc)
 router.get('/farm/:farmId', verifyToken, productController.getProductsByFarm);
 

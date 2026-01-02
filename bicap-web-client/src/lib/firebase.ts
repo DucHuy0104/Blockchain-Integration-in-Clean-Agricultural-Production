@@ -1,17 +1,19 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    apiKey: "AIzaSyDOD_IsX70EuYH3xRX0RimBNukEztm9DQ4",
+    authDomain: "bicap-f8e2c.firebaseapp.com",
+    projectId: "bicap-f8e2c",
+    storageBucket: "bicap-f8e2c.firebasestorage.app",
+    messagingSenderId: "249021389966",
+    appId: "1:249021389966:web:62f85445948ac5807f3ddf",
+    measurementId: "G-ZVDJEQN2Y4"
 };
 
-// Initialize Firebase (Singleton pattern)
+// Initialize Firebase (prevent multiple initializations)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
-export { app, auth };
+export { auth, googleProvider };

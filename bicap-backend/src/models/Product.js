@@ -22,12 +22,21 @@ const Product = sequelize.define('Product', {
     allowNull: false,
     defaultValue: 0
   },
+  price: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    defaultValue: 0
+  },
+  seasonId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
   status: {
     type: DataTypes.STRING,
     defaultValue: 'cultivating',
-    // cultivating: đang trồng, harvested: đã thu hoạch, processing: đang sơ chế, distributed: đã phân phối
+    // cultivating: đang trồng, harvested: đã thu hoạch, processing: đang sơ chế, distributed: đã phân phối, available: đang bán
     validate: {
-      isIn: [['cultivating', 'harvested', 'processing', 'distributed']]
+      isIn: [['cultivating', 'harvested', 'processing', 'distributed', 'available']]
     }
   },
   farmId: {

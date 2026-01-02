@@ -108,16 +108,103 @@ exports.addProcess = async (req, res) => {
 
 // @desc    Get all seasons for a specific farm
 // @route   GET /api/seasons/farm/:farmId
+// @desc    Get all seasons for a specific farm
+// @route   GET /api/seasons/farm/:farmId
 exports.getSeasonsByFarm = async (req, res) => {
     try {
         const { farmId } = req.params;
+        console.log(`[DEBUG] getSeasonsByFarm: Fetching seasons for Farm ID = ${farmId}`);
+
         const seasons = await FarmingSeason.findAll({
             where: { farmId },
             include: [{ model: FarmingProcess, as: 'processes' }],
             order: [['createdAt', 'DESC']]
         });
+
+        console.log(`[DEBUG] getSeasonsByFarm: Found ${seasons.length} seasons`);
         res.json(seasons);
     } catch (error) {
+        console.error(`[DEBUG] getSeasonsByFarm Error:`, error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+};
+
+// @desc    Get a specific season by ID
+// @route   GET /api/seasons/:seasonId
+exports.getSeasonById = async (req, res) => {
+    try {
+        const { seasonId } = req.params;
+        console.log(`[DEBUG] getSeasonById: Fetching seasonId = ${seasonId}`);
+
+        const season = await FarmingSeason.findByPk(seasonId, {
+            include: [
+                { model: FarmingProcess, as: 'processes' },
+                { model: Farm, as: 'farm' }
+            ],
+            order: [[{ model: FarmingProcess, as: 'processes' }, 'createdAt', 'DESC']]
+        });
+
+        if (!season) {
+            console.log(`[DEBUG] getSeasonById: Season ${seasonId} NOT FOUND`);
+            return res.status(404).json({ message: 'Mùa vụ không tồn tại' });
+        }
+
+        console.log(`[DEBUG] getSeasonById: Found season ${season.id}`);
+        res.json(season);
+    } catch (error) {
+        console.error(`[DEBUG] getSeasonById Error:`, error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+};
+
+// @desc    Export Season (Finish & Generate QR)
+// @route   POST /api/seasons/:seasonId/export
+// @access  Private (Farm Owner)
+exports.exportSeason = async (req, res) => {
+    try {
+        const { seasonId } = req.params;
+
+        // 1. Check Season existence
+        const season = await FarmingSeason.findByPk(seasonId);
+        if (!season) {
+            return res.status(404).json({ message: 'Mùa vụ không tồn tại' });
+        }
+
+        // 2. Verify Ownership
+        const farm = await Farm.findByPk(season.farmId);
+        if (farm.ownerId !== req.user.id) {
+            return res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này' });
+        }
+
+        // 3. Update status
+        season.status = 'completed';
+        if (!season.endDate) {
+            season.endDate = new Date();
+        }
+
+        // 4. Log to Blockchain (Mock)
+        const txHash = await blockchainHelper.writeToBlockchain({
+            type: 'EXPORT_SEASON',
+            seasonId: seasonId,
+            status: 'completed'
+        });
+
+        season.txHash = txHash;
+        await season.save();
+
+        // 5. Generate Response with QR Code Data
+        // URL for the public traceability page
+        const traceabilityLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/traceability/${seasonId}`;
+
+        res.json({
+            message: 'Xuất mùa vụ thành công!',
+            season: season,
+            qrCodeData: traceabilityLink,
+            txHash: txHash
+        });
+
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 };

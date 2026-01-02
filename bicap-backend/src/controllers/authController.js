@@ -16,6 +16,21 @@ exports.syncUser = async (req, res) => {
     let user = await User.findOne({ where: { firebaseUid: uid } });
 
     if (user) {
+      // User found. Check if we need to update info (e.g., first time setting role)
+      let updated = false;
+      if (role && user.role !== role) {
+        user.role = role;
+        updated = true;
+      }
+      if (fullName && user.fullName !== fullName) {
+        user.fullName = fullName;
+        updated = true;
+      }
+
+      if (updated) {
+        await user.save();
+      }
+
       // User đã tồn tại -> Trả về thông tin
       return res.status(200).json({
         message: 'Đăng nhập thành công!',
@@ -70,6 +85,41 @@ exports.getMe = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error: error.message });
+    console.error("SyncUser Controller Error:", error);
+    res.status(500).json({
+      message: 'Server error during user sync',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+  try {
+    const { id } = req.user; // Get from SQL User ID (populated by requireRole)
+    const { fullName, address, businessLicense } = req.body;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.fullName = fullName || user.fullName;
+    user.address = address || user.address;
+    user.businessLicense = businessLicense || user.businessLicense;
+
+    await user.save();
+
+    res.json({
+      message: 'Cập nhật thông tin thành công!',
+      user
+    });
+  } catch (error) {
+    console.error('Update Profile Error:', error);
+    res.status(500).json({ message: 'Lỗi cập nhật thông tin', error: error.message });
   }
 };

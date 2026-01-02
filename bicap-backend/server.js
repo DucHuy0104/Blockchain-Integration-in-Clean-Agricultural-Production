@@ -9,6 +9,11 @@ const authRoutes = require('./src/routes/authRoutes');
 const farmRoutes = require('./src/routes/farmRoutes');
 const seasonRoutes = require('./src/routes/seasonRoutes');
 const productRoutes = require('./src/routes/productRoutes');
+const orderRoutes = require('./src/routes/orderRoutes');
+const shipmentRoutes = require('./src/routes/shipmentRoutes');
+const reportRoutes = require('./src/routes/reportRoutes');
+const monitoringRoutes = require('./src/routes/monitoringRoutes');
+const subscriptionRoutes = require('./src/routes/subscriptionRoutes');
 
 const app = express();
 
@@ -34,7 +39,7 @@ const startServer = async () => {
     await initModels();
 
     // 3. Chạy Server
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 5001;
     app.listen(PORT, () => {
       console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);
     });
@@ -55,3 +60,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/farms', farmRoutes);
 app.use('/api/seasons', seasonRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/shipments', shipmentRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);

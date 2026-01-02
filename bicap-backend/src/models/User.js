@@ -20,6 +20,10 @@ const User = sequelize.define('User', {
       isEmail: true
     }
   },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   firebaseUid: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null initially for migration or errors, but should be unique
@@ -31,7 +35,7 @@ const User = sequelize.define('User', {
     defaultValue: 'retailer',
     // Các role: 'admin', 'farm', 'driver', 'retailer', 'shipping_manager'
     validate: {
-      isIn: [['admin', 'farm', 'driver', 'retailer', 'shipping_manager']]
+      isIn: [['admin', 'farm', 'driver', 'retailer', 'shipping_manager', 'shipping', 'guest']]
     }
   },
   walletAddress: {
