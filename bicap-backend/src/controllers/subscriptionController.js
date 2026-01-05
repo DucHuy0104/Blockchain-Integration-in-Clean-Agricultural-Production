@@ -65,11 +65,11 @@ exports.getMySubscription = async (req, res) => {
     }
 };
 
-// 3. Đăng ký / Mua gói (Mock Payment)
+// 3. Đăng ký / Mua gói (Tích hợp VNPay)
 exports.subscribe = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { packageId, paymentDetails } = req.body;
+        const { packageId } = req.body;
 
         // Validate package
         if (!PACKAGES[packageId]) {
@@ -78,44 +78,54 @@ exports.subscribe = async (req, res) => {
 
         const selectedPackage = PACKAGES[packageId];
 
-        // --- MOCK PAYMENT PROCESSING ---
-        // Ở đây chúng ta giả lập thanh toán thành công
-        // Trong thực tế sẽ gọi Stripe/PayPal/VNPAY API
-        if (!paymentDetails || !paymentDetails.cardNumber) {
-            // Basic validation simulates payment form check
-            return res.status(400).json({ message: 'Thông tin thanh toán không hợp lệ' });
-        }
-
-        console.log(`[MOCK PAYMENT] Processing simulated payment of ${selectedPackage.price} for user ${userId}`);
-        // -------------------------------
-
         // Tính ngày hết hạn
         const startDate = new Date();
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + selectedPackage.durationMonths);
 
-        // Tạo Subscription mới
+        // Nếu gói miễn phí (basic), kích hoạt ngay
+        if (selectedPackage.price === 0) {
+            const newSub = await Subscription.create({
+                userId,
+                packageType: packageId,
+                startDate,
+                endDate,
+                amount: selectedPackage.price,
+                status: 'active'
+            });
+
+            return res.status(201).json({
+                message: 'Đăng ký gói miễn phí thành công!',
+                subscription: newSub
+            });
+        }
+
+        // Nếu gói có phí, tạo subscription với status 'pending' và tạo payment request
         const newSub = await Subscription.create({
             userId,
             packageType: packageId,
             startDate,
             endDate,
             amount: selectedPackage.price,
-            status: 'active'
+            status: 'pending' // Sẽ được kích hoạt sau khi thanh toán thành công
         });
 
-        // (Optionally) Update User status or role feature flags if needed
-        // const user = await User.findByPk(userId);
-        // user.hasPremiumAccess = true;
-        // await user.save();
-
+        // Tạo payment request thông qua payment controller
+        // Frontend sẽ gọi API /api/payments với subscriptionId
         res.status(201).json({
-            message: 'Đăng ký gói thành công!',
-            subscription: newSub
+            message: 'Đã tạo đăng ký gói. Vui lòng thanh toán để kích hoạt.',
+            subscription: newSub,
+            paymentRequired: true,
+            paymentEndpoint: `/api/payments`,
+            paymentData: {
+                paymentType: 'subscription',
+                subscriptionId: newSub.id,
+                amount: selectedPackage.price
+            }
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Lỗi xử lý thanh toán', error: error.message });
+        res.status(500).json({ message: 'Lỗi đăng ký gói dịch vụ', error: error.message });
     }
 };

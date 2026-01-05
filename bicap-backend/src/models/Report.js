@@ -26,7 +26,17 @@ const Report = sequelize.define('Report', {
     },
     status: {
         type: DataTypes.STRING,
-        defaultValue: 'pending', // pending, resolved
+        defaultValue: 'pending', // pending, resolved, rejected
+    },
+    type: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'incident, feedback, other'
+    },
+    adminNote: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Ghi chú của admin khi xử lý report'
     }
 }, {
     timestamps: true

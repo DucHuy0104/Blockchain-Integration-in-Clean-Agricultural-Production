@@ -1,6 +1,8 @@
 // src/controllers/seasonController.js
 const { FarmingSeason, FarmingProcess, Farm } = require('../models');
 const blockchainHelper = require('../utils/blockchainHelper');
+const qrGenerator = require('../utils/qrGenerator');
+const { getFileUrl } = require('../middleware/uploadMiddleware');
 
 // @desc    Start a new Farming Season
 // @route   POST /api/seasons
@@ -59,7 +61,13 @@ exports.createSeason = async (req, res) => {
 exports.addProcess = async (req, res) => {
     try {
         const { seasonId } = req.params;
-        const { type, description, imageUrl } = req.body;
+        const { type, description } = req.body;
+        
+        // Lấy imageUrl từ uploaded file hoặc từ body
+        let imageUrl = req.body.imageUrl;
+        if (req.file) {
+            imageUrl = getFileUrl(req, req.file.path);
+        }
 
         // 1. Check Season existence
         const season = await FarmingSeason.findByPk(seasonId);
@@ -204,17 +212,101 @@ exports.exportSeason = async (req, res) => {
 
         // 5. Generate Response with QR Code Data
         // URL for the public traceability page
-        const traceabilityLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/traceability/${seasonId}`;
+        const traceabilityLink = qrGenerator.generateTraceabilityURL(seasonId);
 
         res.json({
             message: 'Xuất mùa vụ thành công!',
             season: season,
             qrCodeData: traceabilityLink,
+            qrCodeImageUrl: `${process.env.API_URL || 'http://localhost:5001'}/api/seasons/${seasonId}/qr-code`,
             txHash: txHash
         });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+};
+
+// @desc    Get QR Code Image for Season
+// @route   GET /api/seasons/:seasonId/qr-code
+// @access  Public (Anyone can scan QR to trace)
+exports.getSeasonQRCode = async (req, res) => {
+    try {
+        const { seasonId } = req.params;
+        const { format = 'png', size = 300 } = req.query; // format: png, svg | size: number
+
+        // 1. Check Season existence
+        const season = await FarmingSeason.findByPk(seasonId, {
+            include: [{ model: Farm, as: 'farm', attributes: ['name'] }]
+        });
+
+        if (!season) {
+            return res.status(404).json({ message: 'Mùa vụ không tồn tại' });
+        }
+
+        // 2. Generate traceability URL
+        const traceabilityURL = qrGenerator.generateTraceabilityURL(seasonId);
+
+        // 3. Generate QR code based on format
+        if (format === 'svg') {
+            const svg = await qrGenerator.generateSVG(traceabilityURL, {
+                width: parseInt(size)
+            });
+            res.setHeader('Content-Type', 'image/svg+xml');
+            return res.send(svg);
+        } else {
+            // Default: PNG
+            const buffer = await qrGenerator.generateBuffer(traceabilityURL, {
+                width: parseInt(size)
+            });
+            res.setHeader('Content-Type', 'image/png');
+            res.setHeader('Content-Disposition', `inline; filename="qr-season-${seasonId}.png"`);
+            return res.send(buffer);
+        }
+
+    } catch (error) {
+        console.error('Error generating QR code:', error);
+        res.status(500).json({ 
+            message: 'Lỗi tạo mã QR', 
+            error: error.message 
+        });
+    }
+};
+
+// @desc    Get QR Code Data URL (Base64) for Season
+// @route   GET /api/seasons/:seasonId/qr-code-data
+// @access  Private (Farm Owner) or Public
+exports.getSeasonQRCodeDataURL = async (req, res) => {
+    try {
+        const { seasonId } = req.params;
+        const { size = 300 } = req.query;
+
+        // 1. Check Season existence
+        const season = await FarmingSeason.findByPk(seasonId);
+        if (!season) {
+            return res.status(404).json({ message: 'Mùa vụ không tồn tại' });
+        }
+
+        // 2. Generate traceability URL
+        const traceabilityURL = qrGenerator.generateTraceabilityURL(seasonId);
+
+        // 3. Generate QR code as Data URL
+        const dataURL = await qrGenerator.generateDataURL(traceabilityURL, {
+            width: parseInt(size)
+        });
+
+        res.json({
+            seasonId: seasonId,
+            traceabilityURL: traceabilityURL,
+            qrCodeDataURL: dataURL
+        });
+
+    } catch (error) {
+        console.error('Error generating QR code Data URL:', error);
+        res.status(500).json({ 
+            message: 'Lỗi tạo mã QR', 
+            error: error.message 
+        });
     }
 };

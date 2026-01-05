@@ -40,6 +40,31 @@ const Shipment = sequelize.define('Shipment', {
         type: DataTypes.DATE,
         allowNull: true
     },
+    currentLocation: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'GPS location hiện tại (lat,lng)'
+    },
+    pickupLocation: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'Địa điểm nhận hàng (lat,lng)'
+    },
+    deliveryLocation: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'Địa điểm giao hàng (lat,lng)'
+    },
+    pickupQRCode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'QR code đã quét khi nhận hàng'
+    },
+    deliveryQRCode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'QR code đã quét khi giao hàng'
+    },
     txHash: {
         type: DataTypes.STRING,
         allowNull: true

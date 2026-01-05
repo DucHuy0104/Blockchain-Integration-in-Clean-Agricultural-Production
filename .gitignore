@@ -88,3 +88,10 @@ docker-data/
 serviceAccountKey.json
 create_admin.js
 **/create_admin.js
+
+# ===================================
+# Uploads
+# ===================================
+uploads/
+**/uploads/
+bicap-backend/uploads/

@@ -1,5 +1,6 @@
 // src/controllers/orderController.js
 const { Order, Product, Farm, User } = require('../models');
+const { getFileUrl } = require('../middleware/uploadMiddleware');
 
 // 1. Tạo đơn hàng (Retailer mua từ Marketplace)
 exports.createOrder = async (req, res) => {
@@ -222,8 +223,13 @@ exports.cancelOrder = async (req, res) => {
 exports.confirmDelivery = async (req, res) => {
     try {
         const { id } = req.params;
-        const { deliveryImage } = req.body;
+        let deliveryImage = req.body.deliveryImage;
         const userId = req.user.id;
+        
+        // Lấy image từ uploaded file nếu có
+        if (req.file) {
+            deliveryImage = getFileUrl(req, req.file.path);
+        }
 
         const order = await Order.findByPk(id, {
             include: [{ model: Product, as: 'product' }]
@@ -257,7 +263,7 @@ exports.confirmDelivery = async (req, res) => {
     }
 };
 
-// 7. Thanh toán tiền cọc (Cho Retailer)
+// 7. Thanh toán tiền cọc (Cho Retailer) - Tích hợp VNPay
 exports.payDeposit = async (req, res) => {
     try {
         const { id } = req.params;
@@ -271,27 +277,27 @@ exports.payDeposit = async (req, res) => {
         if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
         if (order.status !== 'pending') return res.status(400).json({ message: 'Chỉ có thể đặt cọc cho đơn hàng đang chờ' });
 
-        // Giả sử thanh toán cọc 30%
+        // Tính số tiền cọc (30%)
         const depositAmount = order.totalPrice * 0.3;
-        order.depositAmount = depositAmount;
-        order.status = 'deposited';
-        await order.save();
 
-        // Notify Farm
-        const { createNotificationInternal } = require('./notificationController');
-        const farm = await Farm.findByPk(order.product.farmId);
-        if (farm) {
-            await createNotificationInternal(
-                farm.ownerId,
-                'Đã thanh toán cọc',
-                `Đơn hàng #${order.id} đã được thanh toán tiền cọc (${depositAmount.toLocaleString()}đ)`,
-                'order'
-            );
-        }
-
-        res.json({ message: 'Thanh toán tiền cọc thành công', order });
+        // Trả về thông tin để frontend gọi payment API
+        res.json({ 
+            message: 'Vui lòng thanh toán tiền cọc',
+            order: {
+                id: order.id,
+                totalPrice: order.totalPrice,
+                depositAmount: depositAmount
+            },
+            paymentRequired: true,
+            paymentEndpoint: `/api/payments`,
+            paymentData: {
+                paymentType: 'order_deposit',
+                orderId: order.id,
+                amount: depositAmount
+            }
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Lỗi thanh toán tiền cọc' });
+        res.status(500).json({ message: 'Lỗi xử lý thanh toán cọc', error: error.message });
     }
 };

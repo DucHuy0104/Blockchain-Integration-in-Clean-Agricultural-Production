@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
+const { uploadSingle } = require('../middleware/uploadMiddleware');
 
 // Tạo đơn hàng (Cho Retailer/User đã đăng nhập)
 router.post('/', verifyToken, orderController.createOrder);
@@ -18,7 +19,7 @@ router.put('/:id/status', verifyToken, requireRole(['farm', 'admin']), orderCont
 
 // Retailer Actions
 router.put('/:id/cancel', verifyToken, requireRole(['retailer']), orderController.cancelOrder);
-router.put('/:id/confirm-delivery', verifyToken, requireRole(['retailer']), orderController.confirmDelivery);
+router.put('/:id/confirm-delivery', verifyToken, requireRole(['retailer']), uploadSingle('deliveryImage'), orderController.confirmDelivery);
 router.put('/:id/pay-deposit', verifyToken, requireRole(['retailer']), orderController.payDeposit);
 
 

@@ -11,6 +11,7 @@ const Notification = require('./Notification');
 const Report = require('./Report');
 const Subscription = require('./Subscription');
 const SeasonTask = require('./SeasonTask');
+const Payment = require('./Payment');
 
 // --- Define Associations ---
 
@@ -60,6 +61,16 @@ Report.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 // 8. User & Subscription
 User.hasMany(Subscription, { foreignKey: 'userId', as: 'subscriptions' });
 Subscription.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// 10. Payment Relationships
+User.hasMany(Payment, { foreignKey: 'userId', as: 'payments' });
+Payment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Order.hasMany(Payment, { foreignKey: 'orderId', as: 'payments' });
+Payment.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+
+Subscription.hasMany(Payment, { foreignKey: 'subscriptionId', as: 'payments' });
+Payment.belongsTo(Subscription, { foreignKey: 'subscriptionId', as: 'subscription' });
 
 // 9. SeasonTask Associations
 User.hasMany(SeasonTask, { foreignKey: 'userId', as: 'tasks' });
@@ -160,6 +171,6 @@ module.exports = {
   Notification,
   Report,
   Subscription,
-  Subscription,
-  SeasonTask
+  SeasonTask,
+  Payment
 };

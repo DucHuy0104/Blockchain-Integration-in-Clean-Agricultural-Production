@@ -2,6 +2,8 @@
 const { Product, Farm, FarmingSeason } = require('../models');
 const { Op } = require('sequelize'); // Import Op
 const blockchainHelper = require('../utils/blockchainHelper');
+const qrGenerator = require('../utils/qrGenerator');
+const { getFileUrl } = require('../middleware/uploadMiddleware');
 
 // 1. Tạo lô sản phẩm mới (Đăng bán từ vụ mùa)
 exports.createProduct = async (req, res) => {
@@ -48,9 +50,14 @@ exports.createProduct = async (req, res) => {
       txHash // Lưu hash vào DB
     });
 
+    // Generate QR code URL for the product
+    const traceabilityURL = qrGenerator.generateProductTraceabilityURL(newProduct.id);
+
     res.status(201).json({
       message: 'Đăng bán sản phẩm thành công!',
-      product: newProduct
+      product: newProduct,
+      qrCodeData: traceabilityURL,
+      qrCodeImageUrl: `${process.env.API_URL || 'http://localhost:5001'}/api/products/${newProduct.id}/qr-code`
     });
 
   } catch (error) {
@@ -130,5 +137,93 @@ exports.getAllProducts = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi lấy danh sách sản phẩm' });
+  }
+};
+
+// 4. Get QR Code Image for Product
+// @desc    Get QR Code Image for Product
+// @route   GET /api/products/:productId/qr-code
+// @access  Public (Anyone can scan QR to trace)
+exports.getProductQRCode = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { format = 'png', size = 300 } = req.query;
+
+    // 1. Check Product existence
+    const product = await Product.findByPk(productId, {
+      include: [
+        { model: Farm, as: 'farm', attributes: ['name'] },
+        { model: FarmingSeason, as: 'season', attributes: ['id', 'name'] }
+      ]
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
+    }
+
+    // 2. Generate traceability URL
+    const traceabilityURL = qrGenerator.generateProductTraceabilityURL(productId);
+
+    // 3. Generate QR code based on format
+    if (format === 'svg') {
+      const svg = await qrGenerator.generateSVG(traceabilityURL, {
+        width: parseInt(size)
+      });
+      res.setHeader('Content-Type', 'image/svg+xml');
+      return res.send(svg);
+    } else {
+      // Default: PNG
+      const buffer = await qrGenerator.generateBuffer(traceabilityURL, {
+        width: parseInt(size)
+      });
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `inline; filename="qr-product-${productId}.png"`);
+      return res.send(buffer);
+    }
+
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    res.status(500).json({ 
+      message: 'Lỗi tạo mã QR', 
+      error: error.message 
+    });
+  }
+};
+
+// 5. Get QR Code Data URL (Base64) for Product
+// @desc    Get QR Code Data URL for Product
+// @route   GET /api/products/:productId/qr-code-data
+// @access  Public or Private
+exports.getProductQRCodeDataURL = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { size = 300 } = req.query;
+
+    // 1. Check Product existence
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
+    }
+
+    // 2. Generate traceability URL
+    const traceabilityURL = qrGenerator.generateProductTraceabilityURL(productId);
+
+    // 3. Generate QR code as Data URL
+    const dataURL = await qrGenerator.generateDataURL(traceabilityURL, {
+      width: parseInt(size)
+    });
+
+    res.json({
+      productId: productId,
+      traceabilityURL: traceabilityURL,
+      qrCodeDataURL: dataURL
+    });
+
+  } catch (error) {
+    console.error('Error generating QR code Data URL:', error);
+    res.status(500).json({ 
+      message: 'Lỗi tạo mã QR', 
+      error: error.message 
+    });
   }
 };
