@@ -32,9 +32,9 @@ const Order = sequelize.define('Order', {
     status: {
         type: DataTypes.STRING,
         defaultValue: 'pending',
-        // pending: chờ xác nhận, deposited: đã cọc, confirmed: đã xác nhận, shipping: đang giao, completed: hoàn thành, cancelled: hủy
+        // pending: chờ xác nhận, deposited: đã cọc, confirmed: đã xác nhận, shipping: đang giao, delivered: đã giao (chờ thanh toán), completed: hoàn thành, cancelled: hủy
         validate: {
-            isIn: [['pending', 'deposited', 'confirmed', 'shipping', 'completed', 'cancelled']]
+            isIn: [['pending', 'deposited', 'confirmed', 'shipping', 'delivered', 'completed', 'cancelled']]
         }
     },
     contractTerms: {

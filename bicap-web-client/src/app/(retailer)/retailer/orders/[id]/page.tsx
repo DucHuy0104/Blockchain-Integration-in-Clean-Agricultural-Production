@@ -137,6 +137,21 @@ export default function RetailerOrderDetail() {
         }
     };
 
+    const handlePayRemaining = async () => {
+        if (!confirm('Xác nhận thanh toán phần còn lại để hoàn tất đơn hàng?')) return;
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            await axios.put(`http://localhost:5001/api/orders/${order?.id}/pay-remaining`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('Thanh toán hoàn tất! Đơn hàng đã đóng.');
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            alert('Lỗi thanh toán');
+        }
+    };
+
     const handleOpenMessageModal = () => {
         setMsgContent('');
         setShowMsgModal(true);
@@ -175,7 +190,8 @@ export default function RetailerOrderDetail() {
         { status: 'deposited', label: 'Đã đặt cọc' },
         { status: 'confirmed', label: 'Chủ trại xác nhận' },
         { status: 'shipping', label: 'Đang vận chuyển' },
-        { status: 'completed', label: 'Đã nhận hàng' },
+        { status: 'delivered', label: 'Đã nhận hàng' },
+        { status: 'completed', label: 'Hoàn tất thanh toán' },
     ];
 
     const getStatusBadge = (status: string) => {
@@ -192,6 +208,7 @@ export default function RetailerOrderDetail() {
             deposited: 'Đã cọc',
             confirmed: 'Đã xác nhận',
             shipping: 'Đang giao',
+            delivered: 'Chờ thanh toán',
             completed: 'Hoàn thành',
             cancelled: 'Đã hủy'
         };
@@ -344,135 +361,179 @@ export default function RetailerOrderDetail() {
                         )}
                     </div>
 
-                    {/* Right Column: Timeline & Support */}
-                    <div className="lg:col-span-1 space-y-6">
 
-                        {/* Timeline Card */}
+                    {order.status === 'delivered' && (
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 className="text-lg font-bold mb-6 dark:text-white">Theo dõi đơn hàng</h3>
-                            <div className="relative pl-2">
-                                {/* Vertical Line */}
-                                <div className="absolute left-[9px] top-2 bottom-4 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-
-                                <div className="space-y-8 relative">
-                                    {steps.map((step, idx) => {
-                                        const isCompleted =
-                                            order.status === step.status ||
-                                            (order.status === 'confirmed' && idx < 2) ||
-                                            (order.status === 'shipping' && idx < 3) ||
-                                            (order.status === 'completed');
-
-                                        // Special logic for active pulsing dot
-                                        const isCurrent = order.status === step.status;
-
-                                        return (
-                                            <div key={idx} className="flex items-start gap-4">
-                                                <div className={`
-                                                    relative z-10 w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5
-                                                    ${isCompleted
-                                                        ? 'bg-green-500 border-green-500'
-                                                        : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'}
-                                                `}>
-                                                    {isCompleted && (
-                                                        <svg className="w-full h-full text-white p-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className={`text-sm font-semibold ${isCompleted ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>
-                                                        {step.label}
-                                                    </p>
-                                                    {isCompleted && (
-                                                        <p className="text-xs text-gray-500 mt-0.5">
-                                                            {new Date(order.createdAt).toLocaleDateString()}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                            <h3 className="text-lg font-bold mb-4 dark:text-white">Thanh Toán Phần Còn Lại</h3>
+                            <div className="space-y-4">
+                                <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg flex items-start gap-3">
+                                    <span className="text-xl">⚠️</span>
+                                    <div>
+                                        <p className="font-bold">Đơn hàng đã được giao nhận thành công.</p>
+                                        <p className="text-sm">Vui lòng thanh toán số tiền còn lại để hoàn tất hợp đồng.</p>
+                                    </div>
                                 </div>
+
+                                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span className="text-gray-600">Tổng giá trị:</span>
+                                    <span className="font-semibold">{Number(order.totalPrice).toLocaleString()} đ</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span className="text-gray-600">Đã cọc:</span>
+                                    <span className="font-semibold text-green-600">
+                                        -{(Number(order.totalPrice) * 0.3).toLocaleString()} đ
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 text-lg">
+                                    <span className="font-bold text-gray-800 dark:text-gray-200">Cần thanh toán:</span>
+                                    <span className="font-bold text-red-600">
+                                        {(Number(order.totalPrice) * 0.7).toLocaleString()} đ
+                                    </span>
+                                </div>
+
+                                <button
+                                    onClick={handlePayRemaining}
+                                    disabled={actionLoading}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-blue-200 dark:shadow-none"
+                                >
+                                    Thanh toán ngay
+                                </button>
                             </div>
                         </div>
+                    )}
+                </div>
 
-                        {/* Contact Card */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Hỗ trợ</h3>
-                            <p className="text-sm text-gray-500 mb-4">
-                                Bạn cần trao đổi thêm với chủ trại về đơn hàng này?
-                            </p>
-                            <button
-                                onClick={handleOpenMessageModal}
-                                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200 font-medium py-2 rounded-lg transition text-sm flex items-center justify-center gap-2"
-                            >
-                                <span>💬</span> Nhắn tin cho chủ trại
-                            </button>
+                {/* Right Column: Timeline & Support */}
+                <div className="lg:col-span-1 space-y-6">
+
+                    {/* Timeline Card */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <h3 className="text-lg font-bold mb-6 dark:text-white">Theo dõi đơn hàng</h3>
+                        <div className="relative pl-2">
+                            {/* Vertical Line */}
+                            <div className="absolute left-[9px] top-2 bottom-4 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+
+                            <div className="space-y-8 relative">
+                                {steps.map((step, idx) => {
+                                    const isCompleted =
+                                        order.status === step.status ||
+                                        (order.status === 'confirmed' && idx < 2) ||
+                                        (order.status === 'shipping' && idx < 3) ||
+                                        (order.status === 'completed');
+
+                                    // Special logic for active pulsing dot
+                                    const isCurrent = order.status === step.status;
+
+                                    return (
+                                        <div key={idx} className="flex items-start gap-4">
+                                            <div className={`
+                                                    relative z-10 w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5
+                                                    ${isCompleted
+                                                    ? 'bg-green-500 border-green-500'
+                                                    : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'}
+                                                `}>
+                                                {isCompleted && (
+                                                    <svg className="w-full h-full text-white p-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className={`text-sm font-semibold ${isCompleted ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>
+                                                    {step.label}
+                                                </p>
+                                                {isCompleted && (
+                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                        {new Date(order.createdAt).toLocaleDateString()}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-
                     </div>
+
+                    {/* Contact Card */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <h3 className="font-bold text-gray-900 dark:text-white mb-2">Hỗ trợ</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Bạn cần trao đổi thêm với chủ trại về đơn hàng này?
+                        </p>
+                        <button
+                            onClick={handleOpenMessageModal}
+                            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200 font-medium py-2 rounded-lg transition text-sm flex items-center justify-center gap-2"
+                        >
+                            <span>💬</span> Nhắn tin cho chủ trại
+                        </button>
+                    </div>
+
                 </div>
             </div>
 
+
             {/* Message Modal */}
-            {showMsgModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-                        <div className="bg-green-600 p-4 flex justify-between items-center">
-                            <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                                💬 Gửi tin nhắn
-                            </h3>
-                            <button
-                                onClick={() => setShowMsgModal(false)}
-                                className="text-white/80 hover:text-white transition-colors"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Nội dung tin nhắn gửi tới chủ trại:
-                            </label>
-                            <textarea
-                                value={msgContent}
-                                onChange={(e) => setMsgContent(e.target.value)}
-                                rows={5}
-                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white resize-none"
-                                placeholder="Nhập câu hỏi hoặc yêu cầu của bạn..."
-                            ></textarea>
-                            <div className="mt-6 flex gap-3">
+            {
+                showMsgModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+                            <div className="bg-green-600 p-4 flex justify-between items-center">
+                                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                    💬 Gửi tin nhắn
+                                </h3>
                                 <button
                                     onClick={() => setShowMsgModal(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition"
+                                    className="text-white/80 hover:text-white transition-colors"
                                 >
-                                    Hủy bỏ
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 </button>
-                                <button
-                                    onClick={handleSubmitMessage}
-                                    disabled={actionLoading}
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg shadow-green-200 dark:shadow-none transition flex justify-center items-center gap-2 disabled:bg-gray-400"
-                                >
-                                    {actionLoading ? (
-                                        <>
-                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Đang gửi...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Gửi tin nhắn
-                                        </>
-                                    )}
-                                </button>
+                            </div>
+                            <div className="p-6">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Nội dung tin nhắn gửi tới chủ trại:
+                                </label>
+                                <textarea
+                                    value={msgContent}
+                                    onChange={(e) => setMsgContent(e.target.value)}
+                                    rows={5}
+                                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white resize-none"
+                                    placeholder="Nhập câu hỏi hoặc yêu cầu của bạn..."
+                                ></textarea>
+                                <div className="mt-6 flex gap-3">
+                                    <button
+                                        onClick={() => setShowMsgModal(false)}
+                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition"
+                                    >
+                                        Hủy bỏ
+                                    </button>
+                                    <button
+                                        onClick={handleSubmitMessage}
+                                        disabled={actionLoading}
+                                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg shadow-green-200 dark:shadow-none transition flex justify-center items-center gap-2 disabled:bg-gray-400"
+                                    >
+                                        {actionLoading ? (
+                                            <>
+                                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Đang gửi...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Gửi tin nhắn
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

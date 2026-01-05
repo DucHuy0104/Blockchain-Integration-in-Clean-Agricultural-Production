@@ -1,6 +1,8 @@
 // src/controllers/shipmentController.js
 const { Shipment, Order, Farm, User, Product } = require('../models');
 
+const blockchainHelper = require('../utils/blockchainHelper');
+
 // 1. Tạo đơn vận chuyển (Chỉ khi Order đã confirmed)
 exports.createShipment = async (req, res) => {
     try {
@@ -16,13 +18,22 @@ exports.createShipment = async (req, res) => {
         const farm = await Farm.findByPk(farmId);
         if (farm.ownerId !== req.user.id) return res.status(403).json({ message: 'Không có quyền tạo vận đơn cho đơn hàng này' });
 
+        // Simulate Blockchain Transaction
+        const txHash = await blockchainHelper.writeToBlockchain({
+            type: 'SHIPMENT_CREATED',
+            orderId,
+            managerId,
+            pickupTime
+        });
+
         const shipment = await Shipment.create({
             orderId,
             managerId,
             driverId: driverId || null,
             vehicleInfo,
             pickupTime,
-            status: 'created'
+            status: 'created',
+            txHash
         });
 
         // Cập nhật trạng thái đơn hàng sang shipping (nếu muốn logic tự động)
@@ -63,11 +74,18 @@ exports.getShipmentsByFarm = async (req, res) => {
                     model: Order,
                     as: 'order',
                     required: true,
-                    include: [{
-                        model: Product,
-                        as: 'product',
-                        where: { farmId } // Filter shipments where product belongs to farmId
-                    }]
+                    include: [
+                        {
+                            model: Product,
+                            as: 'product',
+                            where: { farmId } // Filter shipments where product belongs to farmId
+                        },
+                        {
+                            model: User,
+                            as: 'retailer',
+                            attributes: ['fullName', 'phone', 'address']
+                        }
+                    ]
                 },
                 { model: User, as: 'driver', attributes: ['fullName', 'phone'] },
                 { model: User, as: 'manager', attributes: ['fullName'] }
@@ -98,9 +116,8 @@ exports.updateShipmentStatus = async (req, res) => {
         if (status === 'delivered') {
             shipment.deliveryTime = deliveryTime || new Date();
             // Cập nhật luôn Order -> completed
-            const order = await Order.findByPk(shipment.orderId);
             if (order) {
-                order.status = 'completed';
+                order.status = 'delivered'; // Delivered but not yet fully paid
                 await order.save();
             }
         } else if (status === 'delivering') {

@@ -240,7 +240,8 @@ exports.confirmDelivery = async (req, res) => {
         if (order.status !== 'shipping') return res.status(400).json({ message: 'Đơn hàng chưa ở trạng thái vận chuyển' });
 
         // Update status and image
-        order.status = 'completed';
+        // Update status and image
+        order.status = 'delivered';
         if (deliveryImage) order.deliveryImage = deliveryImage;
         await order.save();
 
@@ -299,5 +300,46 @@ exports.payDeposit = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Lỗi xử lý thanh toán cọc', error: error.message });
+    }
+};
+
+// 8. Thanh toán phần còn lại (Cho Retailer) - Hoàn tất đơn hàng
+exports.payRemaining = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const order = await Order.findByPk(id, {
+            include: [{ model: Product, as: 'product' }]
+        });
+
+        if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
+        if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
+
+        // Chỉ thanh toán nốt khi đã giao hàng (delivered)
+        if (order.status !== 'delivered') return res.status(400).json({ message: 'Đơn hàng chưa được giao hoặc đã hoàn tất' });
+
+        const remainingAmount = order.totalPrice - (order.depositAmount || 0);
+
+        // Giả sử thanh toán thành công
+        order.status = 'completed';
+        await order.save();
+
+        // Notify Farm
+        const { createNotificationInternal } = require('./notificationController');
+        const farm = await Farm.findByPk(order.product.farmId);
+        if (farm) {
+            await createNotificationInternal(
+                farm.ownerId,
+                'Thanh toán hoàn tất',
+                `Đơn hàng #${order.id} đã thanh toán nốt phần còn lại (${remainingAmount.toLocaleString()}đ). Giao dịch hoàn tất.`,
+                'order'
+            );
+        }
+
+        res.json({ message: 'Thanh toán hoàn tất! Đơn hàng đã đóng.', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi thanh toán phần còn lại' });
     }
 };

@@ -13,10 +13,17 @@ interface Shipment {
     pickupTime: string;
     deliveryTime: string | null;
     status: string;
+    txHash?: string;
     order?: {
         id: number;
+        deliveryImage?: string;
         product?: {
             name: string;
+        };
+        retailer?: {
+            fullName: string;
+            phone: string;
+            address: string;
         };
     };
     driver?: {
@@ -24,6 +31,11 @@ interface Shipment {
         phone: string;
     };
 }
+
+// ... (rest of the file until modal content)
+
+
+
 
 interface Farm {
     id: number;
@@ -227,16 +239,29 @@ export default function ShippingReportPage() {
                         <div className="p-6 space-y-6">
 
                             {/* Order Info */}
-                            <div>
-                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Thông Tin Đơn Hàng</h4>
-                                <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg">
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-gray-600 dark:text-gray-400">Mã đơn hàng:</span>
-                                        <span className="font-semibold">#{selectedShipment.orderId}</span>
+                            {/* Order Info & Receiver */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Đơn Hàng</h4>
+                                    <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg text-sm">
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-gray-600 dark:text-gray-400">Mã đơn:</span>
+                                            <span className="font-semibold">#{selectedShipment.orderId}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 dark:text-gray-400">Sản phẩm:</span>
+                                            <span className="font-medium text-green-600">{selectedShipment.order?.product?.name || '---'}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">Sản phẩm:</span>
-                                        <span className="font-medium text-green-600">{selectedShipment.order?.product?.name || '---'}</span>
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Người Nhận (Retailer)</h4>
+                                    <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg text-sm">
+                                        <div className="font-semibold text-gray-900 dark:text-white">{selectedShipment.order?.retailer?.fullName}</div>
+                                        <div className="text-gray-500">{selectedShipment.order?.retailer?.phone}</div>
+                                        <div className="text-gray-500 text-xs mt-1 truncate" title={selectedShipment.order?.retailer?.address}>
+                                            📍 {selectedShipment.order?.retailer?.address}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -258,15 +283,33 @@ export default function ShippingReportPage() {
                                 </div>
                             </div>
 
+                            {/* Blockchain Info */}
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Blockchain Traceability</h4>
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1">
+                                            <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-xs text-blue-800 dark:text-blue-300 font-semibold">Transaction Hash</p>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 font-mono break-all truncate" title={selectedShipment.txHash || 'Pending...'}>
+                                                {selectedShipment.txHash || <span className="italic opacity-50">Đang đồng bộ...</span>}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Timeline */}
                             <div>
-                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tiến Độ Vận Chuyển</h4>
-                                <div className="space-y-4 relative pl-4 border-l-2 border-gray-200 dark:border-gray-700 ml-2">
+                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Lộ Trình Vận Chuyển</h4>
+                                <div className="space-y-6 relative pl-4 border-l-2 border-gray-200 dark:border-gray-700 ml-2">
                                     {/* Pickup Node */}
                                     <div className="relative">
                                         <span className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-white dark:ring-gray-800"></span>
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">Lấy Hàng</p>
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">Kho Trang Trại</p>
                                             <p className="text-xs text-gray-500">{new Date(selectedShipment.pickupTime).toLocaleString('vi-VN')}</p>
                                         </div>
                                     </div>
@@ -276,18 +319,36 @@ export default function ShippingReportPage() {
                                         <span className={`absolute -left-[21px] top-1 w-3 h-3 rounded-full ring-4 ring-white dark:ring-gray-800 ${selectedShipment.deliveryTime ? 'bg-green-500' : 'bg-gray-300'}`}></span>
                                         <div>
                                             <p className={`text-sm font-semibold ${selectedShipment.deliveryTime ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
-                                                {selectedShipment.status === 'delivered' ? 'Đã Giao Hàng' : 'Dự Kiến Giao'}
+                                                {selectedShipment.status === 'delivered' ? 'Đã Giao Thành Công' : 'Đang Vận Chuyển / Dự Kiến'}
                                             </p>
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-gray-500 mb-1">
                                                 {selectedShipment.deliveryTime
                                                     ? new Date(selectedShipment.deliveryTime).toLocaleString('vi-VN')
-                                                    : <span className="italic">Chưa hoàn tất</span>
+                                                    : '---'
                                                 }
+                                            </p>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+                                                Tại: {selectedShipment.order?.retailer?.address}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Proof of Delivery Image */}
+                            {selectedShipment.status === 'delivered' && selectedShipment.order?.deliveryImage && (
+                                <div>
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Hình Ảnh Giao Hàng (POD)</h4>
+                                    <div className="relative h-32 w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50">
+                                        <img
+                                            src={selectedShipment.order.deliveryImage}
+                                            alt="Proof of Delivery"
+                                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                            onClick={() => window.open(selectedShipment.order?.deliveryImage, '_blank')}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Status Footer */}
                             <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
