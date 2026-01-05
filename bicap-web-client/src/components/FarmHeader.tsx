@@ -16,6 +16,7 @@ export default function FarmHeader() {
                     <NavLink href="/farm/orders" label="Đơn hàng" />
                     <NavLink href="/farm/shipments" label="Vận chuyển" />
                     <NavLink href="/farm/reports" label="Báo cáo" />
+                    <NavLink href="/farm/reports/shipping" label="BC Ship" />
                     <NavLink href="/farm/monitoring" label="Giám sát" icon="🌡️" />
                     <NavLink href="/farm/services" label="Dịch vụ" />
                     <NavLink href="/farm/notifications" label="Thông báo" icon="🔔" highlight />
