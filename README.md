@@ -64,10 +64,10 @@ BICAP-ROOT/
 - Có tài khoản **Firebase** (để cấu hình Admin SDK nếu cần chạy manual).
 
 ### 2. Chạy ứng dụng (Khuyên dùng)
-Hệ thống đã được đóng gói hoàn toàn trong Docker. Bạn chỉ cần chạy:
+Hệ thống đã được đóng gói hoàn toàn trong Docker, giúp đảm bảo môi trường đồng nhất.
 
 ```bash
-# Khởi động toàn bộ Database, Backend, Frontend
+# Khởi động toàn bộ hệ thống (Database, Backend, Frontend) ở chế độ daemon
 docker-compose up -d
 ```
 
@@ -75,22 +75,57 @@ docker-compose up -d
 - **Backend API:** [http://localhost:5001](http://localhost:5001)
 - **SQL Server:** `localhost:1433` (Username: `sa`, Password: `BiCapProject@123`)
 
-### 3. Các lệnh quản lý hữu ích
+### 3. Cập nhật code mới
+Vì Docker đóng gói toàn bộ source code vào Image lúc khởi tạo, nên khi bạn thay đổi code ở máy local, bạn cần "rebuild" lại container để áp dụng thay đổi:
 
-- **Xem nhật ký hệ thống:**
-  ```bash
-  docker-compose logs -f
-  ```
-- **Xóa sạch dữ liệu và khởi động lại mới tinh:**
-  ```bash
-  docker-compose down -v
-  rm -rf .docker_data
-  docker-compose up
-  ```
-- **Cập nhật code mới sau khi sửa đổi:**
+- **Cách 1: Cập nhật tất cả (Đơn giản nhất)**
   ```bash
   docker-compose up --build
   ```
+- **Cách 2: Chỉ cập nhật một dịch vụ (Nhanh hơn)**
+  Nếu bạn chỉ sửa code ở backend:
+  ```bash
+  docker-compose up --build backend
+  ```
+
+### 4. Các lệnh quản lý & Xử lý sự cố
+
+#### 🔍 Kiểm tra trạng thái & Nhật ký
+- **Xem danh sách container đang chạy:** `docker compose ps`
+- **Xem nhật ký (logs) theo thời gian thực:**
+  ```bash
+  docker-compose logs -f         # Xem tất cả
+  docker-compose logs -f backend # Chỉ xem backend
+  ```
+
+#### 🛑 Dừng hệ thống
+- Nếu đang chạy ở chế độ thường: Nhấn `Ctrl + C`.
+- Nếu đang chạy ở chế độ ẩn (`-d`):
+  ```bash
+  docker-compose stop  # Dừng nhưng giữ lại container
+  docker-compose down  # Dừng và xóa container (Khuyên dùng)
+  ```
+
+#### 🧹 Reset hoàn toàn hệ thống
+Dùng khi bạn muốn xóa sạch database và bắt đầu lại từ đầu:
+```bash
+docker-compose down -v      # Xóa container và volumes
+rm -rf .docker_data         # Xóa thư mục lưu dữ liệu database local
+docker-compose up --build   # Khởi động lại và build mới
+```
+
+#### ⚠️ Các lỗi thường gặp (Troubleshooting)
+1. **Xung đột cổng (Port Conflict):** Đảm bảo không có ứng dụng nào khác đang dùng cổng 3000, 5001 hoặc 1433 trên máy của bạn.
+2. **Backend không kết nối được DB:** Docker dùng cơ chế `depends_on` với `healthcheck`. Backend sẽ đợi cho đến khi SQL Server sẵn sàng hoàn toàn mới khởi chạy. Nếu thấy lỗi kết nối lúc mới bắt đầu, hãy đợi khoảng 20-30 giây.
+3. **Dữ liệu không thay đổi:** Nếu bạn sửa code mà không thấy hiệu quả, hãy chắc chắn đã chạy lệnh với flag `--build`.
+
+---
+
+## 🏗️ Kiến trúc Docker
+Hệ thống gồm 3 container chính giao tiếp trong mạng nội bộ Docker:
+1. **`sql_server`**: Chạy Azure SQL Edge (tương thích MSSQL). Dữ liệu được lưu bền vững tại thư mục `.docker_data`.
+2. **`backend`**: Kết nối với `sql_server` qua host name nội bộ (không phải `localhost`).
+3. **`frontend`**: Giao tiếp với `backend` API thông qua cổng 5001 được công khai.
 
 ---
 
