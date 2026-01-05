@@ -27,13 +27,19 @@ export default function RetailerMarketPage() {
     const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
-        axios.get('http://localhost:5001/api/products')
-            .then(res => setProducts(res.data))
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
-    }, []);
+        const delaySearch = setTimeout(() => {
+            setLoading(true);
+            axios.get(`http://localhost:5001/api/products${search ? `?search=${search}` : ''}`)
+                .then(res => setProducts(res.data))
+                .catch(err => console.error(err))
+                .finally(() => setLoading(false));
+        }, 500);
+
+        return () => clearTimeout(delaySearch);
+    }, [search]);
 
     const handleBuyClick = (product: Product) => {
         // Navigate to the detail page for functionality
@@ -43,11 +49,52 @@ export default function RetailerMarketPage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
             {/* Hero Section */}
-            <div className="bg-green-700 text-white py-8 px-4 text-center rounded-b-xl shadow-md mb-6">
-                <h1 className="text-3xl font-bold mb-2">Sàn Nông Sản Dành Cho Nhà Bán Lẻ</h1>
-                <p className="text-green-100 max-w-2xl mx-auto text-sm">
-                    Tìm nguồn hàng chất lượng cao, minh bạch nguồn gốc từ các nông trại uy tín.
-                </p>
+            <div className="relative bg-gradient-to-r from-green-600 to-green-800 text-white py-12 px-4 text-center rounded-b-[3rem] shadow-lg mb-8 overflow-hidden">
+                <div className="relative z-10">
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight drop-shadow-md">
+                        Sàn Nông Sản Sạch
+                    </h1>
+                    <p className="text-green-100 max-w-2xl mx-auto text-lg mb-8 font-light">
+                        Kết nối trực tiếp Nhà bán lẻ với các Nông trại uy tín hàng đầu.
+                        <br />Nguồn hàng minh bạch, chất lượng đảm bảo.
+                    </p>
+
+                    <div className="max-w-xl mx-auto relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg className="h-6 w-6 text-green-600/50 group-focus-within:text-green-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm sản phẩm, trang trại..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-12 pr-20 py-4 rounded-full bg-white/95 backdrop-blur-sm border-2 border-white/20 focus:border-green-400 focus:bg-white focus:ring-4 focus:ring-green-400/30 text-green-900 shadow-xl placeholder-green-700/50 text-lg transition-all"
+                        />
+                        {search && (
+                            <button
+                                onClick={() => setSearch('')}
+                                className="absolute right-16 top-1/2 -translate-y-1/2 text-green-700/50 hover:text-green-700 transition-colors"
+                            >
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
+                        <button
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-all hover:scale-105 active:scale-95"
+                        >
+                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Decorative Circles */}
+                <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3 w-96 h-96 bg-green-400/20 rounded-full blur-3xl"></div>
             </div>
 
             {/* Product List */}

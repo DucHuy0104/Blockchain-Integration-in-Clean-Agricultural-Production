@@ -85,6 +85,15 @@ exports.sendNotificationToUser = async (req, res) => {
     try {
         const { receiverId, title, message } = req.body;
 
+        // Fix for missing req.user
+        let senderName = 'Khách';
+        if (req.user && req.user.fullName) {
+            senderName = req.user.fullName;
+        } else if (req.userFirebase) {
+            const user = await User.findOne({ where: { firebaseUid: req.userFirebase.uid } });
+            if (user) senderName = user.fullName;
+        }
+
         // Simple validation
         if (!receiverId || !title || !message) {
             return res.status(400).json({ message: 'Thiếu thông tin' });
@@ -93,7 +102,7 @@ exports.sendNotificationToUser = async (req, res) => {
         const notification = await Notification.create({
             userId: receiverId, // Receiver
             title: `[Tin nhắn] ${title}`,
-            message: `${message} (Từ: ${req.user.fullName})`,
+            message: `${message} (Từ: ${senderName})`,
             type: 'message'
         });
 

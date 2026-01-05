@@ -40,6 +40,10 @@ const Order = sequelize.define('Order', {
     contractTerms: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+    deliveryImage: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     timestamps: true

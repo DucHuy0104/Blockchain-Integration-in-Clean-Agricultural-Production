@@ -12,8 +12,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (prevent multiple initializations)
+import { getStorage } from "firebase/storage";
+
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { auth, googleProvider };
+export { auth, storage, googleProvider };

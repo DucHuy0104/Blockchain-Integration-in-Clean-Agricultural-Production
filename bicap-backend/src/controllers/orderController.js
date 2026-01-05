@@ -222,6 +222,7 @@ exports.cancelOrder = async (req, res) => {
 exports.confirmDelivery = async (req, res) => {
     try {
         const { id } = req.params;
+        const { deliveryImage } = req.body;
         const userId = req.user.id;
 
         const order = await Order.findByPk(id, {
@@ -232,8 +233,9 @@ exports.confirmDelivery = async (req, res) => {
         if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
         if (order.status !== 'shipping') return res.status(400).json({ message: 'Đơn hàng chưa ở trạng thái vận chuyển' });
 
-        // Update status
+        // Update status and image
         order.status = 'completed';
+        if (deliveryImage) order.deliveryImage = deliveryImage;
         await order.save();
 
         // Notify Farm
@@ -252,5 +254,44 @@ exports.confirmDelivery = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Lỗi xác nhận đơn hàng' });
+    }
+};
+
+// 7. Thanh toán tiền cọc (Cho Retailer)
+exports.payDeposit = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const order = await Order.findByPk(id, {
+            include: [{ model: Product, as: 'product' }]
+        });
+
+        if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
+        if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
+        if (order.status !== 'pending') return res.status(400).json({ message: 'Chỉ có thể đặt cọc cho đơn hàng đang chờ' });
+
+        // Giả sử thanh toán cọc 30%
+        const depositAmount = order.totalPrice * 0.3;
+        order.depositAmount = depositAmount;
+        order.status = 'deposited';
+        await order.save();
+
+        // Notify Farm
+        const { createNotificationInternal } = require('./notificationController');
+        const farm = await Farm.findByPk(order.product.farmId);
+        if (farm) {
+            await createNotificationInternal(
+                farm.ownerId,
+                'Đã thanh toán cọc',
+                `Đơn hàng #${order.id} đã được thanh toán tiền cọc (${depositAmount.toLocaleString()}đ)`,
+                'order'
+            );
+        }
+
+        res.json({ message: 'Thanh toán tiền cọc thành công', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi thanh toán tiền cọc' });
     }
 };

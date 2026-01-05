@@ -113,6 +113,34 @@ const initModels = async () => {
       });
     }
 
+    // 4. Manual Migration for 'Orders' table
+    const orderTableDesc = await queryInterface.describeTable('Orders');
+
+    if (!orderTableDesc.contractTerms) {
+      console.log('⚡ Adding missing column: contractTerms to Orders');
+      await queryInterface.addColumn('Orders', 'contractTerms', {
+        type: require('sequelize').DataTypes.TEXT,
+        allowNull: true
+      });
+    }
+
+    if (!orderTableDesc.depositAmount) {
+      console.log('⚡ Adding missing column: depositAmount to Orders');
+      await queryInterface.addColumn('Orders', 'depositAmount', {
+        type: require('sequelize').DataTypes.DECIMAL(15, 2),
+        allowNull: true,
+        defaultValue: 0
+      });
+    }
+
+    if (!orderTableDesc.deliveryImage) {
+      console.log('⚡ Adding missing column: deliveryImage to Orders');
+      await queryInterface.addColumn('Orders', 'deliveryImage', {
+        type: require('sequelize').DataTypes.STRING,
+        allowNull: true
+      });
+    }
+
     console.log('✅ Database Schema Updated Successfully!');
   } catch (error) {
     console.error('❌ Database Sync Error:', error);

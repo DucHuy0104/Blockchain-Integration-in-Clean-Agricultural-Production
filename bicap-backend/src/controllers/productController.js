@@ -1,5 +1,6 @@
 // src/controllers/productController.js
 const { Product, Farm, FarmingSeason } = require('../models');
+const { Op } = require('sequelize'); // Import Op
 const blockchainHelper = require('../utils/blockchainHelper');
 
 // 1. Tạo lô sản phẩm mới (Đăng bán từ vụ mùa)
@@ -78,13 +79,52 @@ exports.getProductsByFarm = async (req, res) => {
 // 3. Lấy tất cả sản phẩm (Cho Marketplace)
 exports.getAllProducts = async (req, res) => {
   try {
+    const { search } = req.query;
+
+    // Build basic where clause
+    let whereClause = { status: 'available' };
+    let farmWhereClause = {};
+
+    if (search) {
+      // Simple search: match product name OR farm name
+      // However, referencing nested model in top-level OR is tricky.
+      // Easiest is to search Product Name OR filter included Farm name.
+      // But standard OR across tables requires special syntax or subqueries.
+
+      // Let's try searching Product Name OR '$farm.name$' if we use subQuery: false
+      whereClause[Op.and] = [
+        { status: 'available' },
+        {
+          [Op.or]: [
+            { name: { [Op.like]: `%${search}%` } },
+            { '$farm.name$': { [Op.like]: `%${search}%` } }
+          ]
+        }
+      ];
+      // Clean up the original status which is redundant in Op.and but safe.
+      // Actually, let's redefine whereClause cleanly:
+      whereClause = {
+        status: 'available',
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { '$farm.name$': { [Op.like]: `%${search}%` } }
+        ]
+      };
+    }
+
     const products = await Product.findAll({
-      where: { status: 'available' },
+      where: whereClause,
       include: [
-        { model: Farm, as: 'farm', attributes: ['name', 'address', 'certification'] },
+        {
+          model: Farm,
+          as: 'farm',
+          attributes: ['name', 'address', 'certification'],
+          // required: true ensures INNER JOIN so filtering by farm works if strict
+        },
         { model: FarmingSeason, as: 'season', attributes: ['id', 'name'] }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      subQuery: false // Necessary when filtering by associated model fields with limit/offset (though we don't have pagination yet)
     });
     res.json(products);
   } catch (error) {

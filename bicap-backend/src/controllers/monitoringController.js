@@ -1,27 +1,47 @@
 // src/controllers/monitoringController.js
 
 // Mock Data Generator
-const generateMockData = () => {
-    // Temp: 25-35°C
-    const temp = (Math.random() * 10 + 25).toFixed(1);
-    // Humidity: 60-90%
-    const humidity = (Math.random() * 30 + 60).toFixed(1);
-    // pH: 5.5 - 7.5
-    const ph = (Math.random() * 2 + 5.5).toFixed(1);
+// Realistic Data Generator based on time of day
+const generateRealisticData = (date = new Date()) => {
+    const hours = date.getHours() + date.getMinutes() / 60;
+
+    // Temperature: Sine wave cycle
+    // Peak at 14:00 (2pm), Lowest at 02:00 (2am)
+    // Formula: Avg + Amp * sin((hours - shift) * frequency)
+    // Shift: to align peak at 14h. sin is max at PI/2. 
+    // (14 - shift) * (2PI / 24) = PI/2 => shift = 8
+    const tempBase = 28; // Average temp
+    const tempAmp = 5;   // Fluctuation +/- 5 degrees
+    const tempNoise = (Math.random() - 0.5) * 0.5; // Small random noise
+    const temperature = tempBase + tempAmp * Math.sin((hours - 8) * (Math.PI / 12)) + tempNoise;
+
+    // Humidity: Inversely related to temperature
+    // Higher temp -> Lower humidity usually
+    // Humidity peaks at night (cool), low at day (hot)
+    const humidityBase = 75;
+    const humidityAmp = 15;
+    const humidityNoise = (Math.random() - 0.5) * 2;
+    // Inverse phase to temp
+    const humidity = humidityBase - humidityAmp * Math.sin((hours - 8) * (Math.PI / 12)) + humidityNoise;
+
+    // pH: Stable with very minor fluctuations
+    const phBase = 6.5;
+    const phNoise = (Math.random() - 0.5) * 0.2;
+    const ph = phBase + phNoise;
 
     return {
-        temperature: parseFloat(temp),
-        humidity: parseFloat(humidity),
-        ph: parseFloat(ph),
-        timestamp: new Date()
+        temperature: parseFloat(temperature.toFixed(1)),
+        humidity: parseFloat(humidity.toFixed(1)),
+        ph: parseFloat(ph.toFixed(1)),
+        timestamp: date
     };
 };
 
 exports.getCurrentEnvironment = async (req, res) => {
     try {
         const { farmId } = req.params;
-        // In real world, fetch from DB or IoT Gateway
-        const data = generateMockData();
+        // Generate data for current moment
+        const data = generateRealisticData(new Date());
         res.json({ data });
     } catch (error) {
         console.error(error);
@@ -32,13 +52,14 @@ exports.getCurrentEnvironment = async (req, res) => {
 exports.getHistory = async (req, res) => {
     try {
         const { farmId } = req.params;
-        // Mock history: 24 points (last 24h)
+        // Generate history for last 24h
         const history = [];
         const now = new Date();
-        for (let i = 23; i >= 0; i--) {
-            const time = new Date(now.getTime() - i * 60 * 60 * 1000); // minus i hours
-            const point = generateMockData();
-            point.timestamp = time;
+        const nowMs = now.getTime();
+
+        for (let i = 24; i >= 0; i--) {
+            const time = new Date(nowMs - i * 60 * 60 * 1000); // go back i hours
+            const point = generateRealisticData(time);
             history.push(point);
         }
         res.json({ history });
