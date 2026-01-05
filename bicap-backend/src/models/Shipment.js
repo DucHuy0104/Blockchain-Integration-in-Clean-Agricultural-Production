@@ -27,9 +27,9 @@ const Shipment = sequelize.define('Shipment', {
     status: {
         type: DataTypes.STRING,
         defaultValue: 'created',
-        // created: mới tạo, assigned: đã gán xe, picked_up: đã lấy hàng, delivering: đang giao, delivered: đã giao, failed: thất bại
+        // created: mới tạo, pending_pickup: chờ lấy hàng, shipping: đang vận chuyển (chung), assigned: đã gán xe, picked_up: đã lấy hàng, delivering: đang giao, delivered: đã giao, failed: thất bại
         validate: {
-            isIn: [['created', 'assigned', 'picked_up', 'delivering', 'delivered', 'failed']]
+            isIn: [['created', 'pending_pickup', 'shipping', 'assigned', 'picked_up', 'delivering', 'delivered', 'failed']]
         }
     },
     pickupTime: {

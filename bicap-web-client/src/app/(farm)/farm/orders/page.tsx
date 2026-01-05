@@ -39,11 +39,7 @@ export default function FarmOrderManager() {
     const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Shipment Creation State
-    const [showShipModal, setShowShipModal] = useState(false);
-    const [selectedOrderForShipment, setSelectedOrderForShipment] = useState<number | null>(null);
-    const [vehicleInfo, setVehicleInfo] = useState('');
-
+    // Shipment Creation State REMOVED
     // Retailer Info State
     const [showRetailerModal, setShowRetailerModal] = useState(false);
     const [selectedRetailer, setSelectedRetailer] = useState<Order['retailer'] | null>(null);
@@ -90,7 +86,11 @@ export default function FarmOrderManager() {
     };
 
     const updateStatus = async (orderId: number, newStatus: string) => {
-        if (!confirm(`Bạn có chắc muốn chuyển trạng thái thành "${newStatus}"?`)) return;
+        // Only confirm for specific statuses if needed
+        if (newStatus === 'confirmed' || newStatus === 'cancelled') {
+            if (!confirm(`Bạn có chắc muốn chuyển trạng thái thành "${newStatus}"?`)) return;
+        }
+
         try {
             const token = await auth.currentUser?.getIdToken();
             await axios.put(`http://localhost:5001/api/orders/${orderId}/status`, { status: newStatus }, {
@@ -104,31 +104,25 @@ export default function FarmOrderManager() {
         }
     };
 
-    const openShipModal = (orderId: number) => {
-        setSelectedOrderForShipment(orderId);
-        setVehicleInfo('');
-        setShowShipModal(true);
-    };
+    const handleRequestShipping = async (orderId: number) => {
+        if (!confirm('Bạn có muốn liên hệ đơn vị vận chuyển đến lấy hàng?')) return;
 
-    const handleCreateShipment = async () => {
-        if (!selectedOrderForShipment) return;
         try {
             const token = await auth.currentUser?.getIdToken();
+            // Call API with minimal data (just orderId)
             await axios.post('http://localhost:5001/api/shipments', {
-                orderId: selectedOrderForShipment,
-                vehicleInfo,
-                pickupTime: new Date()
-                // driverId: null (auto assign or manual later)
+                orderId: orderId,
+                pickupTime: new Date() // Hint to backend "Pickup now/soon"
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            alert('Tạo vận đơn thành công!');
-            setShowShipModal(false);
-            // Update order status to shipping if backend logic does it, or UI update
-            updateStatus(selectedOrderForShipment, 'shipping');
+
+            alert('Đã gửi yêu cầu vận chuyển! Shipper sẽ liên hệ sớm.');
+            // Update UI/Order Status
+            updateStatus(orderId, 'shipping');
         } catch (error: any) {
             console.error(error);
-            alert(error.response?.data?.message || 'Lỗi tạo vận đơn');
+            alert(error.response?.data?.message || 'Lỗi tạo yêu cầu vận chuyển');
         }
     };
 
@@ -201,7 +195,7 @@ export default function FarmOrderManager() {
                                                 order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                                     order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                                                         order.status === 'shipping' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                                            {order.status}
+                                            {order.status === 'shipping' ? 'Đã yêu cầu VC' : order.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -212,12 +206,15 @@ export default function FarmOrderManager() {
                                             </>
                                         )}
                                         {order.status === 'confirmed' && (
-                                            <button onClick={() => openShipModal(order.id)} className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded">
-                                                📦 Giao hàng
+                                            <button onClick={() => handleRequestShipping(order.id)} className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded flex items-center gap-1">
+                                                <span>📞</span> Liên hệ Vận Chuyển
                                             </button>
                                         )}
                                         {order.status === 'shipping' && (
-                                            <span className="text-gray-400 italic">Đang giao...</span>
+                                            <span className="text-gray-400 italic">Đang chờ shipper...</span>
+                                        )}
+                                        {order.status === 'delivered' && (
+                                            <span className="text-green-600 font-bold">✓ Đã giao</span>
                                         )}
                                     </td>
                                 </tr>
@@ -226,40 +223,6 @@ export default function FarmOrderManager() {
                     </tbody>
                 </table>
             </div>
-
-            {/* Create Shipment Modal */}
-            {showShipModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
-                        <h2 className="text-xl font-bold mb-4">Tạo Vận Đơn</h2>
-                        <div className="mb-4">
-                            <label className="block text-sm text-gray-600 mb-1">Thông tin xe / Tài xế:</label>
-                            <input
-                                type="text"
-                                value={vehicleInfo}
-                                onChange={(e) => setVehicleInfo(e.target.value)}
-                                placeholder="Biển số xe, tên tài xế..."
-                                className="w-full border rounded p-2"
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setShowShipModal(false)}
-                                className="flex-1 bg-gray-200 text-gray-800 font-bold py-2 rounded hover:bg-gray-300"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={handleCreateShipment}
-                                disabled={!vehicleInfo}
-                                className="flex-1 bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                            >
-                                Tạo Vận Đơn
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* View Retailer Modal */}
             {showRetailerModal && selectedRetailer && (

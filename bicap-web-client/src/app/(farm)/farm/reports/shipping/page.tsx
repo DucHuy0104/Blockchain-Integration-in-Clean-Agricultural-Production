@@ -100,6 +100,8 @@ export default function ShippingReportPage() {
 
     const getStatusBadge = (status: string) => {
         const styles: Record<string, string> = {
+            pending_pickup: 'bg-orange-100 text-orange-800',
+            confirmed: 'bg-blue-100 text-blue-800',
             created: 'bg-gray-100 text-gray-800',
             assigned: 'bg-blue-100 text-blue-800',
             picked_up: 'bg-yellow-100 text-yellow-800',
@@ -108,6 +110,8 @@ export default function ShippingReportPage() {
             failed: 'bg-red-100 text-red-800'
         };
         const labels: Record<string, string> = {
+            pending_pickup: 'Chờ lấy hàng',
+            confirmed: 'Đã xác nhận',
             created: 'Mới tạo',
             assigned: 'Đã gán xe',
             picked_up: 'Đã lấy hàng',

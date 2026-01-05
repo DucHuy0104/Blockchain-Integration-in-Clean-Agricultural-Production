@@ -1,10 +1,11 @@
 // src/controllers/reportController.js
-const { Report, User } = require('../models');
+const { Report, User, Order, Product, Farm } = require('../models');
+const { createNotificationInternal } = require('./notificationController');
 
 // 1. Tạo báo cáo (Retailer/Driver gửi báo cáo sự cố)
 exports.createReport = async (req, res) => {
     try {
-        const { title, content, type } = req.body;
+        const { title, content, type, orderId } = req.body;
 
         let senderId;
         if (req.user) {
@@ -20,9 +21,32 @@ exports.createReport = async (req, res) => {
         const report = await Report.create({
             senderId,
             title,
-            content,
-            type // incident, feedback, other
+            content: orderId ? `[Đơn hàng #${orderId}] ${content}` : content,
+            type
         });
+
+        // --- NOTIFICATION LOGIC ---
+        // Nếu có orderId, tìm Farm Owner để thông báo
+        if (orderId) {
+            const order = await Order.findOne({
+                where: { id: orderId },
+                include: [{
+                    model: Product,
+                    as: 'product',
+                    include: [{ model: Farm, as: 'farm' }]
+                }]
+            });
+
+            if (order && order.product && order.product.farm && order.product.farm.ownerId) {
+                await createNotificationInternal(
+                    order.product.farm.ownerId,
+                    'Báo cáo mới từ Đối tác',
+                    `Bạn nhận được một báo cáo mới về Đơn hàng #${orderId}: ${title}`,
+                    'report'
+                );
+            }
+        }
+        // --- END NOTIFICATION LOGIC ---
 
         res.status(201).json({ message: 'Gửi báo cáo thành công', report });
     } catch (error) {

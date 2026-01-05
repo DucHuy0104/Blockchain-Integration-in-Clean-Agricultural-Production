@@ -6,57 +6,91 @@ const blockchainHelper = require('../utils/blockchainHelper');
 // 1. Tạo đơn vận chuyển (Chỉ khi Order đã confirmed)
 exports.createShipment = async (req, res) => {
     try {
-        const { orderId, driverId, vehicleInfo, pickupTime } = req.body;
-        const managerId = req.user.id; // Người tạo là Farm Owner hoặc Logistics Manager
+        const { orderId, driverId, vehicleInfo, pickupTime, estimatedDeliveryTime } = req.body;
+        const managerId = req.user.id; // Farm Owner creates the request
 
-        const order = await Order.findByPk(orderId, { include: ['product'] });
-        if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
-        if (order.status !== 'confirmed') return res.status(400).json({ message: 'Đơn hàng chưa được xác nhận' });
-
-        // Kiểm tra quyền (chủ trại mới được tạo vận đơn cho hàng của mình)
-        const farmId = order.product.farmId;
-        const farm = await Farm.findByPk(farmId);
-        if (farm.ownerId !== req.user.id) return res.status(403).json({ message: 'Không có quyền tạo vận đơn cho đơn hàng này' });
-
-        // Simulate Blockchain Transaction
-        const txHash = await blockchainHelper.writeToBlockchain({
-            type: 'SHIPMENT_CREATED',
-            orderId,
-            managerId,
-            pickupTime
+        // 1. Verify Order
+        const order = await Order.findOne({
+            where: { id: orderId },
+            include: [{
+                model: Product,
+                as: 'product',
+                include: [{ model: Farm, as: 'farm' }]
+            }]
         });
 
-        const shipment = await Shipment.create({
+        if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+
+        // 2. Authorization: Manager must be the Farm Owner
+        // Note: Check if managerId matches order.product.farm.ownerId
+        // console.log('Check ownership:', order.product?.farm?.ownerId, managerId);
+
+        if (!order.product || !order.product.farm || order.product.farm.ownerId !== managerId) {
+            return res.status(403).json({ message: 'Bạn không có quyền tạo vận đơn cho đơn hàng này' });
+        }
+
+        if (order.status !== 'confirmed') {
+            return res.status(400).json({ message: 'Đơn hàng phải được xác nhận trước khi tạo vận đơn' });
+        }
+
+        // 3. Check for existing shipment
+        const existingShipment = await Shipment.findOne({ where: { orderId } });
+        if (existingShipment) {
+            return res.status(400).json({ message: 'Đơn hàng này đã có vận đơn' });
+        }
+
+        // 4. Determine Status
+        // If driver info is missing, it's a request -> 'pending_pickup'
+        let initialStatus = 'pending_pickup';
+        if (driverId && vehicleInfo) {
+            initialStatus = 'shipping';
+        }
+
+        // 5. Create Shipment
+        const newShipment = await Shipment.create({
+            trackingNumber: `SHIP-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
             orderId,
             managerId,
             driverId: driverId || null,
-            vehicleInfo,
-            pickupTime,
-            status: 'created',
+            vehicleInfo: vehicleInfo || null,
+            status: initialStatus,
+            pickupTime: pickupTime || null,
+            estimatedDeliveryTime: estimatedDeliveryTime || null,
+            notes: driverId ? 'Farm Owner created shipment with driver' : 'Farm Owner requested shipping'
+        });
+
+        // 6. Update Order Status
+        order.status = 'shipping';
+        await order.save();
+
+        // 7. Blockchain Log (Mock)
+        const txHash = await blockchainHelper.writeToBlockchain({
+            type: 'CREATE_SHIPMENT',
+            shipmentId: newShipment.id,
+            orderId,
+            managerId,
+            timestamp: new Date().toISOString()
+        });
+
+        // 8. Notification (Mock)
+        // Notify retailer
+        const { createNotificationInternal } = require('./notificationController');
+        await createNotificationInternal(
+            order.retailerId,
+            'Yêu cầu vận chuyển mới',
+            `Đơn hàng #${order.id} đã được yêu cầu vận chuyển.`,
+            'shipment'
+        );
+
+        res.status(201).json({
+            message: driverId ? 'Tạo vận đơn thành công' : 'Đã gửi yêu cầu vận chuyển thành công',
+            shipment: newShipment,
             txHash
         });
 
-        // Cập nhật trạng thái đơn hàng sang shipping (nếu muốn logic tự động)
-        // order.status = 'shipping';
-        // await order.save();
-
-        // --- NOTIFICATION START ---
-        const { createNotificationInternal } = require('./notificationController');
-        // order is loaded with include 'product', we need retailerId from order
-        // Reload order to be safe or check if retailerId is simple field (it is)
-        await createNotificationInternal(
-            order.retailerId,
-            'Vận đơn mới',
-            `Đơn hàng #${order.id} đã có vận đơn mới #${shipment.id}. Dự kiến giao: ${pickupTime}`,
-            'shipment'
-        );
-        // --- NOTIFICATION END ---
-
-        res.status(201).json({ message: 'Tạo vận đơn thành công', shipment });
-
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Lỗi tạo vận đơn', error: error.message });
+        console.error('Create Shipment Error:', error);
+        res.status(500).json({ message: 'Lỗi server khi tạo vận đơn', error: error.message });
     }
 };
 
@@ -115,16 +149,15 @@ exports.updateShipmentStatus = async (req, res) => {
         shipment.status = status;
         if (status === 'delivered') {
             shipment.deliveryTime = deliveryTime || new Date();
-            // Cập nhật luôn Order -> completed
-            if (order) {
-                order.status = 'delivered'; // Delivered but not yet fully paid
-                await order.save();
+            // Update Order -> delivered
+            if (shipment.order) {
+                shipment.order.status = 'delivered';
+                await shipment.order.save();
             }
         } else if (status === 'delivering') {
-            const order = await Order.findByPk(shipment.orderId);
-            if (order) {
-                order.status = 'shipping';
-                await order.save();
+            if (shipment.order) {
+                shipment.order.status = 'shipping';
+                await shipment.order.save();
             }
         }
 

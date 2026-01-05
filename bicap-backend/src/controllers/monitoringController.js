@@ -37,11 +37,47 @@ const generateRealisticData = (date = new Date()) => {
     };
 };
 
+const { Farm, Notification } = require('../models');
+const { createNotificationInternal } = require('./notificationController');
+const { Op } = require('sequelize');
+
 exports.getCurrentEnvironment = async (req, res) => {
     try {
         const { farmId } = req.params;
         // Generate data for current moment
         const data = generateRealisticData(new Date());
+
+        // --- ALERT LOGIC ---
+        // Fetch farm owner
+        const farm = await Farm.findByPk(farmId);
+        if (farm && farm.ownerId) {
+            const alerts = [];
+            if (data.temperature > 38) alerts.push({ type: 'temperature', msg: `Nhiệt độ cao bất thường: ${data.temperature}°C` });
+            if (data.ph < 4 || data.ph > 9) alerts.push({ type: 'ph', msg: `Độ pH không ổn định: ${data.ph}` });
+
+            for (const alert of alerts) {
+                // Check throttling: Has an alert of this type been sent in the last hour?
+                const lastAlert = await Notification.findOne({
+                    where: {
+                        userId: farm.ownerId,
+                        title: { [Op.like]: `%${alert.type === 'temperature' ? 'Nhiệt độ' : 'pH'}%` },
+                        createdAt: { [Op.gt]: new Date(Date.now() - 60 * 60 * 1000) }
+                    }
+                });
+
+                if (!lastAlert) {
+                    await createNotificationInternal(
+                        farm.ownerId,
+                        'Cảnh báo Môi trường',
+                        alert.msg,
+                        'system'
+                    );
+                    console.log(`[IoT Alert] Sent to User ${farm.ownerId}: ${alert.msg}`);
+                }
+            }
+        }
+        // --- END ALERT LOGIC ---
+
         res.json({ data });
     } catch (error) {
         console.error(error);

@@ -28,6 +28,12 @@ export default function MarketplacePage() {
     const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.farm.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     // Buy Modal State
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -109,51 +115,70 @@ export default function MarketplacePage() {
 
             {/* Product List */}
             <div className="container mx-auto p-4 py-8">
+                {/* Search Bar */}
+                <div className="mb-8 max-w-md mx-auto relative">
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm nông sản (tên, trang trại)..."
+                        className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <div className="absolute left-3 top-3.5 text-gray-400">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                </div>
+
                 {loading ? (
                     <div className="text-center py-10">Đang tải sản phẩm...</div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {products.map(product => (
-                            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-2xl transition hover:-translate-y-1">
-                                <div className="h-48 bg-gray-200 flex items-center justify-center">
-                                    <span className="text-4xl">🌾</span>
-                                </div>
-                                <div className="p-5">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate" title={product.name}>{product.name}</h3>
-                                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{product.farm.certification}</span>
-                                    </div>
-                                    <p className="text-gray-500 text-sm mb-4 truncate">{product.farm.name} - {product.farm.address}</p>
-
-                                    <div className="flex justify-between items-center mb-4">
-                                        <div>
-                                            <p className="text-xs text-gray-400">Giá bán</p>
-                                            <p className="text-lg font-bold text-green-600">{product.price.toLocaleString('vi-VN')} đ/kg</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-xs text-gray-400">Còn lại</p>
-                                            <p className="font-semibold text-gray-800 dark:text-gray-200">{product.quantity} kg</p>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => handleBuyClick(product)}
-                                        disabled={product.quantity === 0}
-                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition disabled:bg-gray-400"
-                                    >
-                                        {product.quantity === 0 ? 'Hết hàng' : 'Mua Ngay'}
-                                    </button>
-
-                                    {product.season && (
-                                        <div className="mt-3 text-center">
-                                            <Link href={`/traceability/${(product as any).seasonId || '#'}`} className="text-xs text-blue-500 hover:underline flex items-center justify-center gap-1">
-                                                🔍 Truy xuất nguồn gốc
-                                            </Link>
-                                        </div>
-                                    )}
-                                </div>
+                        {filteredProducts.length === 0 ? (
+                            <div className="col-span-full text-center py-10 text-gray-500">
+                                Không tìm thấy sản phẩm nào phù hợp.
                             </div>
-                        ))}
+                        ) : (
+                            filteredProducts.map(product => (
+                                <div key={product.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-2xl transition hover:-translate-y-1">
+                                    <div className="h-48 bg-gray-200 flex items-center justify-center">
+                                        <span className="text-4xl">🌾</span>
+                                    </div>
+                                    <div className="p-5">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate" title={product.name}>{product.name}</h3>
+                                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{product.farm.certification}</span>
+                                        </div>
+                                        <p className="text-gray-500 text-sm mb-4 truncate">{product.farm.name} - {product.farm.address}</p>
+
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div>
+                                                <p className="text-xs text-gray-400">Giá bán</p>
+                                                <p className="text-lg font-bold text-green-600">{product.price.toLocaleString('vi-VN')} đ/kg</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs text-gray-400">Còn lại</p>
+                                                <p className="font-semibold text-gray-800 dark:text-gray-200">{product.quantity} kg</p>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleBuyClick(product)}
+                                            disabled={product.quantity === 0}
+                                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition disabled:bg-gray-400"
+                                        >
+                                            {product.quantity === 0 ? 'Hết hàng' : 'Mua Ngay'}
+                                        </button>
+
+                                        {product.season && (
+                                            <div className="mt-3 text-center">
+                                                <Link href={`/traceability/${(product as any).seasonId || '#'}`} className="text-xs text-blue-500 hover:underline flex items-center justify-center gap-1">
+                                                    🔍 Truy xuất nguồn gốc
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )))}
                     </div>
                 )}
             </div>

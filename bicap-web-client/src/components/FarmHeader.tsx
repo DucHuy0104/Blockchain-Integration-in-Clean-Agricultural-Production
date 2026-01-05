@@ -14,9 +14,9 @@ export default function FarmHeader() {
                     <NavLink href="/farm/seasons" label="Mùa vụ" />
                     <NavLink href="/farm/products" label="Sản phẩm" />
                     <NavLink href="/farm/orders" label="Đơn hàng" />
-                    <NavLink href="/farm/shipments" label="Vận chuyển" />
-                    <NavLink href="/farm/reports" label="Báo cáo" />
-                    <NavLink href="/farm/reports/shipping" label="BC Ship" />
+
+                    {/* <NavLink href="/farm/shipments" label="Vận chuyển" /> - Moved to Orders Page */}
+                    <NavLink href="/farm/reports/shipping" label="Báo cáo vận chuyển" />
                     <NavLink href="/farm/monitoring" label="Giám sát" icon="🌡️" />
                     <NavLink href="/farm/services" label="Dịch vụ" />
                     <NavLink href="/farm/notifications" label="Thông báo" icon="🔔" highlight />
@@ -24,6 +24,7 @@ export default function FarmHeader() {
                     <div className="border-l border-green-400 pl-1 ml-1 flex gap-1">
                         <NavLink href="/farm/info" label="Trang trại" />
                         <NavLink href="/farm/profile" label="Hồ sơ" />
+                        <NavLink href="/farm/reports" label="Báo cáo" />
                     </div>
 
 

@@ -1,19 +1,51 @@
-version: '3.8'
-
 services:
   # 1. Database Service (SQL Server)
   sql_server:
     container_name: bicap_sql_server
     image: mcr.microsoft.com/azure-sql-edge
-    user: root
     environment:
       ACCEPT_EULA: "1"
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD} # Mật khẩu
+      MSSQL_SA_PASSWORD: "BiCapProject@123" # Updated to match user preference
     ports:
       - "1433:1433"
     volumes:
       # Lưu dữ liệu ra thư mục .docker_data để không bị mất khi tắt container
       - ./.docker_data/sql:/var/opt/mssql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c '(echo > /dev/tcp/localhost/1433) >/dev/null 2>&1'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     restart: always
 
-  # Sau này sẽ thêm redis, backend, vechain node vào đây...
+  # 2. Backend Service
+  backend:
+    container_name: bicap_backend
+    build: ./bicap-backend
+    ports:
+      - "5001:5001"
+    environment:
+      - DB_HOST=sql_server
+      - DB_USER=sa
+      - DB_PASS=BiCapProject@123
+      - DB_NAME=bicap_db
+      - DB_PORT=1433
+      - PORT=5001
+      # Thêm các biến môi trường khác từ .env của bạn nếu cần
+    depends_on:
+      sql_server:
+        condition: service_healthy
+    restart: always
+
+  # 3. Frontend Service (Web App)
+  frontend:
+    container_name: bicap_frontend
+    build: ./bicap-web-client
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5001/api # Client side call
+    depends_on:
+      - backend
+    restart: always

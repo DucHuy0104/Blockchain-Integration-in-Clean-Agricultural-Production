@@ -5,6 +5,8 @@ import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
 
+import { useRouter } from 'next/navigation';
+
 interface Shipment {
     id: number;
     status: string;
@@ -33,6 +35,7 @@ interface Farm {
 
 export default function FarmShipmentManager() {
     const { user } = useAuth();
+    const router = useRouter();
     const [shipments, setShipments] = useState<Shipment[]>([]);
     const [farms, setFarms] = useState<Farm[]>([]);
     const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
@@ -81,6 +84,12 @@ export default function FarmShipmentManager() {
 
     return (
         <div className="max-w-6xl mx-auto p-4">
+            <button
+                onClick={() => router.back()}
+                className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg flex items-center gap-2 transition-colors"
+            >
+                ← Quay lại
+            </button>
             <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Quản Lý Vận Chuyển</h1>
 
             {farms.length > 1 && (
@@ -130,13 +139,19 @@ export default function FarmShipmentManager() {
                                             <span className="text-sm text-gray-400 italic">Chưa gán</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{shipment.vehicleInfo || 'N/A'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {shipment.vehicleInfo || (shipment.status === 'pending_pickup' ? <span className="text-orange-500 italic">Đang chờ điều phối</span> : 'N/A')}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                             ${shipment.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                                shipment.status === 'delivering' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-yellow-100 text-yellow-800'}`}>
-                                            {shipment.status}
+                                                shipment.status === 'shipping' || shipment.status === 'delivering' ? 'bg-blue-100 text-blue-800' :
+                                                    shipment.status === 'pending_pickup' ? 'bg-orange-100 text-orange-800' :
+                                                        'bg-gray-100 text-gray-800'}`}>
+                                            {shipment.status === 'pending_pickup' ? 'Chờ lấy hàng' :
+                                                shipment.status === 'shipping' ? 'Đang giao' :
+                                                    shipment.status === 'delivering' ? 'Đang giao' :
+                                                        shipment.status === 'delivered' ? 'Đã giao' : shipment.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

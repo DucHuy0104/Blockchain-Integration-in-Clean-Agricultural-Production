@@ -20,7 +20,7 @@ User.hasMany(Farm, { foreignKey: 'ownerId', as: 'farms' });
 Farm.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
 
 // 2. Farm & Season
-Farm.hasMany(FarmingSeason, { foreignKey: 'farmId', as: 'seasons' });
+Farm.hasMany(FarmingSeason, { foreignKey: 'farmId', as: 'seasons', onDelete: 'CASCADE' });
 FarmingSeason.belongsTo(Farm, { foreignKey: 'farmId', as: 'farm' });
 
 // 3. Season & Process
@@ -28,18 +28,18 @@ FarmingSeason.hasMany(FarmingProcess, { foreignKey: 'seasonId', as: 'processes' 
 FarmingProcess.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season' });
 
 // 4. Farm & Product
-Farm.hasMany(Product, { foreignKey: 'farmId', as: 'products' });
+Farm.hasMany(Product, { foreignKey: 'farmId', as: 'products', onDelete: 'CASCADE' });
 Product.belongsTo(Farm, { foreignKey: 'farmId', as: 'farm' });
 
-Product.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season' });
-FarmingSeason.hasMany(Product, { foreignKey: 'seasonId', as: 'products' });
+Product.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season', onDelete: 'NO ACTION' });
+FarmingSeason.hasMany(Product, { foreignKey: 'seasonId', as: 'products', onDelete: 'NO ACTION' });
 
 // 5. Order Relationships
 User.hasMany(Order, { foreignKey: 'retailerId', as: 'orders', onDelete: 'NO ACTION' });
 Order.belongsTo(User, { foreignKey: 'retailerId', as: 'retailer' });
 
-Product.hasMany(Order, { foreignKey: 'productId', as: 'orders' });
-Order.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+Product.hasMany(Order, { foreignKey: 'productId', as: 'orders', onDelete: 'NO ACTION' });
+Order.belongsTo(Product, { foreignKey: 'productId', as: 'product', onDelete: 'NO ACTION' });
 
 // 6. Shipment Relationships
 Order.hasOne(Shipment, { foreignKey: 'orderId', as: 'shipment' });
@@ -63,24 +63,24 @@ User.hasMany(Subscription, { foreignKey: 'userId', as: 'subscriptions' });
 Subscription.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // 10. Payment Relationships
-User.hasMany(Payment, { foreignKey: 'userId', as: 'payments' });
+User.hasMany(Payment, { foreignKey: 'userId', as: 'payments', onDelete: 'NO ACTION' });
 Payment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-Order.hasMany(Payment, { foreignKey: 'orderId', as: 'payments' });
+Order.hasMany(Payment, { foreignKey: 'orderId', as: 'payments', onDelete: 'NO ACTION' });
 Payment.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
 
-Subscription.hasMany(Payment, { foreignKey: 'subscriptionId', as: 'payments' });
+Subscription.hasMany(Payment, { foreignKey: 'subscriptionId', as: 'payments', onDelete: 'NO ACTION' });
 Payment.belongsTo(Subscription, { foreignKey: 'subscriptionId', as: 'subscription' });
 
 // 9. SeasonTask Associations
-User.hasMany(SeasonTask, { foreignKey: 'userId', as: 'tasks' });
+User.hasMany(SeasonTask, { foreignKey: 'userId', as: 'tasks', onDelete: 'CASCADE' });
 SeasonTask.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-Farm.hasMany(SeasonTask, { foreignKey: 'farmId', as: 'tasks' });
+Farm.hasMany(SeasonTask, { foreignKey: 'farmId', as: 'tasks', onDelete: 'NO ACTION' });
 SeasonTask.belongsTo(Farm, { foreignKey: 'farmId', as: 'farm', onDelete: 'NO ACTION' });
 
-FarmingSeason.hasMany(SeasonTask, { foreignKey: 'seasonId', as: 'tasks' });
-SeasonTask.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season', onDelete: 'CASCADE' });
+FarmingSeason.hasMany(SeasonTask, { foreignKey: 'seasonId', as: 'tasks', onDelete: 'NO ACTION' });
+SeasonTask.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season', onDelete: 'NO ACTION' });
 
 
 
@@ -109,8 +109,14 @@ const initModels = async () => {
       await queryInterface.addColumn('Products', 'seasonId', {
         type: require('sequelize').DataTypes.INTEGER,
         allowNull: true
-        // Optimization: Skip adding FK constraint mostly to avoid MSSQL errors during dev
-        // references: { model: 'FarmingSeasons', key: 'id' } 
+      });
+    }
+
+    if (!tableDesc.farmId) {
+      console.log('⚡ Adding missing column: farmId to Products');
+      await queryInterface.addColumn('Products', 'farmId', {
+        type: require('sequelize').DataTypes.INTEGER,
+        allowNull: true // Should be false but set true for existing data safety
       });
     }
 
@@ -150,6 +156,40 @@ const initModels = async () => {
         type: require('sequelize').DataTypes.STRING,
         allowNull: true
       });
+    }
+
+    // 5. Manual Migration for 'Reports' table
+    const reportTableDesc = await queryInterface.describeTable('Reports');
+    if (!reportTableDesc.receiverRole) {
+      console.log('⚡ Adding missing column: receiverRole to Reports');
+      await queryInterface.addColumn('Reports', 'receiverRole', { type: require('sequelize').DataTypes.STRING, defaultValue: 'admin' });
+    }
+    if (!reportTableDesc.type) {
+      console.log('⚡ Adding missing column: type to Reports');
+      await queryInterface.addColumn('Reports', 'type', { type: require('sequelize').DataTypes.STRING, allowNull: true });
+    }
+    if (!reportTableDesc.adminNote) {
+      console.log('⚡ Adding missing column: adminNote to Reports');
+      await queryInterface.addColumn('Reports', 'adminNote', { type: require('sequelize').DataTypes.TEXT, allowNull: true });
+    }
+
+    // 6. Check Shipments table just in case
+    const shipmentTableDesc = await queryInterface.describeTable('Shipments');
+    if (!shipmentTableDesc.managerId) {
+      console.log('⚡ Adding missing column: managerId to Shipments');
+      await queryInterface.addColumn('Shipments', 'managerId', { type: require('sequelize').DataTypes.INTEGER, allowNull: true });
+    }
+    if (!shipmentTableDesc.pickupLocation) {
+      console.log('⚡ Adding missing column: pickupLocation to Shipments');
+      await queryInterface.addColumn('Shipments', 'pickupLocation', { type: require('sequelize').DataTypes.STRING, allowNull: true });
+    }
+    if (!shipmentTableDesc.deliveryLocation) {
+      console.log('⚡ Adding missing column: deliveryLocation to Shipments');
+      await queryInterface.addColumn('Shipments', 'deliveryLocation', { type: require('sequelize').DataTypes.STRING, allowNull: true });
+    }
+    if (!shipmentTableDesc.currentLocation) {
+      console.log('⚡ Adding missing column: currentLocation to Shipments');
+      await queryInterface.addColumn('Shipments', 'currentLocation', { type: require('sequelize').DataTypes.STRING, allowNull: true });
     }
 
     console.log('✅ Database Schema Updated Successfully!');

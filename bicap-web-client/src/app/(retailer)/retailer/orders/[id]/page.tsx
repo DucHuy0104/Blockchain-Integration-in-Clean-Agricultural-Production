@@ -406,6 +406,34 @@ export default function RetailerOrderDetail() {
                 {/* Right Column: Timeline & Support */}
                 <div className="lg:col-span-1 space-y-6">
 
+                    {/* Shipment Info Card */}
+                    {(order.status === 'shipping' || order.status === 'delivered') && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 className="text-lg font-bold mb-4 dark:text-white">Thông tin vận chuyển</h3>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                        🚛
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Phương tiện</p>
+                                        <p className="font-medium text-gray-900 dark:text-white">Xe tải lạnh (BKS: {(order as any).shipment?.vehicleInfo || 'Đang cập nhật'})</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                        👤
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Tài xế</p>
+                                        <p className="font-medium text-gray-900 dark:text-white">{(order as any).shipment?.driver?.fullName || 'Chưa gán'}</p>
+                                        <p className="text-xs text-gray-500">{(order as any).shipment?.driver?.phone}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Timeline Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                         <h3 className="text-lg font-bold mb-6 dark:text-white">Theo dõi đơn hàng</h3>
