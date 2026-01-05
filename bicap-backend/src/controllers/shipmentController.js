@@ -1,5 +1,5 @@
 // src/controllers/shipmentController.js
-const { Shipment, Order, Farm, User } = require('../models');
+const { Shipment, Order, Farm, User, Product } = require('../models');
 
 // 1. Tạo đơn vận chuyển (Chỉ khi Order đã confirmed)
 exports.createShipment = async (req, res) => {
@@ -64,7 +64,7 @@ exports.getShipmentsByFarm = async (req, res) => {
                     as: 'order',
                     required: true,
                     include: [{
-                        model: require('../models').Product,
+                        model: Product,
                         as: 'product',
                         where: { farmId } // Filter shipments where product belongs to farmId
                     }]

@@ -1,6 +1,6 @@
 // src/controllers/adminController.js
 const { User, Farm, Order, Product, Subscription, Payment, Report, Shipment, FarmingSeason } = require('../models');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 
 /**
  * Dashboard - Thống kê tổng quan
@@ -31,7 +31,7 @@ exports.getDashboard = async (req, res) => {
         const usersByRole = await User.findAll({
             attributes: [
                 'role',
-                [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'count']
+                [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
             ],
             group: ['role'],
             raw: true
@@ -41,13 +41,14 @@ exports.getDashboard = async (req, res) => {
         const ordersByStatus = await Order.findAll({
             attributes: [
                 'status',
-                [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'count']
+                [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
             ],
             group: ['status'],
             raw: true
         });
 
         // Doanh thu theo tháng (7 tháng gần nhất)
+        // Sử dụng CONVERT cho SQL Server (tương thích với mọi version)
         const monthlyRevenue = await Payment.findAll({
             where: {
                 status: 'success',
@@ -56,11 +57,12 @@ exports.getDashboard = async (req, res) => {
                 }
             },
             attributes: [
-                [require('sequelize').fn('DATE_FORMAT', require('sequelize').col('createdAt'), '%Y-%m'), 'month'],
-                [require('sequelize').fn('SUM', require('sequelize').col('amount')), 'total']
+                // SQL Server: CONVERT(VARCHAR(7), createdAt, 120) để lấy YYYY-MM
+                [Sequelize.literal("CONVERT(VARCHAR(7), createdAt, 120)"), 'month'],
+                [Sequelize.fn('SUM', Sequelize.col('amount')), 'total']
             ],
-            group: [require('sequelize').fn('DATE_FORMAT', require('sequelize').col('createdAt'), '%Y-%m')],
-            order: [[require('sequelize').fn('DATE_FORMAT', require('sequelize').col('createdAt'), '%Y-%m'), 'ASC']],
+            group: [Sequelize.literal("CONVERT(VARCHAR(7), createdAt, 120)")],
+            order: [[Sequelize.literal("CONVERT(VARCHAR(7), createdAt, 120)"), 'ASC']],
             raw: true
         });
 

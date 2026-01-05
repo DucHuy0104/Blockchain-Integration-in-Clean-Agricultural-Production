@@ -181,8 +181,9 @@ exports.confirmPickup = async (req, res) => {
 
         // Validate QR code (có thể là orderId hoặc shipmentId)
         // Trong thực tế, QR code sẽ chứa thông tin đơn hàng hoặc vận đơn
-        const expectedQR = `ORDER_${shipment.orderId}` || `SHIPMENT_${shipmentId}`;
-        if (qrCode !== expectedQR && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
+        const expectedQR1 = `ORDER_${shipment.orderId}`;
+        const expectedQR2 = `SHIPMENT_${shipmentId}`;
+        if (qrCode !== expectedQR1 && qrCode !== expectedQR2 && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
             return res.status(400).json({ message: 'QR code không hợp lệ hoặc không khớp với vận đơn' });
         }
 
@@ -257,8 +258,9 @@ exports.confirmDelivery = async (req, res) => {
         }
 
         // Validate QR code
-        const expectedQR = `ORDER_${shipment.orderId}` || `SHIPMENT_${shipmentId}`;
-        if (qrCode !== expectedQR && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
+        const expectedQR1 = `ORDER_${shipment.orderId}`;
+        const expectedQR2 = `SHIPMENT_${shipmentId}`;
+        if (qrCode !== expectedQR1 && qrCode !== expectedQR2 && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
             return res.status(400).json({ message: 'QR code không hợp lệ hoặc không khớp với vận đơn' });
         }
 
