@@ -90,19 +90,25 @@ function LoginForm() {
 
     return (
         <div className="w-full">
-            <h2 className="text-center text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+            <h2 className="text-center text-3xl font-extrabold mb-2 text-gray-800 dark:text-white">
                 {isRegistering ? 'Tạo Tài Khoản Mới' : 'Đăng Nhập'}
             </h2>
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+                {isRegistering ? 'Tham gia hệ thống BICAP ngay hôm nay' : 'Chào mừng bạn trở lại'}
+            </p>
 
-            {/* Role Selector (More needed for Register, but useful for test login to update role if backend allows) */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {/* Role Selector - Enhanced */}
+            <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-[#388E3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                     Chọn Vai Trò {isRegistering ? '(Bắt buộc)' : '(Test Mode)'}
                 </label>
                 <select
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value)}
-                    className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="block w-full rounded-xl border-2 border-gray-200 bg-white py-3 px-4 shadow-sm focus:border-[#388E3C] focus:outline-none focus:ring-2 focus:ring-[#388E3C] focus:ring-offset-2 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all font-medium"
                 >
                     {roles.map((role) => (
                         <option key={role.id} value={role.id}>
@@ -113,54 +119,75 @@ function LoginForm() {
             </div>
 
             {error && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-600 p-3 rounded text-sm">
-                    {error}
+                <div className="mb-6 bg-red-50 border-2 border-red-200 text-red-700 p-4 rounded-xl text-sm flex items-start gap-3 animate-fadeIn">
+                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{error}</span>
                 </div>
             )}
 
-            <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
+            <form onSubmit={handleEmailAuth} className="space-y-5 mb-6">
                 {isRegistering && (
                     <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Họ và tên</label>
                         <input
                             type="text"
-                            placeholder="Họ và tên"
+                            placeholder="Nhập họ và tên của bạn"
                             required={isRegistering}
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            className="block w-full rounded-xl border-2 border-gray-200 px-4 py-3 shadow-sm focus:border-[#388E3C] focus:outline-none focus:ring-2 focus:ring-[#388E3C] focus:ring-offset-2 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all"
                         />
                     </div>
                 )}
 
                 <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Email</label>
                     <input
                         type="email"
-                        placeholder="Email"
+                        placeholder="your.email@example.com"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="block w-full rounded-xl border-2 border-gray-200 px-4 py-3 shadow-sm focus:border-[#388E3C] focus:outline-none focus:ring-2 focus:ring-[#388E3C] focus:ring-offset-2 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all"
                     />
                 </div>
 
                 <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Mật khẩu</label>
                     <input
                         type="password"
-                        placeholder="Mật khẩu"
+                        placeholder="Tối thiểu 6 ký tự"
                         required
                         minLength={6}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="block w-full rounded-xl border-2 border-gray-200 px-4 py-3 shadow-sm focus:border-[#388E3C] focus:outline-none focus:ring-2 focus:ring-[#388E3C] focus:ring-offset-2 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all"
                     />
                 </div>
 
                 <button
                     type="submit"
                     disabled={loading}
-                    className="flex w-full justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+                    className="flex w-full justify-center items-center gap-2 rounded-xl border border-transparent bg-gradient-to-r from-[#388E3C] to-[#7CB342] py-3.5 px-4 text-sm font-bold text-white shadow-lg hover:from-[#2E7D32] hover:to-[#388E3C] focus:outline-none focus:ring-2 focus:ring-[#388E3C] focus:ring-offset-2 disabled:opacity-50 transition-all btn-glow relative overflow-hidden"
                 >
-                    {loading ? 'Đang xử lý...' : (isRegistering ? 'Đăng Ký' : 'Đăng Nhập')}
+                    {loading ? (
+                        <>
+                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Đang xử lý...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>{isRegistering ? 'Đăng Ký' : 'Đăng Nhập'}</span>
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </>
+                    )}
                 </button>
             </form>
 
@@ -168,17 +195,17 @@ function LoginForm() {
                 <>
                     <div className="relative mb-6">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                            <div className="w-full border-t-2 border-gray-200 dark:border-gray-600" />
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="bg-white dark:bg-gray-800 px-2 text-gray-500">Hoặc tiếp tục với</span>
+                            <span className="bg-white dark:bg-gray-800 px-4 text-gray-500 font-medium">Hoặc tiếp tục với</span>
                         </div>
                     </div>
 
                     <button
                         onClick={handleGoogleLogin}
                         disabled={loading}
-                        className="flex w-full justify-center items-center gap-3 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
+                        className="flex w-full justify-center items-center gap-3 rounded-xl border-2 border-gray-200 bg-white dark:bg-gray-700 py-3.5 px-4 text-sm font-semibold text-gray-700 dark:text-white shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#388E3C] focus:ring-offset-2 disabled:opacity-50 transition-all"
                     >
                         <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
                             <path
@@ -202,13 +229,13 @@ function LoginForm() {
                                 fill="#4285F4"
                             />
                         </svg>
-                        Google
+                        <span>Đăng nhập với Google</span>
                     </button>
                 </>
             )}
 
             {selectedRole !== 'admin' && (
-                <div className="mt-6 text-center">
+                <div className="mt-6 text-center pt-6 border-t border-gray-200 dark:border-gray-700">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                         {isRegistering ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}
                         <button
@@ -216,7 +243,7 @@ function LoginForm() {
                                 setIsRegistering(!isRegistering);
                                 setError('');
                             }}
-                            className="ml-2 font-medium text-green-600 hover:text-green-500"
+                            className="ml-2 font-bold text-[#388E3C] hover:text-[#2E7D32] transition-colors"
                         >
                             {isRegistering ? 'Đăng nhập ngay' : 'Tạo tài khoản mới'}
                         </button>

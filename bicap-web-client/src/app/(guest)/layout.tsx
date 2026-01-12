@@ -31,34 +31,40 @@ export default function GuestLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
-      {/* Header */}
-      <header className="bg-green-700 text-white p-4 shadow-md sticky top-0 z-50">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2 font-bold text-xl cursor-pointer" onClick={() => router.push('/')}>
-            🌱 BICAP Guest
+    <div className="min-h-screen flex flex-col font-sans bg-gradient-to-b from-gray-50 to-white">
+      {/* Header - Enhanced */}
+      <header className="bg-gradient-to-r from-[#388E3C] to-[#7CB342] text-white p-4 shadow-xl sticky top-0 z-50 border-b border-green-700/30">
+        <div className="container mx-auto flex justify-between items-center max-w-7xl">
+          <div className="flex items-center gap-3 font-extrabold text-xl cursor-pointer hover:opacity-90 transition-opacity" onClick={() => router.push('/')}>
+            <span className="text-2xl">🌱</span>
+            <span className="hidden sm:inline">BICAP Guest</span>
           </div>
 
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link href="/market" className="hover:text-green-200 transition flex items-center gap-1">
-              🛒 Chợ nông sản
+          <nav className="flex items-center space-x-4 text-sm font-bold">
+            <Link href="/market" className="hover:bg-white/20 px-4 py-2 rounded-xl transition-all flex items-center gap-2 backdrop-blur-sm">
+              <span>🛒</span>
+              <span className="hidden sm:inline">Chợ nông sản</span>
             </Link>
-            <Link href="/guest/education" className="hover:text-green-200 transition flex items-center gap-1">
-              📚 Kiến thức
+            <Link href="/guest/education" className="hover:bg-white/20 px-4 py-2 rounded-xl transition-all flex items-center gap-2 backdrop-blur-sm">
+              <span>📚</span>
+              <span className="hidden sm:inline">Kiến thức</span>
             </Link>
 
             {/* Nút Đăng Xuất */}
             <button 
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-full transition shadow-sm font-bold"
+              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-all shadow-md font-bold flex items-center gap-2 border border-white/30"
             >
-              Đăng xuất
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:inline">Đăng xuất</span>
             </button>
           </nav>
         </div>
       </header>
 
-      <main className="flex-grow bg-gray-50">
+      <main className="flex-grow">
         {children}
       </main>
     </div>

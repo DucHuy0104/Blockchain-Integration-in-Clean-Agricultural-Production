@@ -2,36 +2,61 @@ import Link from 'next/link';
 
 export default function Home() {
     return (
-        <main className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
-            {/* Hero Section */}
-            <div className="relative bg-gradient-to-br from-green-600 to-emerald-800 text-white overflow-hidden">
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
-                    <div className="text-center">
-                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 drop-shadow-md">
+        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:bg-slate-900 font-sans">
+            {/* Hero Section - Enhanced */}
+            <div className="relative bg-gradient-to-br from-[#7CB342] via-[#388E3C] to-[#00C853] text-white overflow-hidden">
+                {/* Animated Background Pattern */}
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 left-0 w-96 h-96 bg-[#AED581] rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-[#7CB342] rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style={{ animationDelay: '1s' }}></div>
+                    <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-[#388E3C] rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style={{ animationDelay: '2s' }}></div>
+                </div>
+                
+                {/* Decorative Elements */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-20 left-10 text-9xl animate-float">🌱</div>
+                    <div className="absolute top-40 right-20 text-7xl animate-float" style={{ animationDelay: '0.5s' }}>🥬</div>
+                    <div className="absolute bottom-20 left-1/4 text-8xl animate-float" style={{ animationDelay: '1.5s' }}>🌾</div>
+                </div>
+                
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 relative z-10">
+                    <div className="text-center animate-fadeInUp">
+                        <div className="inline-block mb-6 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+                            <span className="text-sm font-semibold">🌾 Nông Nghiệp Sạch & Minh Bạch</span>
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 drop-shadow-2xl animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
                             BICAP System
                         </h1>
-                        <p className="text-xl md:text-2xl text-green-100 max-w-3xl mx-auto font-light">
+                        <p className="text-xl md:text-3xl text-green-50 max-w-3xl mx-auto font-light mb-4 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
                             Blockchain Integration in Clean Agricultural Production
                         </p>
-                        <p className="mt-4 text-green-50 max-w-2xl mx-auto text-sm md:text-base opacity-90">
+                        <p className="mt-4 text-green-100 max-w-2xl mx-auto text-base md:text-lg opacity-95 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
                             Hệ thống quản lý chuỗi cung ứng nông sản sạch minh bạch, an toàn và hiệu quả ứng dụng công nghệ Blockchain.
                         </p>
 
-                        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-                            <Link href="/market" className="px-8 py-3 bg-white text-green-800 font-bold rounded-full shadow-lg hover:bg-green-50 hover:scale-105 transition transform flex items-center justify-center gap-2">
-                                <span>🏪</span> Tham quan Sàn Nông Sản
+                        <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+                            <Link href="/market" className="group px-8 py-4 bg-white text-[#388E3C] font-bold rounded-full shadow-2xl hover:bg-green-50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 btn-glow relative overflow-hidden">
+                                <span className="text-2xl">🏪</span>
+                                <span>Tham quan Sàn Nông Sản</span>
+                                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
                             </Link>
-                            <Link href="/login?role=guest" className="px-8 py-3 bg-green-700/50 backdrop-blur-sm border border-green-400 text-white font-bold rounded-full shadow-lg hover:bg-green-600/50 hover:scale-105 transition transform flex items-center justify-center gap-2">
-                                <span>🔍</span> Truy Xuất Nguồn Gốc
+                            <Link href="/login?role=guest" className="group px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white font-bold rounded-full shadow-2xl hover:bg-white/20 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
+                                <span className="text-2xl">🔍</span>
+                                <span>Truy Xuất Nguồn Gốc</span>
+                                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
                             </Link>
                         </div>
                     </div>
                 </div>
-                {/* Decorative curve */}
+                
+                {/* Enhanced Decorative curve */}
                 <div className="absolute bottom-0 w-full overflow-hidden leading-none rotate-180">
-                    <svg className="relative block w-[calc(114%+1.3px)] h-[60px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                        <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-slate-50 dark:fill-slate-900"></path>
+                    <svg className="relative block w-[calc(114%+1.3px)] h-[80px] md:h-[100px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                        <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-gray-50 dark:fill-slate-900"></path>
                     </svg>
                 </div>
             </div>
