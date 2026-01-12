@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import ScrollAnimation from '@/components/ScrollAnimation';
 
 export default function Home() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -25,62 +26,73 @@ export default function Home() {
         };
     }, []);
 
-    const features = [
+    const part1Features = [
         {
             icon: '🌱',
-            title: 'Quản Lý Mùa Vụ',
-            description: 'Theo dõi và quản lý toàn bộ quy trình canh tác từ gieo trồng đến thu hoạch',
+            title: 'Quản Lý Mùa Vụ Thông Minh',
+            description: 'Hệ thống quản lý mùa vụ toàn diện với nhật ký canh tác chi tiết, theo dõi quy trình từ gieo trồng đến thu hoạch. Tự động hóa công việc và tối ưu năng suất.',
             color: 'from-green-400 to-emerald-600',
-            delay: '0.1s'
+            gradient: 'bg-gradient-to-br from-green-50 to-emerald-50',
+            image: '🌾'
         },
         {
             icon: '🔗',
             title: 'Blockchain Minh Bạch',
-            description: 'Mọi hoạt động được ghi lại trên blockchain, đảm bảo tính minh bạch và không thể thay đổi',
+            description: 'Mọi hoạt động được ghi lại trên blockchain, đảm bảo tính minh bạch tuyệt đối và không thể thay đổi. Người tiêu dùng có thể truy xuất toàn bộ lịch sử sản phẩm.',
             color: 'from-blue-400 to-cyan-600',
-            delay: '0.2s'
+            gradient: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+            image: '⛓️'
         },
         {
             icon: '📱',
-            title: 'IoT Giám Sát',
-            description: 'Theo dõi thời gian thực nhiệt độ, độ ẩm, pH với cảnh báo tự động',
+            title: 'IoT Giám Sát Thời Gian Thực',
+            description: 'Theo dõi nhiệt độ, độ ẩm, pH và các chỉ số môi trường trong thời gian thực. Cảnh báo tự động khi có bất thường, đảm bảo điều kiện canh tác tối ưu.',
             color: 'from-purple-400 to-pink-600',
-            delay: '0.3s'
-        },
+            gradient: 'bg-gradient-to-br from-purple-50 to-pink-50',
+            image: '📡'
+        }
+    ];
+
+    const part2Features = [
         {
             icon: '📦',
-            title: 'Chuỗi Cung Ứng',
-            description: 'Kết nối trực tiếp từ nông trại đến nhà bán lẻ, đảm bảo chất lượng sản phẩm',
+            title: 'Chuỗi Cung Ứng Thông Minh',
+            description: 'Kết nối trực tiếp từ nông trại đến nhà bán lẻ, loại bỏ trung gian. Quản lý đơn hàng, vận chuyển và thanh toán một cách hiệu quả và minh bạch.',
             color: 'from-orange-400 to-red-600',
-            delay: '0.4s'
+            gradient: 'bg-gradient-to-br from-orange-50 to-red-50',
+            image: '🚚'
         },
         {
             icon: '🔍',
-            title: 'Truy Xuất Nguồn Gốc',
-            description: 'Quét QR code để xem toàn bộ lịch sử canh tác và vận chuyển',
+            title: 'Truy Xuất Nguồn Gốc Tức Thì',
+            description: 'Quét QR code để xem toàn bộ lịch sử canh tác, vận chuyển và chứng nhận chất lượng. Thông tin minh bạch, đáng tin cậy và dễ dàng truy cập.',
             color: 'from-teal-400 to-green-600',
-            delay: '0.5s'
+            gradient: 'bg-gradient-to-br from-teal-50 to-green-50',
+            image: '📱'
         },
         {
             icon: '💳',
             title: 'Thanh Toán An Toàn',
-            description: 'Hệ thống thanh toán tích hợp VNPay, đảm bảo giao dịch an toàn',
+            description: 'Tích hợp VNPay và các phương thức thanh toán hiện đại. Giao dịch an toàn, nhanh chóng với mã hóa bảo mật cao.',
             color: 'from-yellow-400 to-orange-600',
-            delay: '0.6s'
+            gradient: 'bg-gradient-to-br from-yellow-50 to-orange-50',
+            image: '💵'
         }
     ];
 
     const stats = [
-        { number: '1000+', label: 'Trang Trại', icon: '🌾' },
-        { number: '5000+', label: 'Sản Phẩm', icon: '🥬' },
-        { number: '99.9%', label: 'Độ Tin Cậy', icon: '✅' },
-        { number: '24/7', label: 'Hỗ Trợ', icon: '💬' }
+        { number: '1000+', label: 'Trang Trại', icon: '🌾', color: 'text-green-600' },
+        { number: '5000+', label: 'Sản Phẩm', icon: '🥬', color: 'text-emerald-600' },
+        { number: '99.9%', label: 'Độ Tin Cậy', icon: '✅', color: 'text-blue-600' },
+        { number: '24/7', label: 'Hỗ Trợ', icon: '💬', color: 'text-purple-600' }
     ];
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 font-sans overflow-x-hidden">
-            {/* Hero Section - Ultra Enhanced */}
-            <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <main className="min-h-screen bg-white overflow-x-hidden">
+            {/* ============================================
+                PART 1: HERO SECTION - First Impression
+                ============================================ */}
+            <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
                 {/* Animated Background with Parallax */}
                 <div className="absolute inset-0">
                     <div 
@@ -120,74 +132,83 @@ export default function Home() {
                 {/* Main Content */}
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
                     {/* Badge */}
-                    <div className="inline-block mb-8 px-6 py-3 bg-white/80 backdrop-blur-md rounded-full border-2 border-white/50 shadow-xl animate-zoom-in">
-                        <span className="text-sm font-bold bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent flex items-center gap-2">
-                            <span className="text-xl">🌾</span>
-                            Nông Nghiệp Sạch & Minh Bạch
-                        </span>
-                    </div>
+                    <ScrollAnimation direction="fade" delay={0}>
+                        <div className="inline-block mb-8 px-6 py-3 bg-white/80 backdrop-blur-md rounded-full border-2 border-white/50 shadow-xl">
+                            <span className="text-sm font-bold bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent flex items-center gap-2">
+                                <span className="text-xl">🌾</span>
+                                Nông Nghiệp Sạch & Minh Bạch
+                            </span>
+                        </div>
+                    </ScrollAnimation>
 
                     {/* Main Heading */}
-                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold mb-8 animate-fadeInUp">
-                        <span className="block bg-gradient-to-r from-[#388E3C] via-[#7CB342] to-[#00C853] bg-clip-text text-transparent animate-gradient">
-                            BICAP
-                        </span>
-                        <span className="block text-4xl md:text-5xl lg:text-6xl text-gray-700 mt-4 font-light">
-                            Blockchain Integration in Clean Agricultural Production
-                        </span>
-                    </h1>
+                    <ScrollAnimation direction="up" delay={100}>
+                        <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold mb-8">
+                            <span className="block bg-gradient-to-r from-[#388E3C] via-[#7CB342] to-[#00C853] bg-clip-text text-transparent animate-gradient">
+                                BICAP
+                            </span>
+                            <span className="block text-4xl md:text-5xl lg:text-6xl text-gray-700 mt-4 font-light">
+                                Blockchain Integration in Clean Agricultural Production
+                            </span>
+                        </h1>
+                    </ScrollAnimation>
 
                     {/* Description */}
-                    <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-                        Hệ thống quản lý chuỗi cung ứng nông sản sạch minh bạch, an toàn và hiệu quả. 
-                        <span className="block mt-2 text-[#388E3C] font-semibold">
-                            Kết nối trực tiếp từ nông trại đến bàn ăn
-                        </span>
-                    </p>
+                    <ScrollAnimation direction="up" delay={200}>
+                        <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+                            Hệ thống quản lý chuỗi cung ứng nông sản sạch minh bạch, an toàn và hiệu quả. 
+                            <span className="block mt-2 text-[#388E3C] font-semibold">
+                                Kết nối trực tiếp từ nông trại đến bàn ăn
+                            </span>
+                        </p>
+                    </ScrollAnimation>
 
                     {/* CTA Buttons */}
-                    <div className="flex flex-col sm:flex-row justify-center gap-6 mb-16 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
-                        <Link 
-                            href="/market" 
-                            className="group relative px-10 py-5 bg-gradient-to-r from-[#388E3C] to-[#7CB342] text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-[#388E3C]/50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 btn-glow overflow-hidden"
-                        >
-                            <span className="relative z-10 flex items-center gap-3">
-                                <span className="text-3xl">🏪</span>
-                                <span>Tham quan Sàn Nông Sản</span>
+                    <ScrollAnimation direction="up" delay={300}>
+                        <div className="flex flex-col sm:flex-row justify-center gap-6 mb-16">
+                            <Link 
+                                href="/market" 
+                                className="group relative px-10 py-5 bg-gradient-to-r from-[#388E3C] to-[#7CB342] text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-[#388E3C]/50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 btn-glow overflow-hidden"
+                            >
+                                <span className="relative z-10 flex items-center gap-3">
+                                    <span className="text-3xl">🏪</span>
+                                    <span>Tham quan Sàn Nông Sản</span>
+                                    <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#2E7D32] to-[#388E3C] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </Link>
+                            <Link 
+                                href="/login?role=guest" 
+                                className="group px-10 py-5 bg-white/90 backdrop-blur-md border-3 border-[#388E3C] text-[#388E3C] font-bold text-lg rounded-2xl shadow-2xl hover:bg-[#388E3C] hover:text-white hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+                            >
+                                <span className="text-3xl">🔍</span>
+                                <span>Truy Xuất Nguồn Gốc</span>
                                 <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                 </svg>
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-[#2E7D32] to-[#388E3C] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </Link>
-                        <Link 
-                            href="/login?role=guest" 
-                            className="group px-10 py-5 bg-white/90 backdrop-blur-md border-3 border-[#388E3C] text-[#388E3C] font-bold text-lg rounded-2xl shadow-2xl hover:bg-[#388E3C] hover:text-white hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
-                        >
-                            <span className="text-3xl">🔍</span>
-                            <span>Truy Xuất Nguồn Gốc</span>
-                            <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
-                        </Link>
-                    </div>
+                            </Link>
+                        </div>
+                    </ScrollAnimation>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
-                        {stats.map((stat, index) => (
-                            <div 
-                                key={index}
-                                className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl hover:scale-105 transition-all duration-300 card-hover"
-                                style={{ animationDelay: `${0.7 + index * 0.1}s` }}
-                            >
-                                <div className="text-4xl mb-2">{stat.icon}</div>
-                                <div className="text-3xl font-extrabold bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent">
-                                    {stat.number}
+                    <ScrollAnimation direction="up" delay={400}>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                            {stats.map((stat, index) => (
+                                <div 
+                                    key={index}
+                                    className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl hover:scale-105 transition-all duration-300 card-hover"
+                                >
+                                    <div className="text-4xl mb-2">{stat.icon}</div>
+                                    <div className={`text-3xl font-extrabold ${stat.color}`}>
+                                        {stat.number}
+                                    </div>
+                                    <div className="text-sm text-gray-600 font-semibold mt-1">{stat.label}</div>
                                 </div>
-                                <div className="text-sm text-gray-600 font-semibold mt-1">{stat.label}</div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    </ScrollAnimation>
                 </div>
 
                 {/* Scroll Indicator */}
@@ -203,211 +224,226 @@ export default function Home() {
                         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
                     </svg>
                 </div>
-            </div>
+            </section>
 
-            {/* Features Section */}
-            <section className="py-20 bg-white relative">
+            {/* ============================================
+                PART 1: FEATURES SECTION - Giới thiệu Part 1
+                ============================================ */}
+            <section className="py-32 bg-gradient-to-b from-white via-gray-50 to-white relative">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-5xl md:text-6xl font-extrabold mb-4">
-                            <span className="bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent">
-                                Tính Năng Nổi Bật
-                            </span>
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                            Hệ thống toàn diện cho nông nghiệp sạch và minh bạch
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {features.map((feature, index) => (
-                            <div
-                                key={index}
-                                className="group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-3xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-500 card-hover animate-fadeInUp"
-                                style={{ animationDelay: feature.delay }}
-                            >
-                                {/* Gradient Background on Hover */}
-                                <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-500`}></div>
-                                
-                                <div className="relative z-10">
-                                    <div className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center text-5xl mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
-                                        {feature.icon}
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-[#388E3C] transition-colors">
-                                        {feature.title}
-                                    </h3>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        {feature.description}
-                                    </p>
-                                </div>
-
-                                {/* Decorative Corner */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-gray-100/50 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    {/* Section Header */}
+                    <ScrollAnimation direction="up">
+                        <div className="text-center mb-20">
+                            <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-[#388E3C] to-[#7CB342] text-white rounded-full text-sm font-bold">
+                                PHẦN 1
                             </div>
+                            <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+                                <span className="bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent">
+                                    Quản Lý & Sản Xuất
+                                </span>
+                            </h2>
+                            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                                Hệ thống quản lý nông trại thông minh với công nghệ Blockchain và IoT, 
+                                đảm bảo quy trình sản xuất minh bạch và hiệu quả
+                            </p>
+                        </div>
+                    </ScrollAnimation>
+
+                    {/* Features Grid */}
+                    <div className="space-y-32">
+                        {part1Features.map((feature, index) => (
+                            <ScrollAnimation 
+                                key={index} 
+                                direction={index % 2 === 0 ? 'left' : 'right'} 
+                                delay={index * 100}
+                            >
+                                <div className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12`}>
+                                    {/* Image/Icon Section */}
+                                    <div className="flex-1">
+                                        <div className={`${feature.gradient} rounded-3xl p-12 shadow-2xl relative overflow-hidden group`}>
+                                            <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                                            <div className="relative z-10 text-center">
+                                                <div className={`text-9xl mb-6 transform group-hover:scale-110 transition-transform duration-500`}>
+                                                    {feature.image}
+                                                </div>
+                                                <div className={`w-24 h-24 mx-auto bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center text-5xl shadow-xl group-hover:rotate-12 transition-transform duration-500`}>
+                                                    {feature.icon}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Content Section */}
+                                    <div className="flex-1">
+                                        <h3 className="text-4xl font-extrabold text-gray-800 mb-6">
+                                            {feature.title}
+                                        </h3>
+                                        <p className="text-lg text-gray-600 leading-relaxed mb-8">
+                                            {feature.description}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-[#388E3C] font-bold group cursor-pointer">
+                                            <span>Tìm hiểu thêm</span>
+                                            <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ScrollAnimation>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Portal Selection Section - Enhanced */}
-            <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-5xl md:text-6xl font-extrabold mb-4">
-                            <span className="bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent">
-                                Cổng Truy Cập
-                            </span>
+            {/* ============================================
+                TRANSITION SECTION - Visual Break
+                ============================================ */}
+            <section className="relative py-20 bg-gradient-to-r from-[#388E3C] via-[#7CB342] to-[#00C853] overflow-hidden">
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/pattern.svg')] bg-repeat"></div>
+                </div>
+                <ScrollAnimation direction="fade">
+                    <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
+                            Từ Nông Trại Đến Bàn Ăn
                         </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                            Chọn vai trò của bạn để bắt đầu hành trình với BICAP
+                        <p className="text-xl text-green-50 leading-relaxed">
+                            Một hệ thống hoàn chỉnh kết nối mọi khâu trong chuỗi cung ứng nông sản sạch
                         </p>
                     </div>
+                </ScrollAnimation>
+            </section>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {/* Farm */}
-                        <Link 
-                            href="/login?role=farm" 
-                            className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-[#7CB342]/30 transition-all duration-500 transform hover:-translate-y-3 border-2 border-transparent hover:border-[#7CB342] animate-fadeInUp"
-                            style={{ animationDelay: '0.1s' }}
-                        >
-                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-[#7CB342] to-[#388E3C]"></div>
-                            <div className="p-8 relative z-10">
-                                <div className="bg-gradient-to-br from-green-100 to-green-200 w-20 h-20 rounded-3xl flex items-center justify-center text-5xl mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-                                    🌱
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-[#388E3C] transition-colors">
-                                    Farm Management
-                                </h3>
-                                <p className="text-gray-600 mb-6 leading-relaxed">
-                                    Quản lý mùa vụ, quy trình canh tác và nhật ký sản xuất cho trang trại.
-                                </p>
-                                <div className="flex items-center text-[#388E3C] font-bold group-hover:gap-3 transition-all">
-                                    <span>Truy cập ngay</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </div>
+            {/* ============================================
+                PART 2: FEATURES SECTION - Giới thiệu Part 2
+                ============================================ */}
+            <section className="py-32 bg-gradient-to-b from-white via-gray-50 to-white relative">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Section Header */}
+                    <ScrollAnimation direction="up">
+                        <div className="text-center mb-20">
+                            <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full text-sm font-bold">
+                                PHẦN 2
                             </div>
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#7CB342]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </Link>
+                            <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+                                <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                                    Phân Phối & Tiêu Dùng
+                                </span>
+                            </h2>
+                            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                                Hệ thống phân phối thông minh và minh bạch, đảm bảo người tiêu dùng 
+                                luôn có thông tin đầy đủ về nguồn gốc sản phẩm
+                            </p>
+                        </div>
+                    </ScrollAnimation>
 
-                        {/* Retailer */}
-                        <Link 
-                            href="/login?role=retailer" 
-                            className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-blue-300/30 transition-all duration-500 transform hover:-translate-y-3 border-2 border-transparent hover:border-blue-500 animate-fadeInUp"
-                            style={{ animationDelay: '0.2s' }}
-                        >
-                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
-                            <div className="p-8 relative z-10">
-                                <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-20 h-20 rounded-3xl flex items-center justify-center text-5xl mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-                                    🛒
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors">
-                                    Retailer Portal
-                                </h3>
-                                <p className="text-gray-600 mb-6 leading-relaxed">
-                                    Dành cho nhà bán lẻ, quản lý đặt hàng và phân phối sản phẩm.
-                                </p>
-                                <div className="flex items-center text-blue-600 font-bold group-hover:gap-3 transition-all">
-                                    <span>Truy cập ngay</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </Link>
+                    {/* Features Grid */}
+                    <div className="space-y-32">
+                        {part2Features.map((feature, index) => (
+                            <ScrollAnimation 
+                                key={index} 
+                                direction={index % 2 === 0 ? 'right' : 'left'} 
+                                delay={index * 100}
+                            >
+                                <div className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12`}>
+                                    {/* Image/Icon Section */}
+                                    <div className="flex-1">
+                                        <div className={`${feature.gradient} rounded-3xl p-12 shadow-2xl relative overflow-hidden group`}>
+                                            <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                                            <div className="relative z-10 text-center">
+                                                <div className={`text-9xl mb-6 transform group-hover:scale-110 transition-transform duration-500`}>
+                                                    {feature.image}
+                                                </div>
+                                                <div className={`w-24 h-24 mx-auto bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center text-5xl shadow-xl group-hover:rotate-12 transition-transform duration-500`}>
+                                                    {feature.icon}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                        {/* Shipping */}
-                        <Link 
-                            href="/login?role=shipping" 
-                            className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-orange-300/30 transition-all duration-500 transform hover:-translate-y-3 border-2 border-transparent hover:border-orange-500 animate-fadeInUp"
-                            style={{ animationDelay: '0.3s' }}
-                        >
-                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-600"></div>
-                            <div className="p-8 relative z-10">
-                                <div className="bg-gradient-to-br from-orange-100 to-orange-200 w-20 h-20 rounded-3xl flex items-center justify-center text-5xl mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-                                    🚚
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-orange-600 transition-colors">
-                                    Shipping Partner
-                                </h3>
-                                <p className="text-gray-600 mb-6 leading-relaxed">
-                                    Quản lý vận chuyển, cập nhật lộ trình và trạng thái đơn hàng.
-                                </p>
-                                <div className="flex items-center text-orange-600 font-bold group-hover:gap-3 transition-all">
-                                    <span>Truy cập ngay</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-br from-orange-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </Link>
-
-                        {/* Admin */}
-                        <Link 
-                            href="/login?role=admin" 
-                            className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-purple-300/30 transition-all duration-500 transform hover:-translate-y-3 border-2 border-transparent hover:border-purple-500 animate-fadeInUp"
-                            style={{ animationDelay: '0.4s' }}
-                        >
-                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-purple-400 to-purple-600"></div>
-                            <div className="p-8 relative z-10">
-                                <div className="bg-gradient-to-br from-purple-100 to-purple-200 w-20 h-20 rounded-3xl flex items-center justify-center text-5xl mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-                                    🛡️
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors">
-                                    System Admin
-                                </h3>
-                                <p className="text-gray-600 mb-6 leading-relaxed">
-                                    Trung tâm quản trị hệ thống, quản lý người dùng và cấu hình.
-                                </p>
-                                <div className="flex items-center text-purple-600 font-bold group-hover:gap-3 transition-all">
-                                    <span>Truy cập ngay</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </Link>
-
-                        {/* Guest - Full Width */}
-                        <Link 
-                            href="/login?role=guest" 
-                            className="group relative bg-gradient-to-br from-teal-50 to-cyan-50 rounded-3xl shadow-2xl overflow-hidden hover:shadow-teal-300/30 transition-all duration-500 transform hover:-translate-y-3 border-2 border-transparent hover:border-teal-500 md:col-span-2 lg:col-span-2 animate-fadeInUp"
-                            style={{ animationDelay: '0.5s' }}
-                        >
-                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-teal-400 to-cyan-600"></div>
-                            <div className="p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 relative z-10">
-                                <div className="bg-gradient-to-br from-teal-200 to-cyan-200 w-24 h-24 rounded-3xl flex items-center justify-center text-6xl shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 flex-shrink-0">
-                                    👤
-                                </div>
-                                <div className="flex-1 text-center md:text-left">
-                                    <h3 className="text-3xl font-bold text-gray-800 mb-3 group-hover:text-teal-600 transition-colors">
-                                        Guest Access (Khách)
-                                    </h3>
-                                    <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                                        Tra cứu thông tin, quét mã QR truy xuất nguồn gốc sản phẩm mà không cần đăng nhập. 
-                                        Khám phá chợ nông sản và tìm hiểu về nông nghiệp sạch.
-                                    </p>
-                                    <div className="flex items-center justify-center md:justify-start text-teal-600 font-bold group-hover:gap-3 transition-all">
-                                        <span>Truy cập ngay</span>
-                                        <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                        </svg>
+                                    {/* Content Section */}
+                                    <div className="flex-1">
+                                        <h3 className="text-4xl font-extrabold text-gray-800 mb-6">
+                                            {feature.title}
+                                        </h3>
+                                        <p className="text-lg text-gray-600 leading-relaxed mb-8">
+                                            {feature.description}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-orange-600 font-bold group cursor-pointer">
+                                            <span>Tìm hiểu thêm</span>
+                                            <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                            </svg>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-br from-teal-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </Link>
+                            </ScrollAnimation>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* Footer - Enhanced */}
+            {/* ============================================
+                PORTAL SELECTION SECTION
+                ============================================ */}
+            <section className="py-32 bg-gradient-to-b from-gray-50 to-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <ScrollAnimation direction="up">
+                        <div className="text-center mb-16">
+                            <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+                                <span className="bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent">
+                                    Bắt Đầu Hành Trình
+                                </span>
+                            </h2>
+                            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                                Chọn vai trò của bạn để truy cập vào hệ thống BICAP
+                            </p>
+                        </div>
+                    </ScrollAnimation>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[
+                            { href: '/login?role=farm', icon: '🌱', title: 'Farm Management', color: 'from-green-400 to-emerald-600', desc: 'Quản lý mùa vụ và sản xuất' },
+                            { href: '/login?role=retailer', icon: '🛒', title: 'Retailer Portal', color: 'from-blue-400 to-cyan-600', desc: 'Quản lý đơn hàng và phân phối' },
+                            { href: '/login?role=shipping', icon: '🚚', title: 'Shipping Partner', color: 'from-orange-400 to-red-600', desc: 'Quản lý vận chuyển' },
+                            { href: '/login?role=admin', icon: '🛡️', title: 'System Admin', color: 'from-purple-400 to-pink-600', desc: 'Quản trị hệ thống' },
+                            { href: '/login?role=guest', icon: '👤', title: 'Guest Access', color: 'from-teal-400 to-green-600', desc: 'Truy cập công khai' }
+                        ].map((portal, index) => (
+                            <ScrollAnimation key={index} direction="up" delay={index * 100}>
+                                <Link 
+                                    href={portal.href} 
+                                    className="group relative bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 border-2 border-transparent hover:border-gray-200"
+                                >
+                                    <div className={`absolute top-0 w-full h-1 bg-gradient-to-r ${portal.color}`}></div>
+                                    <div className="p-8 relative z-10">
+                                        <div className={`w-20 h-20 bg-gradient-to-br ${portal.color} rounded-3xl flex items-center justify-center text-5xl shadow-lg mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300`}>
+                                            {portal.icon}
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-[#388E3C] transition-colors">
+                                            {portal.title}
+                                        </h3>
+                                        <p className="text-gray-600 mb-6 leading-relaxed">
+                                            {portal.desc}
+                                        </p>
+                                        <div className="flex items-center text-[#388E3C] font-bold group-hover:gap-3 transition-all">
+                                            <span>Truy cập ngay</span>
+                                            <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${portal.color} opacity-0 group-hover:opacity-5 transition-opacity`}></div>
+                                </Link>
+                            </ScrollAnimation>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ============================================
+                FOOTER
+                ============================================ */}
             <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-white py-16 relative overflow-hidden">
-                {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 left-0 w-64 h-64 bg-[#7CB342] rounded-full blur-3xl"></div>
                     <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#388E3C] rounded-full blur-3xl"></div>
@@ -433,7 +469,6 @@ export default function Home() {
                                 <li><Link href="#" className="hover:text-white transition-colors">Giới thiệu</Link></li>
                                 <li><Link href="#" className="hover:text-white transition-colors">Đội ngũ</Link></li>
                                 <li><Link href="#" className="hover:text-white transition-colors">Tin tức</Link></li>
-                                <li><Link href="#" className="hover:text-white transition-colors">Tuyển dụng</Link></li>
                             </ul>
                         </div>
 
@@ -443,7 +478,6 @@ export default function Home() {
                                 <li><Link href="#" className="hover:text-white transition-colors">Câu hỏi thường gặp</Link></li>
                                 <li><Link href="#" className="hover:text-white transition-colors">Hướng dẫn sử dụng</Link></li>
                                 <li><Link href="#" className="hover:text-white transition-colors">Liên hệ</Link></li>
-                                <li><Link href="#" className="hover:text-white transition-colors">Báo lỗi</Link></li>
                             </ul>
                         </div>
 
@@ -452,7 +486,6 @@ export default function Home() {
                             <ul className="space-y-2 text-gray-400">
                                 <li><Link href="#" className="hover:text-white transition-colors">Chính sách bảo mật</Link></li>
                                 <li><Link href="#" className="hover:text-white transition-colors">Điều khoản sử dụng</Link></li>
-                                <li><Link href="#" className="hover:text-white transition-colors">Cookie Policy</Link></li>
                             </ul>
                         </div>
                     </div>
