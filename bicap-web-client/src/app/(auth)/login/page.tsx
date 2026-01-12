@@ -46,7 +46,24 @@ function LoginForm() {
             await loginWithGoogle(selectedRole);
         } catch (err: any) {
             console.error(err);
-            setError(err.message || 'Đăng nhập Google thất bại.');
+            let msg = err.message || 'Đăng nhập Google thất bại.';
+            
+            // Firebase config errors
+            if (err.code === 'auth/api-key-not-valid' || err.message?.includes('api-key-not-valid') || err.message?.includes('api-key')) {
+                msg = '❌ Firebase chưa được cấu hình đúng. Vui lòng kiểm tra file .env và cấu hình Firebase API key. Xem FIREBASE_SETUP_GUIDE.md để biết cách cấu hình.';
+            } else if (err.code === 'auth/invalid-api-key' || err.message?.includes('invalid-api-key')) {
+                msg = '❌ Firebase API key không hợp lệ. Vui lòng kiểm tra lại cấu hình trong file .env.';
+            } else if (err.message?.includes('Firebase initialization failed') || err.message?.includes('Firebase chưa được cấu hình')) {
+                msg = '❌ Firebase chưa được cấu hình. Vui lòng cấu hình Firebase trong file .env trước khi sử dụng.';
+            }
+            // Google login specific errors
+            else if (err.code === 'auth/popup-closed-by-user') {
+                msg = 'Bạn đã đóng cửa sổ đăng nhập. Vui lòng thử lại.';
+            } else if (err.code === 'auth/popup-blocked') {
+                msg = 'Trình duyệt đã chặn popup. Vui lòng cho phép popup và thử lại.';
+            }
+            
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -70,10 +87,27 @@ function LoginForm() {
         } catch (err: any) {
             console.error(err);
             let msg = err.message || 'Authentication failed.';
-            if (err.code === 'auth/email-already-in-use') msg = 'Email này đã được sử dụng.';
-            if (err.code === 'auth/wrong-password') msg = 'Sai mật khẩu.';
-            if (err.code === 'auth/user-not-found') msg = 'Không tìm thấy tài khoản với email này.';
-            if (err.code === 'auth/invalid-email') msg = 'Email không hợp lệ.';
+            
+            // Firebase config errors
+            if (err.code === 'auth/api-key-not-valid' || err.message?.includes('api-key-not-valid') || err.message?.includes('api-key')) {
+                msg = '❌ Firebase chưa được cấu hình đúng. Vui lòng kiểm tra file .env và cấu hình Firebase API key. Xem FIREBASE_SETUP_GUIDE.md để biết cách cấu hình.';
+            } else if (err.code === 'auth/invalid-api-key' || err.message?.includes('invalid-api-key')) {
+                msg = '❌ Firebase API key không hợp lệ. Vui lòng kiểm tra lại cấu hình trong file .env.';
+            } else if (err.message?.includes('Firebase initialization failed') || err.message?.includes('Firebase chưa được cấu hình')) {
+                msg = '❌ Firebase chưa được cấu hình. Vui lòng cấu hình Firebase trong file .env trước khi sử dụng.';
+            }
+            // Standard Firebase errors
+            else if (err.code === 'auth/email-already-in-use') msg = 'Email này đã được sử dụng.';
+            else if (err.code === 'auth/wrong-password') msg = 'Sai mật khẩu.';
+            else if (err.code === 'auth/user-not-found') msg = 'Không tìm thấy tài khoản với email này.';
+            else if (err.code === 'auth/invalid-email') msg = 'Email không hợp lệ.';
+            else if (err.code === 'auth/weak-password') msg = 'Mật khẩu quá yếu. Vui lòng sử dụng mật khẩu mạnh hơn (ít nhất 6 ký tự).';
+            else if (err.code === 'auth/too-many-requests') msg = 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau vài phút.';
+            // Network errors
+            else if (err.message?.includes('Network Error') || err.message?.includes('ECONNREFUSED')) {
+                msg = '❌ Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc đảm bảo backend đang chạy.';
+            }
+            
             setError(msg);
         } finally {
             setLoading(false);

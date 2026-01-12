@@ -1,4 +1,7 @@
+'use client';
+
 import type { Metadata } from 'next'
+import FirebaseConfigWarning from '@/components/FirebaseConfigWarning';
 
 export const metadata: Metadata = {
     title: 'Bicap Login',
@@ -12,6 +15,7 @@ export default function AuthLayout({
 }) {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-green-50/30 to-white dark:bg-gray-900 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+            <FirebaseConfigWarning />
             {/* Animated Background */}
             <div className="absolute inset-0 opacity-10">
                 <div className="absolute top-0 left-0 w-96 h-96 bg-[#7CB342] rounded-full mix-blend-multiply filter blur-3xl animate-float"></div>
