@@ -111,14 +111,23 @@ export default function MarketplacePage() {
     const categories = ["Tất cả", "Rau củ", "Trái cây", "Củ quả"];
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans pb-20">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 font-sans pb-20">
             
-            {/* HEADER BANNER - Enhanced */}
-            <div className="bg-gradient-to-r from-[#388E3C] via-[#7CB342] to-[#00C853] text-white py-16 px-4 shadow-2xl mb-8 relative overflow-hidden">
-                {/* Animated Background */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
+            {/* HEADER BANNER - Ultra Enhanced */}
+            <div className="bg-gradient-to-r from-[#388E3C] via-[#7CB342] to-[#00C853] text-white py-20 px-4 shadow-2xl mb-12 relative overflow-hidden">
+                {/* Animated Background with Parallax */}
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
+                    <div className="absolute bottom-0 left-0 w-80 h-80 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+                    <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+                </div>
+
+                {/* Floating Vegetables */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-10 left-10 text-6xl opacity-20 animate-float">🥬</div>
+                    <div className="absolute top-20 right-20 text-7xl opacity-20 animate-float" style={{ animationDelay: '0.5s' }}>🍅</div>
+                    <div className="absolute bottom-10 left-1/4 text-8xl opacity-20 animate-float" style={{ animationDelay: '1s' }}>🥕</div>
+                    <div className="absolute bottom-20 right-1/3 text-6xl opacity-20 animate-float animate-wave">🌽</div>
                 </div>
                 
                 {/* Back Button */}
@@ -130,29 +139,43 @@ export default function MarketplacePage() {
                 </Link>
 
                 <div className="container mx-auto text-center relative z-10">
-                    <div className="inline-block mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
-                        <span className="text-sm font-semibold">🏪 Chợ Nông Sản</span>
+                    <div className="inline-block mb-6 px-6 py-3 bg-white/20 backdrop-blur-md rounded-full border-2 border-white/30 shadow-xl animate-zoom-in">
+                        <span className="text-base font-bold flex items-center gap-2">
+                            <span className="text-2xl">🏪</span>
+                            Chợ Nông Sản
+                        </span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-extrabold mb-4 drop-shadow-2xl animate-fadeInUp">Chợ Nông Sản Sạch BICAP</h1>
-                    <p className="text-green-50 mb-10 text-lg md:text-xl max-w-2xl mx-auto animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-                        Kết nối trực tiếp từ Nông trại đến Bàn ăn. Minh bạch - An toàn - Chất lượng.
+                    <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold mb-6 drop-shadow-2xl animate-fadeInUp">
+                        <span className="block bg-gradient-to-r from-white via-green-50 to-white bg-clip-text text-transparent">
+                            Chợ Nông Sản Sạch
+                        </span>
+                        <span className="block text-4xl md:text-5xl mt-2 text-green-50">BICAP</span>
+                    </h1>
+                    <p className="text-green-50 mb-12 text-xl md:text-2xl max-w-3xl mx-auto font-light leading-relaxed animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
+                        Kết nối trực tiếp từ <span className="font-bold">Nông trại</span> đến <span className="font-bold">Bàn ăn</span>. 
+                        <span className="block mt-2">Minh bạch - An toàn - Chất lượng</span>
                     </p>
                     
-                    <div className="max-w-2xl mx-auto relative animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-                        <div className="relative">
+                    <div className="max-w-3xl mx-auto relative animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+                        <div className="relative group">
                             <input 
                                 type="text" 
-                                placeholder="Tìm kiếm nông sản, tên trang trại..."
-                                className="w-full py-4 pl-6 pr-14 rounded-full text-gray-800 shadow-2xl focus:outline-none focus:ring-4 focus:ring-white/50 transition-all text-lg bg-white border-2 border-transparent focus:border-white/30" 
+                                placeholder="🔍 Tìm kiếm nông sản, tên trang trại..."
+                                className="w-full py-5 pl-8 pr-16 rounded-2xl text-gray-800 shadow-2xl focus:outline-none focus:ring-4 focus:ring-white/50 transition-all text-lg bg-white/95 backdrop-blur-sm border-2 border-transparent focus:border-white/50 hover:border-white/30" 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                            <button className="absolute right-2 top-2 bg-gradient-to-r from-[#388E3C] to-[#7CB342] hover:from-[#2E7D32] hover:to-[#388E3C] text-white p-3 rounded-full transition-all shadow-lg hover:scale-110 transform">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            <button className="absolute right-3 top-3 bg-gradient-to-r from-[#388E3C] to-[#7CB342] hover:from-[#2E7D32] hover:to-[#388E3C] text-white p-3.5 rounded-xl transition-all shadow-xl hover:scale-110 transform btn-glow">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </button>
                         </div>
+                        {searchTerm && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl p-4 z-20 animate-zoom-in">
+                                <p className="text-sm text-gray-600">Đang tìm kiếm: <span className="font-bold text-[#388E3C]">{searchTerm}</span></p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
