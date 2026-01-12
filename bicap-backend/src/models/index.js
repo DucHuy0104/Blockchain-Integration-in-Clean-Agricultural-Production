@@ -112,13 +112,13 @@ const initModels = async () => {
       });
     }
 
-    if (!tableDesc.farmId) {
+    /*if (!tableDesc.farmId) {
       console.log('⚡ Adding missing column: farmId to Products');
       await queryInterface.addColumn('Products', 'farmId', {
         type: require('sequelize').DataTypes.INTEGER,
         allowNull: true // Should be false but set true for existing data safety
       });
-    }
+    }*/
 
     // 3. Manual Migration for 'Users' table
     const userTableDesc = await queryInterface.describeTable('Users');

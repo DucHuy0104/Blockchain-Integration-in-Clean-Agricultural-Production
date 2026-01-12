@@ -23,19 +23,30 @@ interface Product {
     batchCode: string;
 }
 
+// Hàm lấy icon tự động
+const getProductIcon = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('cà chua')) return '🍅';
+    if (n.includes('dưa')) return '🍈';
+    if (n.includes('gạo') || n.includes('lúa')) return '🍚';
+    if (n.includes('rau') || n.includes('xà lách') || n.includes('cải')) return '🥬';
+    if (n.includes('dâu')) return '🍓';
+    if (n.includes('khoai')) return '🥔';
+    if (n.includes('bắp') || n.includes('ngô')) return '🌽';
+    if (n.includes('nấm')) return '🍄';
+    if (n.includes('cà rốt')) return '🥕';
+    return '🌾';
+};
+
 export default function MarketplacePage() {
     const { user } = useAuth();
     const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('Tất cả');
 
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.farm.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // Buy Modal State
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [buyQuantity, setBuyQuantity] = useState(1);
     const [showModal, setShowModal] = useState(false);
@@ -47,6 +58,18 @@ export default function MarketplacePage() {
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     }, []);
+
+    const filteredProducts = products.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              p.farm.name.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        let matchesCategory = true;
+        if (selectedCategory === 'Rau củ') matchesCategory = p.name.toLowerCase().includes('rau') || p.name.toLowerCase().includes('cải') || p.name.toLowerCase().includes('cà');
+        if (selectedCategory === 'Trái cây') matchesCategory = p.name.toLowerCase().includes('dưa') || p.name.toLowerCase().includes('dâu') || p.name.toLowerCase().includes('cam');
+        if (selectedCategory === 'Củ quả') matchesCategory = p.name.toLowerCase().includes('khoai') || p.name.toLowerCase().includes('sắn');
+
+        return matchesSearch && matchesCategory;
+    });
 
     const handleBuyClick = (product: Product) => {
         if (!user) {
@@ -74,7 +97,6 @@ export default function MarketplacePage() {
 
             alert('Đặt hàng thành công! Chủ trại sẽ liên hệ với bạn.');
             setShowModal(false);
-            // Reload products to update quantity
             const res = await axios.get('http://localhost:5001/api/products');
             setProducts(res.data);
 
@@ -86,138 +108,170 @@ export default function MarketplacePage() {
         }
     };
 
+    const categories = ["Tất cả", "Rau củ", "Trái cây", "Củ quả"];
+
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* Header */}
-            {/* Header */}
-            <nav className="bg-green-600 text-white px-4 py-2 sticky top-0 z-50 shadow-md">
-                <div className="w-full flex justify-between items-center gap-2">
-                    <Link href="/" className="text-lg font-bold whitespace-nowrap hidden lg:block">BICAP Market</Link>
-                    <div className="flex items-center gap-1 justify-end w-full lg:w-auto">
-                        <NavLink href="/" label="Trang chủ" icon="🏠" />
-                        <NavLink href="/market" label="Sàn Nông Sản" icon="🏪" highlight />
-                        {user ? (
-                            <NavLink href="/farm" label="Vào Dashboard" icon="🚜" />
-                        ) : (
-                            <NavLink href="/login" label="Đăng Nhập" icon="👤" />
-                        )}
+        <div className="min-h-screen bg-gray-50 font-sans pb-20">
+            
+            {/* HEADER BANNER */}
+            <div className="bg-green-700 text-white py-12 px-4 shadow-lg mb-8 relative">
+                
+                {/* --- NÚT QUAY LẠI --- */}
+                <Link href="/guest" className="absolute top-6 left-6 flex items-center text-green-100 hover:text-white transition font-bold z-10">
+                    <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Quay lại
+                </Link>
+                {/* ------------------- */}
+
+                <div className="container mx-auto text-center">
+                    <h1 className="text-4xl font-extrabold mb-3">Chợ Nông Sản Sạch BICAP</h1>
+                    <p className="text-green-100 mb-8 text-lg">Kết nối trực tiếp từ Nông trại đến Bàn ăn. Minh bạch - An toàn.</p>
+                    
+                    <div className="max-w-2xl mx-auto relative">
+                        {/* --- Ô INPUT ĐÃ CÓ bg-white --- */}
+                        <input 
+                            type="text" 
+                            placeholder="Tìm kiếm nông sản, tên trang trại..."
+                            className="w-full py-4 pl-6 pr-12 rounded-full text-gray-800 shadow-2xl focus:outline-none focus:ring-4 focus:ring-green-400 transition-all text-lg bg-white" 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <button className="absolute right-2 top-2 bg-green-600 hover:bg-green-800 text-white p-2.5 rounded-full transition shadow-md">
+                            🔍
+                        </button>
                     </div>
                 </div>
-            </nav>
-
-            {/* Hero Section */}
-            <div className="bg-green-700 text-white py-12 px-4 text-center">
-                <h1 className="text-4xl font-bold mb-4">Nông Sản Sạch - Truy Xuất Nguồn Gốc Blockchain</h1>
-                <p className="text-green-100 max-w-2xl mx-auto">
-                    Kết nối trực tiếp từ Nông trại đến Bàn ăn. Minh bạch, An toàn và Tin cậy.
-                </p>
             </div>
 
-            {/* Product List */}
-            <div className="container mx-auto p-4 py-8">
-                {/* Search Bar */}
-                <div className="mb-8 max-w-md mx-auto relative">
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm nông sản (tên, trang trại)..."
-                        className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <div className="absolute left-3 top-3.5 text-gray-400">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    </div>
+            {/* NỘI DUNG CHÍNH */}
+            <div className="container mx-auto px-4">
+                
+                {/* BỘ LỌC */}
+                <div className="flex gap-3 overflow-x-auto pb-4 mb-8 justify-center">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            className={`px-6 py-2 rounded-full font-bold transition whitespace-nowrap border
+                                ${selectedCategory === cat 
+                                    ? "bg-green-600 text-white border-green-600 shadow-md" 
+                                    : "bg-white text-gray-600 hover:bg-gray-100 border-gray-200"}`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
                 </div>
 
+                {/* DANH SÁCH SẢN PHẨM */}
                 {loading ? (
-                    <div className="text-center py-10">Đang tải sản phẩm...</div>
+                    <div className="text-center py-20 text-gray-500 text-xl">Đang tải sản phẩm từ nông trại...</div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {filteredProducts.length === 0 ? (
-                            <div className="col-span-full text-center py-10 text-gray-500">
-                                Không tìm thấy sản phẩm nào phù hợp.
-                            </div>
-                        ) : (
-                            filteredProducts.map(product => (
-                                <div key={product.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-2xl transition hover:-translate-y-1">
-                                    <div className="h-48 bg-gray-200 flex items-center justify-center">
-                                        <span className="text-4xl">🌾</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {filteredProducts.length > 0 ? (
+                            filteredProducts.map((product) => (
+                                <div key={product.id} className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition duration-300 overflow-hidden border border-gray-100 group flex flex-col">
+                                    <div className="h-48 bg-gray-50 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform relative">
+                                        {getProductIcon(product.name)}
+                                        <div className="absolute top-3 right-3 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded shadow-sm">
+                                            {product.farm.certification || 'VietGAP'}
+                                        </div>
                                     </div>
-                                    <div className="p-5">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h3 className="text-lg font-bold text-gray-800 dark:text-white truncate" title={product.name}>{product.name}</h3>
-                                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{product.farm.certification}</span>
+                                    
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <div className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                                            🏠 {product.farm.name}
                                         </div>
-                                        <p className="text-gray-500 text-sm mb-4 truncate">{product.farm.name} - {product.farm.address}</p>
-
-                                        <div className="flex justify-between items-center mb-4">
+                                        
+                                        <h3 className="text-lg font-bold text-gray-800 mb-1 line-clamp-1" title={product.name}>
+                                            {product.name}
+                                        </h3>
+                                        
+                                        <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
                                             <div>
-                                                <p className="text-xs text-gray-400">Giá bán</p>
-                                                <p className="text-lg font-bold text-green-600">{product.price.toLocaleString('vi-VN')} đ/kg</p>
+                                                <p className="text-green-600 font-extrabold text-xl">
+                                                    {product.price.toLocaleString()}đ
+                                                </p>
+                                                <p className="text-xs text-gray-400">
+                                                    Còn: {product.quantity} kg
+                                                </p>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-gray-400">Còn lại</p>
-                                                <p className="font-semibold text-gray-800 dark:text-gray-200">{product.quantity} kg</p>
-                                            </div>
+                                            
+                                            <button 
+                                                onClick={() => handleBuyClick(product)}
+                                                disabled={product.quantity <= 0}
+                                                className={`px-4 py-2 rounded-lg font-bold text-sm transition shadow-md
+                                                    ${product.quantity > 0 
+                                                        ? "bg-gray-900 hover:bg-green-600 text-white" 
+                                                        : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                                            >
+                                                {product.quantity > 0 ? 'Mua Ngay' : 'Hết hàng'}
+                                            </button>
                                         </div>
-
-                                        <button
-                                            onClick={() => handleBuyClick(product)}
-                                            disabled={product.quantity === 0}
-                                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition disabled:bg-gray-400"
-                                        >
-                                            {product.quantity === 0 ? 'Hết hàng' : 'Mua Ngay'}
-                                        </button>
-
-                                        {product.season && (
-                                            <div className="mt-3 text-center">
-                                                <Link href={`/traceability/${(product as any).seasonId || '#'}`} className="text-xs text-blue-500 hover:underline flex items-center justify-center gap-1">
-                                                    🔍 Truy xuất nguồn gốc
-                                                </Link>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
-                            )))}
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-20">
+                                <div className="text-6xl mb-4">🥬</div>
+                                <h3 className="text-xl font-bold text-gray-600">Không tìm thấy sản phẩm nào!</h3>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
-            {/* Buy Modal */}
+            {/* MODAL MUA HÀNG */}
             {showModal && selectedProduct && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
-                        <h2 className="text-xl font-bold mb-4">Đặt Mua: {selectedProduct.name}</h2>
-
-                        <div className="mb-4">
-                            <label className="block text-sm text-gray-600">Số lượng (kg):</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max={selectedProduct.quantity}
-                                value={buyQuantity}
-                                onChange={(e) => setBuyQuantity(Number(e.target.value))}
-                                className="w-full border rounded p-2 mt-1"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">Tối đa: {selectedProduct.quantity} kg</p>
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100">
+                        <div className="flex justify-between items-center mb-4 border-b pb-2">
+                            <h2 className="text-xl font-bold text-gray-800">Đặt Mua Nông Sản</h2>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
                         </div>
 
-                        <div className="mb-6 flex justify-between font-bold text-lg">
-                            <span>Tổng tiền:</span>
-                            <span className="text-green-600">{(selectedProduct.price * buyQuantity).toLocaleString('vi-VN')} đ</span>
+                        <div className="mb-6 text-center">
+                            <div className="text-5xl mb-2">{getProductIcon(selectedProduct.name)}</div>
+                            <h3 className="font-bold text-lg text-green-700">{selectedProduct.name}</h3>
+                            <p className="text-gray-500 text-sm">{selectedProduct.farm.name}</p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="mb-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Số lượng (kg):</label>
+                                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={selectedProduct.quantity}
+                                        value={buyQuantity}
+                                        onChange={(e) => setBuyQuantity(Number(e.target.value))}
+                                        className="w-full p-3 text-center focus:outline-none font-bold text-lg"
+                                    />
+                                </div>
+                                <p className="text-xs text-right text-gray-400 mt-1">Trong kho còn: {selectedProduct.quantity} kg</p>
+                            </div>
+
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <span className="font-medium text-gray-600">Tổng thanh toán:</span>
+                                <span className="text-xl font-bold text-green-600">
+                                    {(selectedProduct.price * buyQuantity).toLocaleString('vi-VN')} đ
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="flex-1 bg-gray-200 text-gray-800 font-bold py-2 rounded hover:bg-gray-300"
+                                className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition"
                             >
-                                Hủy
+                                Hủy bỏ
                             </button>
                             <button
                                 onClick={submitOrder}
                                 disabled={buying || buyQuantity <= 0 || buyQuantity > selectedProduct.quantity}
-                                className="flex-1 bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                                className="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition disabled:opacity-50 shadow-lg shadow-green-200"
                             >
                                 {buying ? 'Đang xử lý...' : 'Xác Nhận Mua'}
                             </button>
@@ -226,16 +280,5 @@ export default function MarketplacePage() {
                 </div>
             )}
         </div>
-    );
-}
-
-function NavLink({ href, label, icon, highlight }: { href: string, label: string, icon?: string, highlight?: boolean }) {
-    return (
-        <Link href={href} className={`flex flex-col items-center hover:bg-green-700 px-2 py-1.5 rounded transition-colors group ${highlight ? 'text-yellow-300' : 'text-white'}`}>
-            <span className={`text-xs font-bold uppercase tracking-wide whitespace-nowrap ${highlight ? 'text-yellow-300' : 'text-white'}`}>
-                {icon && <span className="mr-1">{icon}</span>}
-                {label}
-            </span>
-        </Link>
     );
 }

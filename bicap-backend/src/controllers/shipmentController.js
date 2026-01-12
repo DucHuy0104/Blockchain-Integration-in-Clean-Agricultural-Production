@@ -3,6 +3,55 @@ const { Shipment, Order, Farm, User, Product } = require('../models');
 
 const blockchainHelper = require('../utils/blockchainHelper');
 
+// API: GET /api/shipments
+exports.getAllShipments = async (req, res) => {
+    try {
+        console.log("Đang gọi API lấy danh sách vận đơn..."); // Log để debug
+
+        const shipments = await Shipment.findAll({
+            include: [
+                { 
+                    model: User, 
+                    as: 'driver', // Phải khớp với alias trong models/index.js
+                    attributes: ['id', 'fullName', 'phone'] 
+                },
+                {
+                    model: Order,
+                    as: 'order',
+                    attributes: ['id', 'status'],
+                    include: [
+                        { model: Product, as: 'product', attributes: ['name', 'price'] }
+                    ]
+                }
+            ],
+            order: [['createdAt', 'DESC']] // Đơn mới nhất lên đầu
+        });
+
+        // Format dữ liệu cho Frontend dễ hiển thị
+        const data = shipments.map(s => ({
+            id: s.id,
+            diemDi: s.pickupLocation || "Kho Trung Tâm",
+            diemDen: s.deliveryLocation || "Khách hàng",
+            taiXe: s.driver ? s.driver.fullName : "Chưa phân công",
+            status: s.status, // Giữ nguyên trạng thái từ DB (assigned, picked_up...)
+            details: {
+                // Tạo mã QR từ ID thật
+                qrCode: s.pickupQRCode || `SHIPMENT_${s.id}`,
+                vehicle: s.driver?.vehicleType || "Xe tải",
+                type: s.order?.product?.name || "Hàng hóa",
+                weight: "---", // Nếu DB có cột weight thì thay vào đây
+                time: s.updatedAt
+            }
+        }));
+
+        res.status(200).json(data);
+
+    } catch (error) {
+        console.error("Lỗi Controller getAllShipments:", error);
+        res.status(500).json({ message: "Lỗi Server khi lấy vận đơn", error: error.message });
+    }
+};
+
 // 1. Tạo đơn vận chuyển (Chỉ khi Order đã confirmed)
 exports.createShipment = async (req, res) => {
     try {

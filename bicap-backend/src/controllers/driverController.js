@@ -424,3 +424,69 @@ exports.getDriverStats = async (req, res) => {
     }
 };
 
+/**
+ * --- CHỈ THÊM HÀM NÀY ĐỂ TRANG ADMIN KHÔNG BỊ LỖI ---
+ * Lấy danh sách tất cả tài xế
+ */
+exports.getAllDrivers = async (req, res) => {
+    try {
+        // Tìm tất cả user có role là 'driver'
+        const drivers = await User.findAll({
+            where: { role: 'driver' }, 
+            attributes: ['id', 'fullName', 'phone', 'email', 'address', 'vehicleType', 'licensePlate'], // Thêm vehicleType, licensePlate
+            include: [
+                {
+                    model: Shipment,
+                    as: 'assignedShipments',
+                    where: {
+                        status: {
+                            [Op.in]: ['assigned', 'picked_up', 'delivering']
+                        }
+                    },
+                    required: false,
+                    attributes: ['id', 'status', 'currentLocation']
+                }
+            ]
+        });
+
+        // Format dữ liệu trả về cho Frontend
+        const formattedDrivers = drivers.map(driver => {
+            const activeShipment = driver.assignedShipments && driver.assignedShipments.length > 0
+                ? driver.assignedShipments[0]
+                : null;
+            const status = activeShipment ? 'Bận' : 'Rảnh';
+
+            return {
+                id: driver.id,
+                name: driver.fullName,
+                phone: driver.phone,
+                vehicle: driver.vehicleType || "Xe tải", // Lấy từ DB (nếu có)
+                plate: driver.licensePlate || "---",     // Lấy từ DB (nếu có)
+                status: status,
+                current_job: activeShipment ? activeShipment.id : null
+            };
+        });
+
+        res.json(formattedDrivers);
+    } catch (error) {
+        console.error('Error getting all drivers:', error);
+        // Trả về mảng rỗng nếu lỗi để không chết frontend
+        res.status(500).json([]); 
+    }
+};
+// API: Lấy danh sách tất cả tài xế
+exports.getAllDrivers = async (req, res) => {
+    try {
+        console.log("🛠️ Đang lấy danh sách tài xế...");
+        const drivers = await User.findAll({
+            where: { role: 'driver' }, // Chỉ lấy user là driver
+            attributes: ['id', 'fullName', 'phone', 'vehicleType', 'licensePlate', 'status', 'email'],
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json(drivers);
+    } catch (error) {
+        console.error("Lỗi getDrivers:", error);
+        res.status(500).json({ message: "Lỗi lấy danh sách tài xế" });
+    }
+};

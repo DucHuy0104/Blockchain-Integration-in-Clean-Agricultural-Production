@@ -1,7 +1,7 @@
 -- Tạo Database
-CREATE DATABASE BICAP_DB;
+CREATE DATABASE BICAP;
 GO
-USE BICAP_DB;
+USE BICAP;
 GO
 
 /* =============================================

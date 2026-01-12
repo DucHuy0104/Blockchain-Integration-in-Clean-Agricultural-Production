@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+// THÊM DÒNG NÀY VÀO ĐẦU FILE 
+const driverController = require('./src/controllers/driverController');
 
 // SỬA DÒNG NÀY: Import từ models/index thay vì config/database
 const { connectDB } = require('./src/config/database');
@@ -22,7 +24,7 @@ const publicRoutes = require('./src/routes/publicRoutes');
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true
 }));
 app.use(express.json());
@@ -74,8 +76,11 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/monitoring', monitoringRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/driver', driverRoutes);
+app.use('/api/drivers', driverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/tasks', require('./src/routes/seasonTaskRoutes'));
+
+// 👇 THÊM DÒNG NÀY ĐỂ MỞ API:
+app.get('/api/drivers', driverController.getAllDrivers);

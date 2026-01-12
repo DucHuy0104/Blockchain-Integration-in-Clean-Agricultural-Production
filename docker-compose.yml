@@ -10,7 +10,7 @@ services:
       - "1433:1433"
     volumes:
       # Lưu dữ liệu ra thư mục .docker_data để không bị mất khi tắt container
-      - ./.docker_data/sql:/var/opt/mssql/data
+      - ./.docker_data_new/sql:/var/opt/mssql/data
     healthcheck:
       test: [ "CMD-SHELL", "bash -c '(echo > /dev/tcp/localhost/1433) >/dev/null 2>&1'" ]
       interval: 10s
@@ -25,11 +25,13 @@ services:
     build: ./bicap-backend
     ports:
       - "5001:5001"
+    env_file:             
+      - ./bicap-backend/.env
     environment:
       - DB_HOST=sql_server
       - DB_USER=sa
       - DB_PASS=BiCapProject@123
-      - DB_NAME=bicap_db
+      - DB_NAME=BICAP
       - DB_PORT=1433
       - PORT=5001
       # Thêm các biến môi trường khác từ .env của bạn nếu cần

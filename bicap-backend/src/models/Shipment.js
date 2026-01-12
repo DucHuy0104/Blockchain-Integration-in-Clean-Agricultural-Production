@@ -1,4 +1,3 @@
-// src/models/Shipment.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -27,7 +26,6 @@ const Shipment = sequelize.define('Shipment', {
     status: {
         type: DataTypes.STRING,
         defaultValue: 'created',
-        // created: mới tạo, pending_pickup: chờ lấy hàng, shipping: đang vận chuyển (chung), assigned: đã gán xe, picked_up: đã lấy hàng, delivering: đang giao, delivered: đã giao, failed: thất bại
         validate: {
             isIn: [['created', 'pending_pickup', 'shipping', 'assigned', 'picked_up', 'delivering', 'delivered', 'failed']]
         }
@@ -42,28 +40,23 @@ const Shipment = sequelize.define('Shipment', {
     },
     currentLocation: {
         type: DataTypes.STRING,
-        allowNull: true,
-        comment: 'GPS location hiện tại (lat,lng)'
+        allowNull: true
     },
     pickupLocation: {
         type: DataTypes.STRING,
-        allowNull: true,
-        comment: 'Địa điểm nhận hàng (lat,lng)'
+        allowNull: true
     },
     deliveryLocation: {
         type: DataTypes.STRING,
-        allowNull: true,
-        comment: 'Địa điểm giao hàng (lat,lng)'
+        allowNull: true
     },
     pickupQRCode: {
         type: DataTypes.STRING,
-        allowNull: true,
-        comment: 'QR code đã quét khi nhận hàng'
+        allowNull: true
     },
     deliveryQRCode: {
         type: DataTypes.STRING,
-        allowNull: true,
-        comment: 'QR code đã quét khi giao hàng'
+        allowNull: true
     },
     txHash: {
         type: DataTypes.STRING,
