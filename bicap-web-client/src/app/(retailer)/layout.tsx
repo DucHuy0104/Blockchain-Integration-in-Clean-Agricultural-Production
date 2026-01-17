@@ -12,9 +12,9 @@ export default function RetailerLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="flex flex-col min-h-screen bg-blue-50 dark:bg-blue-950">
+        <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 via-blue-50/30 to-white dark:bg-blue-950">
             <RetailerHeader />
-            <main className="flex-grow container mx-auto p-4">
+            <main className="flex-grow container mx-auto p-4 md:p-6">
                 {children}
             </main>
         </div>

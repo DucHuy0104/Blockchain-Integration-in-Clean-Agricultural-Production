@@ -185,21 +185,42 @@ export default function FarmPage() {
 
     return (
         <div className="max-w-6xl mx-auto p-4 space-y-8 flex flex-col">
-            {/* 1. Hero / Welcome Section */}
-            <div className="bg-gradient-to-r from-green-600 to-teal-500 rounded-2xl p-8 shadow-lg flex justify-between items-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-                <div>
-                    <p className="text-gray-900 text-lg font-medium mb-1">{getTimeGreeting()}</p>
-                    <h1 className="text-4xl font-bold text-black border-none">
-                        {loading && !userName ? 'Đang tải...' : (userName || user?.fullName || 'Chủ Trang Trại')}
+            {/* 1. Hero / Welcome Section - Enhanced */}
+            <div className="bg-gradient-to-br from-[#7CB342] via-[#388E3C] to-[#00C853] rounded-3xl p-8 md:p-10 shadow-2xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
+                {/* Animated Background */}
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
+                </div>
+                
+                <div className="relative z-10 flex-1">
+                    <div className="inline-block mb-3 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+                        <p className="text-white text-sm font-semibold">{getTimeGreeting()}</p>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 drop-shadow-lg">
+                        {loading && !userName ? (
+                            <span className="inline-flex items-center gap-2">
+                                <svg className="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Đang tải...
+                            </span>
+                        ) : (userName || user?.fullName || 'Chủ Trang Trại')}
                     </h1>
 
-                    <div className="mt-2 text-lg font-medium text-gray-900 flex items-center">
+                    <div className="mt-3 text-lg font-medium text-white/90 flex items-center flex-wrap gap-2">
                         {farms.length > 0 ? (
                             <>
-                                <span className="mr-2">🏡 Đang quản lý:</span>
+                                <span className="flex items-center gap-1">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Đang quản lý:
+                                </span>
                                 {farms.length > 1 ? (
                                     <select
-                                        className="bg-white/80 border-none rounded px-3 py-1 font-bold text-green-800 cursor-pointer focus:ring-2 focus:ring-green-400"
+                                        className="bg-white/90 backdrop-blur-sm border-2 border-white/30 rounded-xl px-4 py-2 font-bold text-[#388E3C] cursor-pointer focus:ring-2 focus:ring-white focus:outline-none shadow-lg hover:bg-white transition-all"
                                         value={selectedFarm?.id || ''}
                                         onChange={handleFarmChange}
                                     >
@@ -208,63 +229,77 @@ export default function FarmPage() {
                                         ))}
                                     </select>
                                 ) : (
-                                    <span className="font-bold">{selectedFarm?.name}</span>
+                                    <span className="font-bold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl">{selectedFarm?.name}</span>
                                 )}
                             </>
                         ) : (
-                            'Bạn chưa thiết lập trang trại.'
+                            <span className="text-white/80">Bạn chưa thiết lập trang trại.</span>
                         )}
                     </div>
 
                     {farms.length === 0 && !loading && (
-                        <Link href="/farm/info" className="inline-block mt-4 bg-white text-green-800 px-5 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 transition">
-                            + Đăng ký trang trại ngay
+                        <Link href="/farm/info" className="inline-block mt-4 bg-white text-[#388E3C] px-6 py-3 rounded-full font-bold shadow-xl hover:bg-green-50 hover:scale-105 transition-all btn-glow relative overflow-hidden">
+                            <span className="relative z-10 flex items-center gap-2">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Đăng ký trang trại ngay
+                            </span>
                         </Link>
                     )}
                 </div>
-                <div className="hidden md:block text-8xl text-black">
+                <div className="hidden md:block text-9xl text-white/30 relative z-10 animate-float">
                     🚜
                 </div>
             </div>
-            {/* 2. Overview Stats Cards */}
+            {/* 2. Overview Stats Cards - Enhanced */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Link href="/farm/seasons">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all hover:-translate-y-1 cursor-pointer">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Vụ Mùa Hoạt Động</p>
-                                <h3 className="text-4xl font-extrabold text-gray-800 dark:text-white mt-2">{stats.activeSeasons}</h3>
+                <Link href="/farm/seasons" className="group">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer card-hover">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                                <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Vụ Mùa Hoạt Động</p>
+                                <h3 className="text-5xl font-extrabold bg-gradient-to-r from-[#388E3C] to-[#7CB342] bg-clip-text text-transparent">{stats.activeSeasons}</h3>
                             </div>
-                            <span className="bg-green-100 text-green-600 p-3 rounded-lg text-2xl">🌱</span>
+                            <div className="bg-gradient-to-br from-green-100 to-green-200 text-green-700 p-4 rounded-2xl text-3xl shadow-md group-hover:scale-110 transition-transform">
+                                🌱
+                            </div>
                         </div>
-                        <div className="mt-4 text-sm text-green-600 font-medium">
-                            Đang canh tác &rarr;
+                        <div className="mt-4 text-sm text-[#388E3C] font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
+                            <span>Đang canh tác</span>
+                            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
                         </div>
                     </div>
                 </Link>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Công Việc Đang Chờ</p>
-                            <h3 className="text-4xl font-extrabold text-gray-800 dark:text-white mt-2"> {seasonTasks.reduce((acc, s) => acc + s.tasks.length, 0)}</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                            <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Công Việc Đang Chờ</p>
+                            <h3 className="text-5xl font-extrabold bg-gradient-to-r from-[#FFB300] to-[#F57C00] bg-clip-text text-transparent">{seasonTasks.reduce((acc, s) => acc + s.tasks.length, 0)}</h3>
                         </div>
-                        <span className="bg-orange-100 text-orange-600 p-3 rounded-lg text-2xl">📋</span>
+                        <div className="bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 p-4 rounded-2xl text-3xl shadow-md">
+                            📋
+                        </div>
                     </div>
-                    <div className="mt-4 text-sm text-orange-600 font-medium">
+                    <div className="mt-4 text-sm text-[#FFB300] font-bold">
                         Cần thực hiện
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Vụ Mùa Hoàn Thành</p>
-                            <h3 className="text-4xl font-extrabold text-gray-800 dark:text-white mt-2">{stats.totalOutput}</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                            <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Vụ Mùa Hoàn Thành</p>
+                            <h3 className="text-5xl font-extrabold bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">{stats.totalOutput}</h3>
                         </div>
-                        <span className="bg-blue-100 text-blue-600 p-3 rounded-lg text-2xl">🏆</span>
+                        <div className="bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 p-4 rounded-2xl text-3xl shadow-md">
+                            🏆
+                        </div>
                     </div>
-                    <div className="mt-4 text-sm text-blue-600 font-medium">
+                    <div className="mt-4 text-sm text-blue-600 font-bold">
                         Tổng tích lũy
                     </div>
                 </div>
@@ -332,50 +367,70 @@ export default function FarmPage() {
                 </div>
             </div>
 
-            {/* 3. Quick Actions Grid */}
+            {/* 3. Quick Actions Grid - Enhanced */}
             <div>
-                <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Truy Cập Nhanh</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                    <svg className="w-6 h-6 text-[#388E3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Truy Cập Nhanh
+                </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {QUICK_ACTIONS.map((action, idx) => (
                         <Link href={action.href} key={idx} className="block group">
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition text-center h-full flex flex-col items-center justify-center">
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-3 ${action.color} group-hover:scale-110 transition`}>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-300 text-center h-full flex flex-col items-center justify-center card-hover">
+                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 ${action.color} group-hover:scale-110 transition-transform shadow-md`}>
                                     {action.icon}
                                 </div>
-                                <span className="font-semibold text-gray-700 dark:text-gray-200">{action.title}</span>
+                                <span className="font-bold text-gray-700 dark:text-gray-200 group-hover:text-[#388E3C] transition-colors">{action.title}</span>
                             </div>
                         </Link>
                     ))}
                 </div>
             </div>
 
-            {/* 4. Monitoring Widget (Mini) */}
-            <div className="bg-indigo-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                <div className="relative z-10 flex justify-between items-end">
+            {/* 4. Monitoring Widget (Mini) - Enhanced */}
+            <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+                {/* Animated Background */}
+                <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
+                </div>
+                
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <div>
-                        <h2 className="text-xl font-bold mb-2">Giám Sát Môi Trường</h2>
-                        <p className="text-indigo-200 text-sm mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold">Giám Sát Môi Trường</h2>
+                        </div>
+                        <p className="text-indigo-200 text-sm mb-6">
                             {selectedFarm ? `Dữ liệu từ ${selectedFarm.name}` : 'Dữ liệu thời gian thực'}
                         </p>
-                        <Link href={selectedFarm ? `/farm/monitoring?farmId=${selectedFarm.id}` : '/farm/monitoring'} className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-sm font-bold transition">
-                            Xem chi tiết &rarr;
+                        <Link 
+                            href={selectedFarm ? `/farm/monitoring?farmId=${selectedFarm.id}` : '/farm/monitoring'} 
+                            className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 border border-white/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+                        >
+                            <span>Xem chi tiết</span>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
                         </Link>
                     </div>
-                    <div className="text-right">
-                        <div className="flex space-x-6">
-                            <div className="text-center">
-                                <span className="block text-2xl font-bold">28°C</span>
-                                <span className="text-xs text-indigo-300">Nhiệt độ</span>
-                            </div>
-                            <div className="text-center">
-                                <span className="block text-2xl font-bold">65%</span>
-                                <span className="text-xs text-indigo-300">Độ ẩm</span>
-                            </div>
+                    <div className="flex gap-8">
+                        <div className="text-center bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
+                            <div className="text-3xl font-extrabold mb-1">28°C</div>
+                            <div className="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Nhiệt độ</div>
+                        </div>
+                        <div className="text-center bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
+                            <div className="text-3xl font-extrabold mb-1">65%</div>
+                            <div className="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Độ ẩm</div>
                         </div>
                     </div>
                 </div>
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-700 rounded-full opacity-50 blur-2xl"></div>
-                <div className="absolute bottom-10 left-10 w-20 h-20 bg-purple-600 rounded-full opacity-30 blur-xl"></div>
             </div>
         </div>
     );

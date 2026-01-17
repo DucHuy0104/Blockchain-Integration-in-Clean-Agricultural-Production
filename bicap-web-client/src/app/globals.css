@@ -1,21 +1,63 @@
 @import "tailwindcss";
 
+/* ============================================
+   BICAP - Color Palette (Chủ đề Rau Củ)
+   ============================================ */
 :root {
+    /* Primary Colors - Rau Xanh */
+    --green-fresh: #7CB342;      /* Xanh lá non - rau xanh tươi */
+    --green-dark: #388E3C;       /* Xanh đậm - lá già */
+    --green-light: #AED581;      /* Xanh nhạt - background */
+    --green-emerald: #00C853;    /* Xanh ngọc - accent */
+    
+    /* Secondary Colors - Trái Cây */
+    --orange-ripe: #FFB300;      /* Vàng cam - trái cây chín */
+    --orange-bright: #F57C00;    /* Đỏ cam - cà chua, ớt */
+    --orange-light: #FFE082;     /* Cam nhạt - background */
+    
+    /* Earth Colors - Đất */
+    --brown-earth: #8D6E63;      /* Nâu đất */
+    --beige-cream: #FFF9E6;      /* Kem - giấy, background nhẹ */
+    
+    /* Neutral Colors */
+    --white: #FFFFFF;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #EEEEEE;
+    --gray-300: #E0E0E0;
+    --gray-400: #BDBDBD;
+    --gray-500: #9E9E9E;
+    --gray-600: #757575;
+    --gray-700: #616161;
+    --gray-800: #424242;
+    --gray-900: #212121;
+    
+    /* Semantic Colors */
+    --success: #4CAF50;
+    --warning: #FF9800;
+    --error: #F44336;
+    --info: #2196F3;
+    
+    /* Background & Foreground */
     --background: #ffffff;
     --foreground: #171717;
+    --background-alt: #F9FAFB;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --background: #0a0a0a;
         --foreground: #ededed;
+        --background-alt: #1a1a1a;
     }
 }
 
 body {
     color: var(--foreground);
     background: var(--background);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes fadeIn {
@@ -50,4 +92,305 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ============================================
+   Enhanced Animations
+   ============================================ */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-slideInRight {
+    animation: slideInRight 0.5s ease-out;
+}
+
+.animate-scaleIn {
+    animation: scaleIn 0.3s ease-out;
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Gradient Backgrounds */
+.gradient-vegetable {
+    background: linear-gradient(135deg, var(--green-fresh) 0%, var(--green-dark) 100%);
+}
+
+.gradient-fruit {
+    background: linear-gradient(135deg, var(--orange-ripe) 0%, var(--orange-bright) 100%);
+}
+
+.gradient-herb {
+    background: linear-gradient(135deg, var(--green-light) 0%, var(--green-fresh) 100%);
+}
+
+.gradient-earth {
+    background: linear-gradient(135deg, var(--brown-earth) 0%, var(--beige-cream) 100%);
+}
+
+/* Glassmorphism Effect */
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Card Hover Effects */
+.card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Button Glow Effect */
+.btn-glow {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.btn-glow:hover::before {
+    left: 100%;
+}
+
+/* Skeleton Loader */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* ============================================
+   Advanced Animations & Effects
+   ============================================ */
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes bounce-slow {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes rotate-slow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(124, 179, 66, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(124, 179, 66, 0.8);
+    }
+}
+
+@keyframes slide-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes zoom-in {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes wave {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-10px) rotate(5deg);
+    }
+    75% {
+        transform: translateY(10px) rotate(-5deg);
+    }
+}
+
+.animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+}
+
+.animate-bounce-slow {
+    animation: bounce-slow 3s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+    animation: rotate-slow 20s linear infinite;
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-in-left {
+    animation: slide-in-left 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+    animation: slide-in-right 0.6s ease-out;
+}
+
+.animate-zoom-in {
+    animation: zoom-in 0.5s ease-out;
+}
+
+.animate-wave {
+    animation: wave 3s ease-in-out infinite;
+}
+
+/* Parallax Effect */
+.parallax {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Text Gradient */
+.text-gradient {
+    background: linear-gradient(135deg, var(--green-fresh) 0%, var(--green-dark) 50%, var(--orange-ripe) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Scrollbar Styling */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--green-fresh);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--green-dark);
 }

@@ -1,9 +1,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/context/AuthContext'
 
-const inter = Inter({ subsets: ['latin'] })
+// Use system font instead of Google Fonts for Docker build compatibility
+const fontClass = 'font-sans'
 
 export const metadata: Metadata = {
     title: 'BICAP - Blockchain Integration in Clean Agricultural Production',
@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body className={inter.className}>
+            <body className={fontClass}>
                 <AuthProvider>
                     {children}
                 </AuthProvider>
