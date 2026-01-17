@@ -10,14 +10,15 @@ GO
 
 -- Bảng người dùng chung (cho Admin, Farm, Retailer, Shipper, Manager)
 CREATE TABLE Users (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Username NVARCHAR(50) NOT NULL UNIQUE,
-    PasswordHash NVARCHAR(255) NOT NULL,
-    Email NVARCHAR(100),
+Id INT PRIMARY KEY IDENTITY(1,1),
+    firebaseUid NVARCHAR(128) UNIQUE, -- 👈 Cột này để đồng bộ với Google Firebase
+    Username NVARCHAR(50) NULL,      -- Cho phép NULL vì dùng Email làm chính
+    PasswordHash NVARCHAR(255) NULL, -- Cho phép NULL nếu dùng Google Login
+    Email NVARCHAR(100) NOT NULL UNIQUE,
     PhoneNumber NVARCHAR(20),
     FullName NVARCHAR(100),
-    Role NVARCHAR(20) CHECK (Role IN ('Admin', 'FarmOwner', 'Retailer', 'ShipManager', 'ShipDriver')),
-    Status BIT DEFAULT 1, -- 1: Active, 0: Locked
+    Role NVARCHAR(20) CHECK (Role IN ('Admin', 'FarmOwner', 'Retailer', 'ShipManager', 'ShipDriver', 'Guest')),
+    Status NVARCHAR(20) DEFAULT 'active', -- 👈 Cột này để Backend kiểm tra trạng thái
     CreatedAt DATETIME DEFAULT GETDATE()
 );
 
@@ -245,3 +246,4 @@ CREATE TABLE SystemConfig (
     ConfigValue NVARCHAR(MAX), -- Lưu địa chỉ Smart Contract, ABI, v.v.
     Description NVARCHAR(255)
 );
+

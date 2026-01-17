@@ -3,16 +3,27 @@ const { Shipment, Order, Farm, User, Product } = require('../models');
 
 const blockchainHelper = require('../utils/blockchainHelper');
 
-// API: GET /api/shipments
+// API: GET /api/shipments?driverId=...
 exports.getAllShipments = async (req, res) => {
     try {
-        console.log("Đang gọi API lấy danh sách vận đơn..."); // Log để debug
+        console.log("Đang gọi API lấy danh sách vận đơn..."); 
+        
+        // Lấy driverId từ URL (nếu có)
+        const { driverId } = req.query; 
+        
+        // Tạo điều kiện lọc
+        let whereCondition = {};
+        if (driverId) {
+            whereCondition.driverId = driverId; // Chỉ lấy đơn của tài xế này
+            console.log(`🔎 Đang lọc đơn hàng cho Tài xế ID: ${driverId}`);
+        }
 
         const shipments = await Shipment.findAll({
+            where: whereCondition, // <--- ✅ ÁP DỤNG ĐIỀU KIỆN LỌC VÀO ĐÂY
             include: [
                 { 
                     model: User, 
-                    as: 'driver', // Phải khớp với alias trong models/index.js
+                    as: 'driver', 
                     attributes: ['id', 'fullName', 'phone'] 
                 },
                 {
@@ -24,7 +35,7 @@ exports.getAllShipments = async (req, res) => {
                     ]
                 }
             ],
-            order: [['createdAt', 'DESC']] // Đơn mới nhất lên đầu
+            order: [['createdAt', 'DESC']] 
         });
 
         // Format dữ liệu cho Frontend dễ hiển thị

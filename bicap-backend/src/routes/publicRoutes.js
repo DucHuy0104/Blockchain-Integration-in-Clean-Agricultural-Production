@@ -18,4 +18,3 @@ router.get('/farms', publicController.getPublicFarms);
 router.get('/farms/:id', publicController.getPublicFarm);
 
 module.exports = router;
-

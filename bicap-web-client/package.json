@@ -13,6 +13,8 @@
     "@yudiel/react-qr-scanner": "^2.5.0",
     "axios": "^1.13.2",
     "firebase": "^12.7.0",
+    "html5-qrcode": "^2.3.8",
+    "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
     "next": "16.1.0",
     "qrcode.react": "^4.2.0",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

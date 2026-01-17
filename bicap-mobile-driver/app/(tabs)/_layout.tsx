@@ -1,35 +1,37 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Platform } from 'react-native';
+// Đảm bảo import đúng đường dẫn tới file theme
+import { Colors } from '../../constants/theme';
+// Import thư viện Icon
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        // Lấy màu tint (xanh) từ file theme.ts
+        tabBarActiveTintColor: Colors.light.tint,
+        // Ẩn thanh tiêu đề phía trên (để màn hình index.tsx tự quản lý)
         headerShown: false,
-        tabBarButton: HapticTab,
+        // Tinh chỉnh thanh Tab bar cho đẹp trên iOS/Android
+        tabBarStyle: Platform.select({
+          ios: { position: 'absolute' },
+          default: {},
+        }),
       }}>
+
+      {/* Tab 1: Trang chủ (Tương ứng với file index.tsx) */}
       <Tabs.Screen
-        name="index"
+        name="index" 
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Đơn hàng',
+          tabBarIcon: ({ color }) => <FontAwesome name="cube" size={24} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
+
+      {/* Bạn có thể thêm các Tab khác ở dưới đây (ví dụ: Tài khoản, Thông báo...) */}
+      
     </Tabs>
   );
 }
