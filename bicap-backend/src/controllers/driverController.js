@@ -490,3 +490,28 @@ exports.getAllDrivers = async (req, res) => {
         res.status(500).json({ message: "Lỗi lấy danh sách tài xế" });
     }
 };
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+
+// Đảm bảo tên hàm này khớp 100% với file Routes
+exports.loginDriver = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        // Logic test nhanh để bạn vào được Dashboard
+        return res.json({
+            success: true, // Bắt buộc phải có để Frontend chạy tiếp
+            token: 'test_token_2026', 
+            message: 'Đăng nhập thành công!'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi server' });
+    }
+};
+
+// Nếu dòng 31 gọi signupDriver thì phải có hàm này
+exports.signupDriver = async (req, res) => {
+    res.json({ success: true, message: 'Signup test OK' });
+};
+

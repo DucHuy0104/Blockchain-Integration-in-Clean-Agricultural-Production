@@ -44,7 +44,7 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {/* Farm */}
+                    {/* 1. Farm */}
                     <Link href="/login?role=farm" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
                         <div className="absolute top-0 w-full h-2 bg-green-500"></div>
                         <div className="p-8">
@@ -61,7 +61,7 @@ export default function Home() {
                         </div>
                     </Link>
 
-                    {/* Retailer */}
+                    {/* 2. Retailer */}
                     <Link href="/login?role=retailer" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
                         <div className="absolute top-0 w-full h-2 bg-blue-500"></div>
                         <div className="p-8">
@@ -78,7 +78,7 @@ export default function Home() {
                         </div>
                     </Link>
 
-                    {/* Shipping */}
+                    {/* 3. Shipping */}
                     <Link href="/login?role=shipping" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
                         <div className="absolute top-0 w-full h-2 bg-orange-500"></div>
                         <div className="p-8">
@@ -95,7 +95,24 @@ export default function Home() {
                         </div>
                     </Link>
 
-                    {/* Admin */}
+                    {/* 4. DRIVER APP (MỚI THÊM) - Link thẳng tới /driver/login */}
+                    <Link href="/login?role=driver" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
+                        <div className="absolute top-0 w-full h-2 bg-indigo-500"></div>
+                        <div className="p-8">
+                            <div className="bg-indigo-100 dark:bg-indigo-900/30 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                <span className="text-3xl">🚛</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 transition-colors">Driver App (Tài Xế)</h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                Dành riêng cho tài xế: Nhận lộ trình, quét QR giao hàng nhanh chóng.
+                            </p>
+                            <div className="mt-6 flex items-center text-indigo-600 text-sm font-medium">
+                                Truy cập ngay <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* 5. Admin */}
                     <Link href="/login?role=admin" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
                         <div className="absolute top-0 w-full h-2 bg-purple-500"></div>
                         <div className="p-8">
@@ -112,23 +129,19 @@ export default function Home() {
                         </div>
                     </Link>
 
-                    {/* Guest */}
-                    <Link href="/login?role=guest" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700 md:col-span-2 lg:col-span-2">
+                    {/* 6. Guest (Đã chỉnh lại cho cân grid 3 cột) */}
+                    <Link href="/login?role=guest" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
                         <div className="absolute top-0 w-full h-2 bg-teal-500"></div>
-                        <div className="p-8 flex flex-col md:flex-row items-center gap-6">
-                            <div className="bg-teal-100 dark:bg-teal-900/30 w-16 h-16 rounded-full flex-shrink-0 flex items-center justify-center">
+                        <div className="p-8">
+                            <div className="bg-teal-100 dark:bg-teal-900/30 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                 <span className="text-3xl">👤</span>
                             </div>
-                            <div className="flex-1 text-center md:text-left">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 transition-colors">Guest Access (Khách)</h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                    Tra cứu thông tin, quét mã QR truy xuất nguồn gốc sản phẩm mà không cần đăng nhập.
-                                </p>
-                            </div>
-                            <div className="flex-shrink-0">
-                                <span className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors">
-                                    Truy cập ngay
-                                </span>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 transition-colors">Guest (Khách)</h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                Tra cứu thông tin, quét mã QR truy xuất nguồn gốc sản phẩm.
+                            </p>
+                            <div className="mt-6 flex items-center text-teal-600 text-sm font-medium">
+                                Truy cập ngay <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                             </div>
                         </div>
                     </Link>

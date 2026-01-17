@@ -1,4 +1,5 @@
 // src/routes/driverRoutes.js
+const { loginDriver } = require('../controllers/driverController');
 const express = require('express');
 const router = express.Router();
 const driverController = require('../controllers/driverController');
@@ -25,8 +26,13 @@ router.post('/shipments/pickup', driverAuth, driverController.confirmPickup);
 // Xác nhận giao hàng (quét QR) - Note: shipmentId trong body, không phải params
 router.post('/shipments/delivery', driverAuth, driverController.confirmDelivery);
 
+// Sửa .get thành .post
+// router.post('/login', driverController.loginDriver);
+// router.post('/signup', driverController.signupDriver);
+
 // Cập nhật trạng thái vận chuyển
 router.put('/shipments/:id/status', driverAuth, driverController.updateShipmentStatus);
+
 
 module.exports = router;
 
