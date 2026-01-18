@@ -6,11 +6,12 @@ services:
     environment:
       ACCEPT_EULA: "1"
       MSSQL_SA_PASSWORD: "BiCapProject@123" # Updated to match user preference
+    user: root
     ports:
       - "1433:1433"
     volumes:
-      # Lưu dữ liệu ra thư mục .docker_data để không bị mất khi tắt container
-      - ./.docker_data_new/sql:/var/opt/mssql/data
+      # Use a named volume for better compatibility on Mac/Docker Desktop
+      - sql_data:/var/opt/mssql/data
     healthcheck:
       test: [ "CMD-SHELL", "bash -c '(echo > /dev/tcp/localhost/1433) >/dev/null 2>&1'" ]
       interval: 10s
@@ -25,7 +26,7 @@ services:
     build: ./bicap-backend
     ports:
       - "5001:5001"
-    env_file:             
+    env_file:
       - ./bicap-backend/.env
     environment:
       - DB_HOST=sql_server
@@ -60,3 +61,6 @@ services:
     depends_on:
       - backend
     restart: always
+
+volumes:
+  sql_data:

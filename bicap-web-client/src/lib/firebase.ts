@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 // Validate Firebase Configuration
 const requiredEnvVars = {
@@ -41,10 +41,10 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (prevent multiple initializations)
-let app;
-let auth;
-let storage;
-let googleProvider;
+let app: FirebaseApp;
+let auth: Auth;
+let storage: FirebaseStorage;
+let googleProvider: GoogleAuthProvider;
 
 try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();

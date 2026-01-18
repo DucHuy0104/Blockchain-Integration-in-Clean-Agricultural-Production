@@ -30,7 +30,7 @@ interface AuthContextType {
     logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
     loginWithGoogle: async () => { },
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
         } catch (error: any) {
             console.error("Backend sync error:", error);
-            
+
             // Better error messages
             if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
                 throw new Error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc đảm bảo backend đang chạy.");
@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error.response?.status === 401) {
                 throw new Error("Token không hợp lệ. Vui lòng đăng nhập lại.");
             }
-            
+
             // Propagate error to let the caller handle UI feedback
             throw new Error(error.response?.data?.message || error.message || "Không thể đồng bộ với server. Vui lòng thử lại.");
         }
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         } catch (error: any) {
             console.error("Google login error:", error);
-            
+
             // Better error messages
             if (error.code === 'auth/popup-closed-by-user') {
                 throw new Error("Bạn đã đóng cửa sổ đăng nhập. Vui lòng thử lại.");
@@ -136,7 +136,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error.code === 'auth/invalid-api-key') {
                 throw new Error("Firebase API key không hợp lệ. Vui lòng kiểm tra cấu hình.");
             }
-            
+
             throw error;
         }
     };
@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await syncUserWithBackend(token, role, fullName);
         } catch (error: any) {
             console.error("Email register error:", error);
-            
+
             // Better error messages
             if (error.code === 'auth/email-already-in-use') {
                 throw new Error("Email này đã được sử dụng. Vui lòng đăng nhập hoặc sử dụng email khác.");
@@ -172,7 +172,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error.code === 'auth/invalid-api-key') {
                 throw new Error("Firebase API key không hợp lệ. Vui lòng kiểm tra cấu hình.");
             }
-            
+
             throw error;
         }
     };
@@ -194,7 +194,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await syncUserWithBackend(token, role);
         } catch (error: any) {
             console.error("Email login error:", error);
-            
+
             // Better error messages
             if (error.code === 'auth/user-not-found') {
                 throw new Error("Không tìm thấy tài khoản với email này. Vui lòng kiểm tra lại hoặc đăng ký tài khoản mới.");
@@ -211,7 +211,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error.code === 'auth/too-many-requests') {
                 throw new Error("Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau vài phút.");
             }
-            
+
             throw error;
         }
     };
@@ -234,4 +234,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+    return useContext(AuthContext);
+}

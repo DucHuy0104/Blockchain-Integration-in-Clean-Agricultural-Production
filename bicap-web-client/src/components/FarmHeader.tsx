@@ -3,16 +3,12 @@
 import Link from 'next/link';
 import LogoutButton from './LogoutButton';
 import { useState } from 'react';
-
-'use client';
-
-import Link from 'next/link';
-import LogoutButton from './LogoutButton';
 import { usePathname } from 'next/navigation';
+
 
 export default function FarmHeader() {
     const pathname = usePathname();
-    
+
     return (
         <nav className="bg-gradient-to-r from-[#388E3C] to-[#7CB342] text-white px-4 py-3 sticky top-0 z-50 shadow-xl border-b border-green-700/30">
             <div className="w-full flex justify-between items-center gap-2 max-w-7xl mx-auto">
@@ -44,22 +40,20 @@ export default function FarmHeader() {
 
 function NavLink({ href, label, icon, highlight, target, currentPath }: { href: string, label: string, icon?: string, highlight?: boolean, target?: string, currentPath: string }) {
     const isActive = currentPath === href || (href !== '/farm' && currentPath.startsWith(href));
-    
+
     return (
-        <Link 
-            href={href} 
-            target={target} 
-            className={`flex flex-col items-center px-3 py-2 rounded-lg transition-all duration-200 group relative ${
-                isActive 
-                    ? 'bg-white/20 backdrop-blur-sm shadow-md' 
-                    : highlight 
-                    ? 'hover:bg-yellow-500/20 text-yellow-200' 
+        <Link
+            href={href}
+            target={target}
+            className={`flex flex-col items-center px-3 py-2 rounded-lg transition-all duration-200 group relative ${isActive
+                ? 'bg-white/20 backdrop-blur-sm shadow-md'
+                : highlight
+                    ? 'hover:bg-yellow-500/20 text-yellow-200'
                     : 'hover:bg-white/10 text-white'
-            }`}
+                }`}
         >
-            <span className={`text-xs font-bold uppercase tracking-wide whitespace-nowrap flex items-center gap-1 ${
-                highlight ? 'text-yellow-200' : 'text-white'
-            }`}>
+            <span className={`text-xs font-bold uppercase tracking-wide whitespace-nowrap flex items-center gap-1 ${highlight ? 'text-yellow-200' : 'text-white'
+                }`}>
                 {icon && <span>{icon}</span>}
                 {label}
             </span>

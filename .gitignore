@@ -80,6 +80,8 @@ docker-compose.*.local.yml
 docker-data/
 **/.docker_data/
 **/docker-data/
+.docker_data_new/
+**/.docker_data_new/
 
 
 # ===================================

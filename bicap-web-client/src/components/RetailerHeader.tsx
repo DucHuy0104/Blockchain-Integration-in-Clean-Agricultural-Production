@@ -4,11 +4,6 @@ import Link from 'next/link';
 import LogoutButton from './LogoutButton';
 import { usePathname } from 'next/navigation';
 
-'use client';
-
-import Link from 'next/link';
-import LogoutButton from './LogoutButton';
-import { usePathname } from 'next/navigation';
 
 export default function RetailerHeader() {
     const pathname = usePathname();
@@ -41,19 +36,17 @@ function NavLink({ href, label, icon, highlight, currentPath }: { href: string, 
     const isActive = currentPath === href || (href !== '/retailer' && currentPath.startsWith(href));
 
     return (
-        <Link 
-            href={href} 
-            className={`flex flex-col items-center px-3 py-2 rounded-lg transition-all duration-200 group relative ${
-                isActive 
-                    ? 'bg-white/20 backdrop-blur-sm shadow-md' 
-                    : highlight 
-                    ? 'hover:bg-yellow-500/20 text-yellow-200' 
-                    : 'hover:bg-white/10 text-white'
-            }`}
+        <Link
+            href={href}
+            className={`flex flex-col items-center px-3 py-2 rounded-lg transition-all duration-200 group relative ${isActive
+                    ? 'bg-white/20 backdrop-blur-sm shadow-md'
+                    : highlight
+                        ? 'hover:bg-yellow-500/20 text-yellow-200'
+                        : 'hover:bg-white/10 text-white'
+                }`}
         >
-            <span className={`text-xs font-bold uppercase tracking-wide whitespace-nowrap flex items-center gap-1 ${
-                highlight ? 'text-yellow-200' : 'text-white'
-            }`}>
+            <span className={`text-xs font-bold uppercase tracking-wide whitespace-nowrap flex items-center gap-1 ${highlight ? 'text-yellow-200' : 'text-white'
+                }`}>
                 {icon && <span>{icon}</span>}
                 {label}
             </span>
