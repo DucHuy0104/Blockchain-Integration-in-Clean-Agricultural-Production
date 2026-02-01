@@ -1,10 +1,12 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // SỬA DÒNG NÀY: Import từ models/index thay vì config/database
 const { connectDB } = require('./src/config/database');
 const { initModels } = require('./src/models');
+const { connectRedis } = require('./src/config/redis');
 const authRoutes = require('./src/routes/authRoutes');
 const farmRoutes = require('./src/routes/farmRoutes');
 const seasonRoutes = require('./src/routes/seasonRoutes');
@@ -27,6 +29,29 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// ===== RATE LIMITING =====
+// General API rate limiter: 100 requests per 15 minutes
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Strict limiter for authentication endpoints: 5 requests per 15 minutes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many login attempts, please try again later.',
+  skipSuccessfulRequests: true, // Don't count successful requests
+});
+
+// Apply rate limiters
+app.use('/api/', apiLimiter); // Apply to all API routes
+app.use('/api/auth/login', authLimiter); // Stricter limit for login
+app.use('/api/auth/register', authLimiter); // Stricter limit for register
+
 // Serve static files (uploads)
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -43,10 +68,13 @@ const startServer = async () => {
     // 1. Kết nối Database
     await connectDB();
 
-    // 2. Đồng bộ bảng (Tạo bảng Users nếu chưa có)
+    // 2. Kết nối Redis (optional - không block nếu fail)
+    await connectRedis();
+
+    // 3. Đồng bộ bảng (Tạo bảng Users nếu chưa có)
     await initModels();
 
-    // 3. Chạy Server
+    // 4. Chạy Server
     const PORT = process.env.PORT || 5001;
     app.listen(PORT, () => {
       console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);

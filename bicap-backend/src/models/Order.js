@@ -46,7 +46,14 @@ const Order = sequelize.define('Order', {
         allowNull: true
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    indexes: [
+        { fields: ['buyerId'] },           // Queries by buyer
+        { fields: ['productId'] },         // Queries by product
+        { fields: ['status'] },            // Filter by status
+        { fields: ['buyerId', 'status'] }, // Combined queries
+        { fields: ['createdAt'] }          // Sort by date
+    ]
 });
 
 module.exports = Order;

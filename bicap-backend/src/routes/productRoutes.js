@@ -4,12 +4,13 @@ const router = express.Router();
 const productController = require('../controllers/productController');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 const { uploadSingle } = require('../middleware/uploadMiddleware');
+const { cacheMiddleware } = require('../config/redis');
 
 // Tạo sản phẩm (Chỉ chủ trại) - với upload ảnh
 router.post('/', verifyToken, requireRole(['farm', 'admin']), uploadSingle('image'), productController.createProduct);
 
-// Xem tất cả sản phẩm (Marketplace - Public)
-router.get('/', productController.getAllProducts);
+// Xem tất cả sản phẩm (Marketplace - Public) - Cache 5 phút
+router.get('/', cacheMiddleware(300), productController.getAllProducts);
 
 // Xem sản phẩm của một trang trại cụ thể (Công khai hoặc cần login tùy logic, ở đây để cần login cho chắc)
 router.get('/farm/:farmId', verifyToken, productController.getProductsByFarm);

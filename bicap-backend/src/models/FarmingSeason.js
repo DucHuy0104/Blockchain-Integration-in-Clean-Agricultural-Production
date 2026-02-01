@@ -36,7 +36,12 @@ const FarmingSeason = sequelize.define('FarmingSeason', {
         allowNull: true
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    indexes: [
+        { fields: ['farmId'] },          // Queries by farm
+        { fields: ['status'] },          // Filter by status
+        { fields: ['farmId', 'status'] } // Combined queries
+    ]
 });
 
 module.exports = FarmingSeason;

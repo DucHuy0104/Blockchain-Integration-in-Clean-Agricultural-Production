@@ -52,7 +52,14 @@ const Product = sequelize.define('Product', {
     allowNull: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    { fields: ['farmId'] },           // Queries by farm
+    { fields: ['seasonId'] },         // Queries by season
+    { fields: ['status'] },           // Filter by status
+    { fields: ['createdAt'] },        // Sort by date
+    { fields: ['farmId', 'status'] }, // Combined queries
+  ]
 });
 
 module.exports = Product;
