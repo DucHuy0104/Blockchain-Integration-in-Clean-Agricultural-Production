@@ -43,7 +43,7 @@ interface Farm {
 }
 
 export default function ShippingReportPage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [farms, setFarms] = useState<Farm[]>([]);
     const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
     const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -54,7 +54,7 @@ export default function ShippingReportPage() {
         if (!user) return;
         const fetchFarms = async () => {
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const res = await axios.get('http://localhost:5001/api/farms/my-farms', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -79,7 +79,7 @@ export default function ShippingReportPage() {
         const fetchShipments = async () => {
             setLoading(true);
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const res = await axios.get(`http://localhost:5001/api/shipments/farm/${selectedFarmId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });

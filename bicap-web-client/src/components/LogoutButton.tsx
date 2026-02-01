@@ -2,13 +2,13 @@
 
 import { useAuth } from '@/context/AuthContext';
 
-export default function LogoutButton() {
+export default function LogoutButton({ className }: { className?: string }) {
     const { logout } = useAuth();
 
     return (
         <button
             onClick={logout}
-            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition"
+            className={className || "bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition"}
         >
             Đăng xuất
         </button>

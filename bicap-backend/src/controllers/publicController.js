@@ -1,6 +1,7 @@
 // src/controllers/publicController.js
 const { Product, Farm, FarmingSeason, FarmingProcess, Order, User } = require('../models');
-const { Op } = require('sequelize');
+const { Op, sequelize } = require('sequelize');
+const { sequelize: db } = require('../config/database');
 
 /**
  * Lấy danh sách sản phẩm công khai (Marketplace)
@@ -36,7 +37,10 @@ exports.getPublicProducts = async (req, res) => {
             ],
             limit: parseInt(limit),
             offset: offset,
-            order: [['createdAt', 'DESC']],
+            order: [
+                [db.literal('CASE WHEN image IS NULL THEN 1 ELSE 0 END'), 'ASC'],
+                ['id', 'ASC']
+            ],
             subQuery: false
         });
 

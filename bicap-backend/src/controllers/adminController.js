@@ -286,32 +286,86 @@ exports.getFarmById = async (req, res) => {
 exports.approveFarm = async (req, res) => {
     try {
         const { id } = req.params;
-        const { approved } = req.body; // true/false
+        const { status, note } = req.body; // 'active', 'rejected', 'pending'
 
         const farm = await Farm.findByPk(id);
         if (!farm) {
             return res.status(404).json({ message: 'Farm không tồn tại' });
         }
 
-        // Có thể thêm field 'approved' vào Farm model nếu cần
-        // Ở đây giả sử có field status
-        if (approved) {
-            // farm.status = 'approved';
-            // farm.approvedAt = new Date();
-        } else {
-            // farm.status = 'rejected';
-        }
+        farm.status = status || farm.status;
+        if (note) farm.adminNote = note;
 
         await farm.save();
 
         res.json({
-            message: approved ? 'Đã duyệt farm thành công' : 'Đã từ chối farm',
+            message: `Hành động với farm thành công: ${farm.status}`,
             farm
         });
 
     } catch (error) {
         console.error('Error approving farm:', error);
         res.status(500).json({ message: 'Lỗi duyệt farm', error: error.message });
+    }
+};
+
+/**
+ * Quản lý Products
+ */
+exports.getAllProducts = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, status, search } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        const whereClause = {};
+        if (status) whereClause.status = status;
+        if (search) {
+            whereClause.name = { [Op.like]: `%${search}%` };
+        }
+
+        const { count, rows: products } = await Product.findAndCountAll({
+            where: whereClause,
+            include: [
+                { model: Farm, as: 'farm', attributes: ['id', 'name'] }
+            ],
+            limit: parseInt(limit),
+            offset: offset,
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json({
+            products,
+            pagination: {
+                total: count,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(count / parseInt(limit))
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting all products:', error);
+        res.status(500).json({ message: 'Lỗi lấy danh sách sản phẩm', error: error.message });
+    }
+};
+
+exports.updateProductStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const product = await Product.findByPk(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
+        }
+
+        product.status = status;
+        await product.save();
+
+        res.json({ message: 'Cập nhật trạng thái sản phẩm thành công', product });
+    } catch (error) {
+        console.error('Error updating product status:', error);
+        res.status(500).json({ message: 'Lỗi cập nhật sản phẩm', error: error.message });
     }
 };
 

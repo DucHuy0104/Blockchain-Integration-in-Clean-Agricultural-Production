@@ -1,146 +1,94 @@
 # 🌱 BICAP: Blockchain Integration in Clean Agricultural Production
 
-**BICAP** (Blockchain Integration in Clean Agricultural Production) là giải pháp công nghệ toàn diện nhằm minh bạch hóa chuỗi cung ứng nông sản sạch. Hệ thống kết hợp sức mạnh của **Blockchain**, **IoT** và **Cloud Computing** để đảm bảo mọi sản phẩm từ trang trại đến tay người tiêu dùng đều có nguồn gốc rõ ràng và bất biến.
+**BICAP** (Blockchain Integration in Clean Agricultural Production) là một giải pháp công nghệ toàn diện nhằm minh bạch hóa chuỗi cung ứng nông sản sạch. Hệ thống kết hợp kỹ thuật **Blockchain (VeChain)**, **IoT**, và **Mobile App** để đảm bảo mọi sản phẩm từ trang trại đến tay người tiêu dùng đều có nguồn gốc rõ ràng, bất biến và đáng tin cậy.
 
 ---
 
-## 🚀 Tính năng Cốt lõi
+## 🚀 Tính năng Cốt lõi & Vai trò
 
-### 🚜 Dành cho Chủ trang trại (Farm Owner)
-- **Quản lý mùa vụ:** Lập kế hoạch và theo dõi toàn bộ quá trình canh tác.
-- **Minh bạch Blockchain:** Mọi hoạt động canh tác quan trọng đều được hash và ghi lại trên mạng lưới **VeChain**.
-- **Giám sát IoT:** Theo dõi thời gian thực các chỉ số môi trường (Nhiệt độ, Độ ẩm, pH) và nhận cảnh báo tự động khi vượt ngưỡng.
-- **Sàn giao dịch:** Đưa sản phẩm lên chợ nông sản, quản lý đơn hàng đầu ra.
-- **Logistics:** Theo dõi trạng thái vận chuyển và thông báo từ tài xế.
+### 🚜 Trang trại (Farm Owner)
+- **Quản lý mùa vụ:** Theo dõi toàn bộ quá trình từ gieo hạt đến thu hoạch.
+- **Minh bạch Blockchain:** Ghi lại nhật ký canh tác (phân bón, thuốc bảo vệ thực vật) lên mạng lưới **VeChain**.
+- **Giám sát IoT:** Theo dõi thời gian thực các chỉ số môi trường qua Dashboard.
+- **Sàn giao dịch:** Niêm yết sản phẩm và quản lý các đơn đặt hàng từ Nhà bán lẻ.
 
-### 🏪 Dành cho Nhà bán lẻ (Retailer)
-- **Tìm kiếm thông minh:** Tìm nguồn hàng nông sản sạch theo tiêu chuẩn.
-- **Truy xuất nguồn gốc:** Quét mã QR để xem toàn bộ lịch sử canh tác, bón phân, thu hoạch và các chứng chỉ an toàn.
-- **Quản lý đơn hàng:** Quy trình thanh toán tiền cọc (Deposit) và thanh toán nốt sau khi nhận hàng.
-- **Xác nhận giao hàng:** Tải lên hình ảnh bằng chứng nhận hàng (Proof of Delivery) để hoàn tất quy trình.
+### 🏢 Quản lý vận chuyển (Shipping Manager) - *Cập nhật mới*
+- **Quản lý Đội xe:** Quản lý danh sách phương tiện (xe tải lạnh, xe tải thường) và trạng thái hoạt động.
+- **Quản lý Tài xế:** Theo dõi danh sách tài xế, trạng thái (Sẵn sàng/Bận) và hiệu suất làm việc.
+- **Điều phối Vận đơn:** Chuyển đổi Đơn hàng thành Vận đơn, gán tài xế và phương tiện phù hợp.
+- **Giám sát sự cố:** Tiếp nhận và phản hồi các báo cáo sự cố (Incident Reports) từ tài xế trong quá trình giao hàng.
 
-### 🚚 Dành cho Tài xế (Driver)
-- **Nhận chuyến:** Quản lý danh sách các vận đơn được phân công.
-- **Cập nhật lộ trình:** Cập nhật trạng thái (Pickup, Shipping, Delivered) theo thời gian thực.
-- **Báo cáo sự cố:** Gửi báo cáo tình trạng vận chuyển cho chủ trại và nhà bán lẻ.
+### 🚚 Tài xế (Driver - Web & Mobile App) - *Cập nhật mới*
+- **App di động (Expo):** Ứng dụng chuyên dụng cho tài xế di chuyển trên đường.
+- **Xác thực QR Code:**
+    - **Quét nhận hàng tại Farm:** Hiển thị thông tin sản phẩm (Tên, Trại, Khối lượng) để đối soát trước khi nhận.
+    - **Quét giao hàng tại Store:** Xác nhận hoàn tất quy trình giao hàng.
+- **Luồng trạng thái:** Quy trình chuẩn: **Gán** -> **Nhận hàng (QR)** -> **Bắt đầu vận chuyển** -> **Giao hàng (QR)**.
+- **Báo cáo sự cố:** Gửi báo cáo kèm phân loại (Giao thông, Xe cộ, Sự cố khác) và nhận phản hồi từ quản lý ngay trên App.
 
-### 🛡️ Dành cho Quản trị viên (Admin)
-- **Kiểm soát hệ thống:** Duyệt hồ sơ pháp lý của trang trại và nhà bán lẻ.
-- **Quản lý hạ tầng:** Theo dõi các báo cáo vi phạm và tình trạng hệ thống.
+### 🏪 Nhà bán lẻ (Retailer)
+- **Tìm nguồn hàng:** Mua trực tiếp nông sản sạch từ các trang trại uy tín.
+- **Truy xuất nguồn gốc:** Quét mã QR Vận đơn để xem toàn bộ "cuộc đời" của sản phẩm từ lúc gieo hạt đến lúc vận chuyển.
+- **Đối soát thanh toán:** Thanh toán tiền cọc và xác nhận nhận hàng thông qua hình ảnh POD (Proof of Delivery).
 
 ---
 
-## 🧱 Kiến trúc Công nghệ & Hạ tầng
+## 🧱 Kiến trúc Công nghệ
 
 | Thành phần | Công nghệ | Mục đích |
 | :--- | :--- | :--- |
-| **Hạ tầng** | Docker & Docker Compose | Đảm bảo môi trường nhất quán, triển khai nhanh. |
-| **Frontend** | Next.js 14+ (App Router), TypeScript, Tailwind | Giao diện hiện đại, chuyên nghiệp, responsive. |
-| **Backend** | Node.js, Express.js, Sequelize | Xử lý logic, API RESTful và đồng bộ dữ liệu. |
-| **Cơ sở dữ liệu** | Azure SQL Edge (MSSQL) | Lưu trữ dữ liệu hệ thống off-chain. |
-| **Blockchain** | VeChain (Thor Network) | Đảm bảo tính toàn vẹn và không thể sửa đổi của dữ liệu gốc. |
-| **Xác thực** | Firebase Authentication | Bảo mật tài khoản người dùng đa nền tảng. |
-| **Mobile** | React Native (Expo) | Ứng dụng di động tối ưu cho di chuyển. |
+| **Frontend Web** | Next.js 14+ (App Router), TailwindCSS | Dashboard quản lý cho Farm, Shipping, Retailer. |
+| **Mobile App** | React Native, Expo, Expo Router, Expo Camera | Ứng dụng hiện trường cho Tài xế. |
+| **Backend** | Node.js, Express, Sequelize (ORM) | Xử lý API, Auth, và Logic nghiệp vụ. |
+| **Database** | Azure SQL Edge (MSSQL) | Lưu trữ dữ liệu hệ thống tập trung. |
+| **Blockchain** | VeChain (Thor) | Lưu trữ mã băm dữ liệu truy xuất nguồn gốc. |
+| **Đóng gói** | Docker & Docker Compose | Triển khai nhất quán toàn bộ hệ thống. |
 
 ---
 
-## 📂 Cấu trúc Dự án
+## 🛠️ Hướng dẫn Vận hành
 
-```text
-BICAP-ROOT/
-├── � bicap-backend/           # Server API (Logic, DB, Blockchain)
-├── 📂 bicap-web-client/        # Ứng dụng Web (Farm & Retailer)
-├── 📂 bicap-mobile-driver/     # Ứng dụng di động (Driver)
-├── 📂 bicap-smart-contracts/   # Smart contracts (Solidity)
-└── � docker-compose.yml       # Orchestration cho toàn bộ hệ thống
-```
-
----
-
-## 🛠️ Hướng dẫn Cài đặt & Chạy
-
-### 1. Chuẩn bị
-- Đã cài đặt **Docker Desktop**.
-- Có tài khoản **Firebase** (để cấu hình Admin SDK nếu cần chạy manual).
-
-### 2. Chạy ứng dụng (Khuyên dùng)
-Hệ thống đã được đóng gói hoàn toàn trong Docker, giúp đảm bảo môi trường đồng nhất.
+### 1. Khởi chạy toàn bộ hệ thống bằng Docker (Khuyên dùng)
+Đảm bảo bạn đã cài đặt Docker Desktop.
 
 ```bash
-# Khởi động toàn bộ hệ thống (Database, Backend, Frontend) ở chế độ daemon
-docker-compose up -d
+# Khởi động Database, Backend và Frontend
+docker-compose up -d --build
 ```
 
-- **Web Client:** [http://localhost:3000](http://localhost:3000)
-- **Backend API:** [http://localhost:5001](http://localhost:5001)
-- **SQL Server:** `localhost:1433` (Username: `sa`, Password: `BiCapProject@123`)
+- **Web Portal:** [http://localhost:3000](http://localhost:3000)
+- **API Server:** [http://localhost:5001](http://localhost:5001)
 
-### 3. Cập nhật code mới
-Vì Docker đóng gói toàn bộ source code vào Image lúc khởi tạo, nên khi bạn thay đổi code ở máy local, bạn cần "rebuild" lại container để áp dụng thay đổi:
-
-- **Cách 1: Cập nhật tất cả (Đơn giản nhất)**
-  ```bash
-  docker-compose up --build
-  ```
-- **Cách 2: Chỉ cập nhật một dịch vụ (Nhanh hơn)**
-  Nếu bạn chỉ sửa code ở backend:
-  ```bash
-  docker-compose up --build backend
-  ```
-
-### 4. Các lệnh quản lý & Xử lý sự cố
-
-#### 🔍 Kiểm tra trạng thái & Nhật ký
-- **Xem danh sách container đang chạy:** `docker compose ps`
-- **Xem nhật ký (logs) theo thời gian thực:**
-  ```bash
-  docker-compose logs -f         # Xem tất cả
-  docker-compose logs -f backend # Chỉ xem backend
-  ```
-
-#### 🛑 Dừng hệ thống
-- Nếu đang chạy ở chế độ thường: Nhấn `Ctrl + C`.
-- Nếu đang chạy ở chế độ ẩn (`-d`):
-  ```bash
-  docker-compose stop  # Dừng nhưng giữ lại container
-  docker-compose down  # Dừng và xóa container (Khuyên dùng)
-  ```
-
-#### 🧹 Reset hoàn toàn hệ thống
-Dùng khi bạn muốn xóa sạch database và bắt đầu lại từ đầu:
+### 2. Chạy ứng dụng di động cho Tài xế (Expo)
+Vào thư mục `bicap-mobile-driver`:
 ```bash
-docker-compose down -v      # Xóa container và volumes
-rm -rf .docker_data         # Xóa thư mục lưu dữ liệu database local
-docker-compose up --build   # Khởi động lại và build mới
+npm install
+# Sửa IP máy tính bạn trong constants/Config.ts
+npx expo start
 ```
+Dùng điện thoại cài sẵn **Expo Go** để quét mã QR và trải nghiệm.
 
-#### ⚠️ Các lỗi thường gặp (Troubleshooting)
-1. **Xung đột cổng (Port Conflict):** Đảm bảo không có ứng dụng nào khác đang dùng cổng 3000, 5001 hoặc 1433 trên máy của bạn.
-2. **Backend không kết nối được DB:** Docker dùng cơ chế `depends_on` với `healthcheck`. Backend sẽ đợi cho đến khi SQL Server sẵn sàng hoàn toàn mới khởi chạy. Nếu thấy lỗi kết nối lúc mới bắt đầu, hãy đợi khoảng 20-30 giây.
-3. **Dữ liệu không thay đổi:** Nếu bạn sửa code mà không thấy hiệu quả, hãy chắc chắn đã chạy lệnh với flag `--build`.
-
----
-
-## 🏗️ Kiến trúc Docker
-Hệ thống gồm 3 container chính giao tiếp trong mạng nội bộ Docker:
-1. **`sql_server`**: Chạy Azure SQL Edge (tương thích MSSQL). Dữ liệu được lưu bền vững tại thư mục `.docker_data`.
-2. **`backend`**: Kết nối với `sql_server` qua host name nội bộ (không phải `localhost`).
-3. **`frontend`**: Giao tiếp với `backend` API thông qua cổng 5001 được công khai.
+### 3. Quy trình thử nghiệm chuẩn (End-to-End)
+1.  **Farm**: Đăng nhập (`farm@test.com`) -> Tạo sản phẩm -> Đưa lên sàn.
+2.  **Retailer**: Đăng nhập (`retailer@test.com`) -> Đặt mua sản phẩm -> Thanh toán cọc.
+3.  **Shipping Manager**: Đăng nhập (`shipping@test.com`) -> Vào "Vận đơn" -> Gán tài xế `driver@test.com` và xe cho đơn hàng.
+4.  **Driver (Mobile)**: Đăng nhập (`driver@test.com`) -> Thấy đơn hàng -> Quét mã QR (lấy từ trang Quản lý Web) để Nhận hàng -> Bắt đầu vận chuyển -> Quét QR để Giao hàng.
+5.  **Retailer**: Xác nhận đã nhận hàng và hoàn tất thanh toán.
 
 ---
 
-## �️ Thiết kế Cơ sở dữ liệu
-
-Hệ thống sử dụng SQL Server với các ràng buộc chặt chẽ. Đặc biệt, logic xóa (Cascade) đã được tối ưu cho MSSQL để tránh lỗi "Multiple Cascade Paths":
-- **User ↔ Farm:** Cascade (Xóa user xóa farm).
-- **Product ↔ Order:** No Action (Giữ đơn hàng để đối soát ngay cả khi xóa sản phẩm).
-- **Season ↔ Product:** No Action (Tránh vòng lặp cascade qua Farm).
-
----
-
-## 🌟 Đóng góp
-Dự án được xây dựng dựa trên tinh thần hỗ trợ nông nghiệp sạch Việt Nam. Mọi ý đóng góp vui lòng gửi qua các Issue hoặc Pull Request trên repository này.
+## 📂 Cấu trúc Thư mục
+- `bicap-backend/`: Mã nguồn server API và scripts khởi tạo dữ liệu.
+- `bicap-web-client/`: Giao diện Web đa vai trò (Next.js).
+- `bicap-mobile-driver/`: Ứng dụng di động Expo cho tài xế.
+- `bicap-smart-contracts/`: Các hợp đồng thông minh lưu trữ Blockchain.
+- `docker-compose.yml`: Cấu hình chạy toàn bộ hệ thống trong 1 lệnh.
 
 ---
 
+## ⚠️ Lưu ý & Bảo trì
+- **Dữ liệu**: Nếu muốn reset lại toàn bộ dữ liệu mẫu, chạy `docker-compose down -v` sau đó chạy lại lệnh khởi động.
+- **Firebase**: Hệ thống sử dụng Firebase Auth cho môi trường Production, trong môi trường Dev sử dụng JWT giả lập để thuận tiện thử nghiệm.
+
+---
 **🌱 BICAP - Vì một nền nông nghiệp minh bạch và sạch!**

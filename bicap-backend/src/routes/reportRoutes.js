@@ -1,10 +1,12 @@
-// src/routes/reportRoutes.js
 const express = require('express');
 const router = express.Router();
 const reportController = require('../controllers/reportController');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 
-router.post('/', verifyToken, reportController.createReport);
-router.get('/', verifyToken, requireRole(['admin', 'farm', 'retailer', 'driver', 'shipping_manager']), reportController.getAllReports);
+router.use(verifyToken);
+
+router.post('/', reportController.createReport);
+router.get('/', reportController.getReports);
+router.put('/:id', requireRole(['admin', 'shipping', 'manager']), reportController.updateReport);
 
 module.exports = router;

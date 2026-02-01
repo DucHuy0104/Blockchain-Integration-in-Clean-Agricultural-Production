@@ -27,7 +27,7 @@ const Shipment = sequelize.define('Shipment', {
         type: DataTypes.STRING,
         defaultValue: 'created',
         validate: {
-            isIn: [['created', 'pending_pickup', 'shipping', 'assigned', 'picked_up', 'delivering', 'delivered', 'failed']]
+            isIn: [['created', 'pending_pickup', 'assigned', 'picked_up', 'delivering', 'delivered', 'failed', 'cancelled']]
         }
     },
     pickupTime: {
@@ -55,6 +55,18 @@ const Shipment = sequelize.define('Shipment', {
         allowNull: true
     },
     deliveryQRCode: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    pickupImage: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    deliveryImage: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    cancelReason: {
         type: DataTypes.STRING,
         allowNull: true
     },

@@ -28,7 +28,7 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const router = useRouter();
     const params = useParams(); // Use useParams hook
     const id = params?.id; // Access id safely
@@ -74,7 +74,7 @@ export default function ProductDetailPage() {
         }
         setBuying(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.post('http://localhost:5001/api/orders', {
                 productId: product?.id,
                 quantity: Number(buyQuantity),

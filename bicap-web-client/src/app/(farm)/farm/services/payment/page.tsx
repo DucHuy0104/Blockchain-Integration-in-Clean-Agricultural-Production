@@ -9,7 +9,7 @@ import axios from 'axios';
 function PaymentContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const packageId = searchParams.get('package');
 
     const [loading, setLoading] = useState(false);
@@ -70,7 +70,7 @@ function PaymentContent() {
         }
 
         try {
-            const token = await auth?.currentUser?.getIdToken();
+            const token = await getAccessToken();
             if (!token) throw new Error("Vui lòng đăng nhập lại");
 
             // Call Backend Mock Payment

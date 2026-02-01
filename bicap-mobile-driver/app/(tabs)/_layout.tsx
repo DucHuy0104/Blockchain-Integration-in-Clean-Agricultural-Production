@@ -23,15 +23,22 @@ export default function TabLayout() {
 
       {/* Tab 1: Trang chủ (Tương ứng với file index.tsx) */}
       <Tabs.Screen
-        name="index" 
+        name="index"
         options={{
           title: 'Đơn hàng',
           tabBarIcon: ({ color }) => <FontAwesome name="cube" size={24} color={color} />,
         }}
       />
 
-      {/* Bạn có thể thêm các Tab khác ở dưới đây (ví dụ: Tài khoản, Thông báo...) */}
-      
+      {/* Tab 2: Báo cáo sự cố */}
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: 'Báo cáo',
+          tabBarIcon: ({ color }) => <FontAwesome name="warning" size={24} color={color} />,
+        }}
+      />
+
     </Tabs>
   );
 }

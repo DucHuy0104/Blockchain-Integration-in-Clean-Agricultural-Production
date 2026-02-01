@@ -15,7 +15,7 @@ interface Farm {
 }
 
 export default function FarmInfoPage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [farms, setFarms] = useState<Farm[]>([]);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'form'>('list');
@@ -32,11 +32,16 @@ export default function FarmInfoPage() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [debugLog, setDebugLog] = useState<string[]>([]);
+
+    const addLog = (msg: string) => setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
 
     useEffect(() => {
         if (user) {
+            addLog(`User detected: ${user.email} (Role: ${user.role || 'N/A'})`);
             fetchFarms();
         } else {
+            addLog("No user detected yet...");
             // If auth is still loading, we might want to wait, or if no user, stop loading
             // But AuthContext handles 'loading' state.
         }
@@ -44,19 +49,28 @@ export default function FarmInfoPage() {
 
     const fetchFarms = async () => {
         setLoading(true);
+        addLog("Starting fetchFarms...");
         try {
-            const token = await auth.currentUser?.getIdToken();
-            if (!token) return;
+            addLog("Attempting to get access token...");
+            const token = await getAccessToken();
+            if (!token) {
+                addLog("No token found!");
+                return;
+            }
+            addLog("Token found. Calling API...");
 
             const res = await axios.get('http://localhost:5001/api/farms/my-farms', {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
+            addLog(`API Success: ${res.data.farms?.length} farms found.`);
+
             if (res.data.farms) {
                 setFarms(res.data.farms);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Fetch farm error:", err);
+            addLog(`API Error: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -102,7 +116,7 @@ export default function FarmInfoPage() {
         setError('');
 
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             if (!token) throw new Error("Vui lòng đăng nhập lại");
 
             if (editingFarm) {

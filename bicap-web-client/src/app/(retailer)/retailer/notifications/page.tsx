@@ -15,7 +15,7 @@ interface Notification {
 }
 
 export default function RetailerNotifications() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -26,7 +26,7 @@ export default function RetailerNotifications() {
     const fetchNotifications = async () => {
         setLoading(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get('http://localhost:5001/api/notifications', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -40,7 +40,7 @@ export default function RetailerNotifications() {
 
     const markAsRead = async (id: number) => {
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.put(`http://localhost:5001/api/notifications/${id}/read`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });

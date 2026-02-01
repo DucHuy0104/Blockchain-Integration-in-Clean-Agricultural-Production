@@ -1,5 +1,5 @@
 // src/controllers/driverController.js
-const { Shipment, Order, Product, Farm, User } = require('../models');
+const { Shipment, Order, Product, Farm, User, Vehicle } = require('../models');
 const { Op } = require('sequelize');
 const { createNotificationInternal } = require('./notificationController');
 
@@ -82,7 +82,7 @@ exports.getShipmentById = async (req, res) => {
                                 {
                                     model: Farm,
                                     as: 'farm',
-                                    attributes: ['id', 'name', 'address', 'location_coords', 'phone']
+                                    attributes: ['id', 'name', 'address', 'location_coords']
                                 }
                             ]
                         },
@@ -158,7 +158,9 @@ exports.updateLocation = async (req, res) => {
 exports.confirmPickup = async (req, res) => {
     try {
         const { shipmentId, qrCode, latitude, longitude } = req.body;
+        console.log(`[DEBUG_PICKUP] Body:`, req.body);
         const driverId = req.user.id;
+        console.log(`[DEBUG_PICKUP] DriverID:`, driverId);
 
         if (!shipmentId || !qrCode) {
             return res.status(400).json({ message: 'Thiếu thông tin: shipmentId, qrCode' });
@@ -183,7 +185,7 @@ exports.confirmPickup = async (req, res) => {
         // Trong thực tế, QR code sẽ chứa thông tin đơn hàng hoặc vận đơn
         const expectedQR1 = `ORDER_${shipment.orderId}`;
         const expectedQR2 = `SHIPMENT_${shipmentId}`;
-        if (qrCode !== expectedQR1 && qrCode !== expectedQR2 && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
+        if (qrCode !== expectedQR1 && qrCode !== expectedQR2 && qrCode !== `SHIP_${shipmentId}` && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
             return res.status(400).json({ message: 'QR code không hợp lệ hoặc không khớp với vận đơn' });
         }
 
@@ -196,7 +198,7 @@ exports.confirmPickup = async (req, res) => {
         shipment.status = 'picked_up';
         shipment.pickupTime = new Date();
         shipment.pickupQRCode = qrCode;
-        
+
         if (latitude && longitude) {
             shipment.pickupLocation = `${latitude},${longitude}`;
             shipment.currentLocation = `${latitude},${longitude}`;
@@ -236,6 +238,7 @@ exports.confirmPickup = async (req, res) => {
 exports.confirmDelivery = async (req, res) => {
     try {
         const { shipmentId, qrCode, latitude, longitude, deliveryImage } = req.body;
+        console.log(`[DEBUG_DELIVERY] Body:`, req.body);
         const driverId = req.user.id;
 
         if (!shipmentId || !qrCode) {
@@ -260,7 +263,7 @@ exports.confirmDelivery = async (req, res) => {
         // Validate QR code
         const expectedQR1 = `ORDER_${shipment.orderId}`;
         const expectedQR2 = `SHIPMENT_${shipmentId}`;
-        if (qrCode !== expectedQR1 && qrCode !== expectedQR2 && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
+        if (qrCode !== expectedQR1 && qrCode !== expectedQR2 && qrCode !== `SHIP_${shipmentId}` && qrCode !== shipment.orderId.toString() && qrCode !== shipmentId.toString()) {
             return res.status(400).json({ message: 'QR code không hợp lệ hoặc không khớp với vận đơn' });
         }
 
@@ -273,7 +276,7 @@ exports.confirmDelivery = async (req, res) => {
         shipment.status = 'delivered';
         shipment.deliveryTime = new Date();
         shipment.deliveryQRCode = qrCode;
-        
+
         if (latitude && longitude) {
             shipment.deliveryLocation = `${latitude},${longitude}`;
             shipment.currentLocation = `${latitude},${longitude}`;
@@ -428,12 +431,16 @@ exports.getDriverStats = async (req, res) => {
  * --- CHỈ THÊM HÀM NÀY ĐỂ TRANG ADMIN KHÔNG BỊ LỖI ---
  * Lấy danh sách tất cả tài xế
  */
+
+// ...
+
 exports.getAllDrivers = async (req, res) => {
     try {
-        // Tìm tất cả user có role là 'driver'
+
+        // 1. Lấy tất cả Drivers cùng xe họ đang lái
         const drivers = await User.findAll({
-            where: { role: 'driver' }, 
-            attributes: ['id', 'fullName', 'phone', 'email', 'address', 'vehicleType', 'licensePlate'], // Thêm vehicleType, licensePlate
+            where: { role: 'driver' },
+            attributes: ['id', 'fullName', 'phone', 'email', 'address'],
             include: [
                 {
                     model: Shipment,
@@ -444,52 +451,143 @@ exports.getAllDrivers = async (req, res) => {
                         }
                     },
                     required: false,
-                    attributes: ['id', 'status', 'currentLocation']
+                    attributes: ['id', 'status']
+                },
+                {
+                    model: Vehicle,
+                    as: 'drivenVehicle',
+                    required: false,
+                    attributes: ['id', 'vehicleType', 'licensePlate']
                 }
             ]
         });
 
-        // Format dữ liệu trả về cho Frontend
+        // 2. Lấy tất cả Vehicles CHƯA có Driver gán vào
+        const unassignedVehicles = await Vehicle.findAll({
+            where: { driverId: null },
+            attributes: ['id', 'vehicleType', 'licensePlate']
+        });
+
+        // 3. Map danh sách Drivers
         const formattedDrivers = drivers.map(driver => {
             const activeShipment = driver.assignedShipments && driver.assignedShipments.length > 0
                 ? driver.assignedShipments[0]
                 : null;
             const status = activeShipment ? 'Bận' : 'Rảnh';
+            const vehicle = driver.drivenVehicle;
 
             return {
-                id: driver.id,
+                id: `driver-${driver.id}`,
+                realId: driver.id,
+                type: 'driver',
                 name: driver.fullName,
                 phone: driver.phone,
-                vehicle: driver.vehicleType || "Xe tải", // Lấy từ DB (nếu có)
-                plate: driver.licensePlate || "---",     // Lấy từ DB (nếu có)
+                vehicle: vehicle ? vehicle.vehicleType : "Chưa có xe",
+                plate: vehicle ? vehicle.licensePlate : "---",
                 status: status,
                 current_job: activeShipment ? activeShipment.id : null
             };
         });
 
-        res.json(formattedDrivers);
+        // 4. Map danh sách Xe chưa gán
+        const formattedVehicles = unassignedVehicles.map(v => ({
+            id: `vehicle-${v.id}`,
+            realId: v.id,
+            type: 'unassigned_vehicle',
+            name: "Chưa phân công",
+            phone: "---",
+            vehicle: v.vehicleType,
+            plate: v.licensePlate,
+            status: "Rảnh",
+            current_job: null
+        }));
+
+        // Gộp lại trả về
+        res.json([...formattedDrivers, ...formattedVehicles]);
     } catch (error) {
         console.error('Error getting all drivers:', error);
-        // Trả về mảng rỗng nếu lỗi để không chết frontend
-        res.status(500).json([]); 
+        res.status(500).json([]);
     }
 };
-// API: Lấy danh sách tất cả tài xế
-exports.getAllDrivers = async (req, res) => {
+
+/**
+ * Tạo tài xế mới
+ */
+exports.createDriver = async (req, res) => {
     try {
-        console.log("🛠️ Đang lấy danh sách tài xế...");
-        const drivers = await User.findAll({
-            where: { role: 'driver' }, // Chỉ lấy user là driver
-            attributes: ['id', 'fullName', 'phone', 'vehicleType', 'licensePlate', 'status', 'email'],
-            order: [['createdAt', 'DESC']]
+        const { fullName, email, password, phone, address } = req.body;
+
+        // 1. Kiểm tra email tồn tại
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) return res.status(400).json({ message: 'Email đã được sử dụng' });
+
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = await bcrypt.hash(password || '123456', 10);
+
+        // 2. Tạo User role driver
+        const newUser = await User.create({
+            fullName,
+            email,
+            password: hashedPassword,
+            phone,
+            address,
+            role: 'driver'
         });
 
-        res.json(drivers);
+        res.status(201).json({ message: 'Tạo tài xế thành công', driver: newUser });
+
     } catch (error) {
-        console.error("Lỗi getDrivers:", error);
-        res.status(500).json({ message: "Lỗi lấy danh sách tài xế" });
+        console.error('Error creating driver:', error);
+        res.status(500).json({ message: 'Lỗi tạo tài xế', error: error.message });
     }
 };
+
+/**
+ * Cập nhật thông tin tài xế
+ */
+exports.updateDriver = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { fullName, phone, address, email } = req.body;
+
+        const driver = await User.findOne({ where: { id, role: 'driver' } });
+        if (!driver) return res.status(404).json({ message: 'Không tìm thấy tài xế' });
+
+        if (fullName) driver.fullName = fullName;
+        if (phone) driver.phone = phone;
+        if (address) driver.address = address;
+        if (email) driver.email = email;
+
+        await driver.save();
+        res.json({ message: 'Cập nhật tài xế thành công', driver });
+
+    } catch (error) {
+        console.error('Error updating driver:', error);
+        res.status(500).json({ message: 'Lỗi cập nhật tài xế' });
+    }
+};
+
+/**
+ * Xóa tài xế
+ */
+exports.deleteDriver = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const driver = await User.findOne({ where: { id, role: 'driver' } });
+        if (!driver) return res.status(404).json({ message: 'Không tìm thấy tài xế' });
+
+        // Giải phóng xe đang gán (nếu có)
+        await Vehicle.update({ driverId: null }, { where: { driverId: id } });
+
+        await driver.destroy();
+        res.json({ message: 'Xoá tài xế thành công' });
+
+    } catch (error) {
+        console.error('Error deleting driver:', error);
+        res.status(500).json({ message: 'Lỗi xoá tài xế' });
+    }
+};
+
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -502,7 +600,7 @@ exports.loginDriver = async (req, res) => {
         // Logic test nhanh để bạn vào được Dashboard
         return res.json({
             success: true, // Bắt buộc phải có để Frontend chạy tiếp
-            token: 'test_token_2026', 
+            token: 'test_token_2026',
             message: 'Đăng nhập thành công!'
         });
     } catch (error) {

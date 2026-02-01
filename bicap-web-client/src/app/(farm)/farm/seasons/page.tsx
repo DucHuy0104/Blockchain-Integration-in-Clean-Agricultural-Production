@@ -21,7 +21,7 @@ interface Farm {
 }
 
 export default function SeasonListPage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [seasons, setSeasons] = useState<Season[]>([]);
     const [farms, setFarms] = useState<Farm[]>([]);
     const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
@@ -43,7 +43,7 @@ export default function SeasonListPage() {
 
     const fetchFarms = async () => {
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get('http://localhost:5001/api/farms/my-farms', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -66,7 +66,7 @@ export default function SeasonListPage() {
         try {
             // Public endpoint for reading seasons (or private, both work with token)
             // Ideally we use token for everything in dashboard
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get(`http://localhost:5001/api/seasons/farm/${farmId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });

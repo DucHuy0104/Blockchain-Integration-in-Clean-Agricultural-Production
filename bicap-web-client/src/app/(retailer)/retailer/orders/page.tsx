@@ -22,7 +22,7 @@ interface Order {
 }
 
 export default function RetailerOrders() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -30,7 +30,7 @@ export default function RetailerOrders() {
         if (!user) return;
         const fetchOrders = async () => {
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const res = await axios.get('http://localhost:5001/api/orders/my-orders', {
                     headers: { Authorization: `Bearer ${token}` }
                 });

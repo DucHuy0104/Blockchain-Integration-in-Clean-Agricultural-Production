@@ -3,13 +3,12 @@ const { Farm, FarmingSeason, FarmingProcess } = require('../models');
 const { Op } = require('sequelize');
 
 // 1. Tạo trang trại mới
+// 1. Tạo trang trại mới
 exports.createFarm = async (req, res) => {
   try {
     const { name, address, description, certification, location_coords } = req.body;
-
-    // Lấy ID người dùng từ Token (do Middleware giải mã)
-    // Đây là bước quan trọng để biết "Ai là chủ trang trại này"
     const ownerId = req.user.id;
+    console.log(`[CREATE FARM] Request from User ID: ${ownerId}`);
 
     const newFarm = await Farm.create({
       name,
@@ -20,13 +19,15 @@ exports.createFarm = async (req, res) => {
       ownerId
     });
 
+    console.log(`[CREATE FARM] Created Farm ID: ${newFarm.id} for Owner: ${newFarm.ownerId}`);
+
     res.status(201).json({
       message: 'Tạo trang trại thành công!',
       farm: newFarm
     });
 
   } catch (error) {
-    console.error(error);
+    console.error(`[CREATE FARM ERROR] User: ${req.user.id}`, error);
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
 };
@@ -34,12 +35,18 @@ exports.createFarm = async (req, res) => {
 // 2. Lấy danh sách trang trại của tôi
 exports.getMyFarms = async (req, res) => {
   try {
+    const userId = req.user.id;
+    console.log(`[GET MY FARMS] Request from User ID: ${userId}`);
+
     const farms = await Farm.findAll({
-      where: { ownerId: req.user.id } // Chỉ lấy trang trại của người đang đăng nhập
+      where: { ownerId: userId } // Chỉ lấy trang trại của người đang đăng nhập
     });
+
+    console.log(`[GET MY FARMS] Found ${farms.length} farms for User ${userId}`);
 
     res.status(200).json({ farms });
   } catch (error) {
+    console.error(`[GET FARMS ERROR]`, error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 };

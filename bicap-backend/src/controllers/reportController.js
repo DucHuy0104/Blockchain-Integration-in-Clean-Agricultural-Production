@@ -1,80 +1,75 @@
-// src/controllers/reportController.js
-const { Report, User, Order, Product, Farm } = require('../models');
-const { createNotificationInternal } = require('./notificationController');
+const { Report, User } = require('../models');
 
-// 1. Tạo báo cáo (Retailer/Driver gửi báo cáo sự cố)
+// @desc    Create a new report (Driver sending to Manager/Admin)
+// @route   POST /api/reports
 exports.createReport = async (req, res) => {
     try {
-        const { title, content, type, orderId } = req.body;
-
-        let senderId;
-        if (req.user) {
-            senderId = req.user.id;
-        } else if (req.userFirebase) {
-            const user = await User.findOne({ where: { firebaseUid: req.userFirebase.uid } });
-            if (!user) return res.status(404).json({ message: 'User not found' });
-            senderId = user.id;
-        } else {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
+        const senderId = req.user.id;
+        const { title, content, type, receiverRole } = req.body;
 
         const report = await Report.create({
             senderId,
+            receiverRole: receiverRole || 'admin',
             title,
-            content: orderId ? `[Đơn hàng #${orderId}] ${content}` : content,
-            type
+            content,
+            type,
+            status: 'pending'
         });
-
-        // --- NOTIFICATION LOGIC ---
-        // Nếu có orderId, tìm Farm Owner để thông báo
-        if (orderId) {
-            const order = await Order.findOne({
-                where: { id: orderId },
-                include: [{
-                    model: Product,
-                    as: 'product',
-                    include: [{ model: Farm, as: 'farm' }]
-                }]
-            });
-
-            if (order && order.product && order.product.farm && order.product.farm.ownerId) {
-                await createNotificationInternal(
-                    order.product.farm.ownerId,
-                    'Báo cáo mới từ Đối tác',
-                    `Bạn nhận được một báo cáo mới về Đơn hàng #${orderId}: ${title}`,
-                    'report'
-                );
-            }
-        }
-        // --- END NOTIFICATION LOGIC ---
 
         res.status(201).json({ message: 'Gửi báo cáo thành công', report });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Lỗi gửi báo cáo' });
+        res.status(500).json({ message: 'Lỗi server khi gửi báo cáo' });
     }
 };
 
-// 2. Lấy danh sách báo cáo (Admin/Farm xem - ở đây logic đơn giản lấy toàn bộ hoặc theo filter)
-// 2. Lấy danh sách báo cáo
-exports.getAllReports = async (req, res) => {
+// @desc    Get reports (Manager viewing)
+// @route   GET /api/reports
+exports.getReports = async (req, res) => {
     try {
-        let options = {
-            include: [{ model: User, as: 'sender', attributes: ['fullName', 'email', 'role'] }],
-            order: [['createdAt', 'DESC']]
-        };
-
-        // If not admin or farm (manager), only show own reports
-        // Or strictly if role is retailer/driver, filter by senderId
         const userRole = req.user.role;
-        if (!['admin', 'farm'].includes(userRole)) {
-            options.where = { senderId: req.user.id };
+
+        let whereCondition = {};
+
+        // If manager/admin, see reports sent to them
+        if (['admin', 'shipping', 'manager'].includes(userRole)) {
+            // Flexible logic: managers can see reports targeting them OR admin
+            // Simplification: see all reports for now or filter by receiverRole
+        } else {
+            // Drivers only see their own reports
+            whereCondition.senderId = req.user.id;
         }
 
-        const reports = await Report.findAll(options);
-        res.json({ reports });
+        const reports = await Report.findAll({
+            where: whereCondition,
+            include: [{ model: User, as: 'sender', attributes: ['id', 'fullName', 'role'] }],
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json(reports);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Lỗi lấy danh sách báo cáo' });
+    }
+};
+
+// @desc    Update report status (Manager action)
+// @route   PUT /api/reports/:id
+exports.updateReport = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, adminNote } = req.body;
+
+        const report = await Report.findByPk(id);
+        if (!report) return res.status(404).json({ message: 'Báo cáo không tồn tại' });
+
+        if (status) report.status = status;
+        if (adminNote) report.adminNote = adminNote;
+
+        await report.save();
+        res.json({ message: 'Cập nhật báo cáo thành công', report });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi cập nhật báo cáo' });
     }
 };

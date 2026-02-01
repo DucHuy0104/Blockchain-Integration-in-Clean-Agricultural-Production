@@ -29,7 +29,7 @@ interface OrderDetail {
 }
 
 export default function RetailerOrderDetail() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const router = useRouter();
     const params = useParams();
     const id = params?.id;
@@ -47,7 +47,7 @@ export default function RetailerOrderDetail() {
         if (!user || !id) return;
         const fetchOrder = async () => {
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const res = await axios.get('http://localhost:5001/api/orders/my-orders', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -66,7 +66,7 @@ export default function RetailerOrderDetail() {
         if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
         setActionLoading(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.put(`http://localhost:5001/api/orders/${order?.id}/cancel`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -93,20 +93,33 @@ export default function RetailerOrderDetail() {
             let imageUrl = deliveryImage;
 
             if (deliveryImage.startsWith('blob:')) {
-                // Fetch the blob data
-                const response = await fetch(deliveryImage);
-                const blob = await response.blob();
+                try {
+                    // Fetch the blob data
+                    const response = await fetch(deliveryImage);
+                    const blob = await response.blob();
 
-                // Create storage ref
-                const timestamp = Date.now();
-                const storageRef = ref(storage, `delivery_proofs/order_${order?.id}_${timestamp}.jpg`);
+                    // Create storage ref
+                    const timestamp = Date.now();
+                    const storageRef = ref(storage, `delivery_proofs/order_${order?.id}_${timestamp}.jpg`);
 
-                // Upload
-                await uploadBytes(storageRef, blob);
-                imageUrl = await getDownloadURL(storageRef);
+                    // Upload
+                    await uploadBytes(storageRef, blob);
+                    imageUrl = await getDownloadURL(storageRef);
+                } catch (uploadError: any) {
+                    console.error("Firebase Upload Error (likely CORS):", uploadError);
+                    // Fallback for Development/CORS issues
+                    if (window.location.hostname === 'localhost') {
+                        // Use a reliable placeholder image that doesn't have CORS issues (or a data URI)
+                        // Using a simple placeholder service
+                        imageUrl = "https://placehold.co/600x400?text=Delivery+Proof+(Fallback)";
+                        alert("⚠️ Lỗi upload ảnh (Do chưa cấu hình CORS cho Firebase Storage). Hệ thống sẽ dùng ảnh minh họa để bạn có thể tiếp tục flow.");
+                    } else {
+                        throw uploadError;
+                    }
+                }
             }
 
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.put(`http://localhost:5001/api/orders/${order?.id}/confirm-delivery`, {
                 deliveryImage: imageUrl
             }, {
@@ -125,7 +138,7 @@ export default function RetailerOrderDetail() {
     const handlePayDeposit = async () => {
         if (!confirm('Xác nhận thanh toán tiền cọc?')) return;
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.put(`http://localhost:5001/api/orders/${order?.id}/pay-deposit`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -140,7 +153,7 @@ export default function RetailerOrderDetail() {
     const handlePayRemaining = async () => {
         if (!confirm('Xác nhận thanh toán phần còn lại để hoàn tất đơn hàng?')) return;
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.put(`http://localhost:5001/api/orders/${order?.id}/pay-remaining`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -164,7 +177,7 @@ export default function RetailerOrderDetail() {
         }
         setActionLoading(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.post('http://localhost:5001/api/notifications/send', {
                 receiverId: order?.product.farm.ownerId,
                 title: `Tin nhắn từ Nhà bán lẻ (ĐH #${order?.id})`,

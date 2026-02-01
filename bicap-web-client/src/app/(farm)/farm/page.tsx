@@ -37,7 +37,7 @@ interface SeasonWithTasks {
 }
 
 export default function FarmPage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
 
     const [farms, setFarms] = useState<Farm[]>([]);
     const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
@@ -54,7 +54,7 @@ export default function FarmPage() {
         const initData = async () => {
             if (!user) return;
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const headers = { Authorization: `Bearer ${token}` };
 
                 const [farmRes, meRes] = await Promise.all([
@@ -104,7 +104,7 @@ export default function FarmPage() {
             // but we could have a `statsLoading` state.
 
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const headers = { Authorization: `Bearer ${token}` };
 
                 // Pass farmId query param
@@ -128,7 +128,7 @@ export default function FarmPage() {
         const fetchGroupedTasks = async () => {
             if (!selectedFarm) return;
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 // 1. Fetch Active Seasons
                 const seasonRes = await axios.get(`http://localhost:5001/api/seasons/farm/${selectedFarm.id}?status=active`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -192,7 +192,7 @@ export default function FarmPage() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
                 </div>
-                
+
                 <div className="relative z-10 flex-1">
                     <div className="inline-block mb-3 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
                         <p className="text-white text-sm font-semibold">{getTimeGreeting()}</p>
@@ -341,7 +341,7 @@ export default function FarmPage() {
                                                             s.id === season.id ? { ...s, tasks: s.tasks.filter(t => t.id !== task.id) } : s
                                                         ));
                                                         try {
-                                                            const token = await auth.currentUser?.getIdToken();
+                                                            const token = await getAccessToken();
                                                             await axios.put(`http://localhost:5001/api/tasks/${task.id}/toggle`, {}, {
                                                                 headers: { Authorization: `Bearer ${token}` }
                                                             });
@@ -396,7 +396,7 @@ export default function FarmPage() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
                 </div>
-                
+
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <div>
                         <div className="flex items-center gap-2 mb-3">
@@ -410,8 +410,8 @@ export default function FarmPage() {
                         <p className="text-indigo-200 text-sm mb-6">
                             {selectedFarm ? `Dữ liệu từ ${selectedFarm.name}` : 'Dữ liệu thời gian thực'}
                         </p>
-                        <Link 
-                            href={selectedFarm ? `/farm/monitoring?farmId=${selectedFarm.id}` : '/farm/monitoring'} 
+                        <Link
+                            href={selectedFarm ? `/farm/monitoring?farmId=${selectedFarm.id}` : '/farm/monitoring'}
                             className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 border border-white/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
                         >
                             <span>Xem chi tiết</span>

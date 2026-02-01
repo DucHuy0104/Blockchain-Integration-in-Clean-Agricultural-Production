@@ -11,6 +11,7 @@ interface Product {
     name: string;
     price: number;
     quantity: number;
+    image?: string;
     farm: {
         name: string;
         address: string;
@@ -106,10 +107,18 @@ export default function RetailerMarketPage() {
                         {products.map(product => (
                             <div key={product.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-2xl transition hover:-translate-y-1">
                                 <div
-                                    className="h-48 bg-gray-200 flex items-center justify-center relative cursor-pointer"
+                                    className="h-48 bg-gray-200 flex items-center justify-center relative cursor-pointer overflow-hidden"
                                     onClick={() => handleBuyClick(product)}
                                 >
-                                    <span className="text-4xl">🌾</span>
+                                    {product.image ? (
+                                        <img
+                                            src={`http://localhost:5001${product.image}`}
+                                            alt={product.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-4xl">🌾</span>
+                                    )}
                                     {/* Badge for certification */}
                                     <span className="absolute top-2 right-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full shadow-sm font-medium">
                                         {product.farm.certification}

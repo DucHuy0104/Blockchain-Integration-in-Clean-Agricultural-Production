@@ -1,129 +1,192 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-
-// Dữ liệu dự phòng (Backup) - Hiện ra khi API lỗi hoặc DB rỗng
-const BACKUP_DATA = [
-  {
-    id: "DH-001 (Demo)",
-    diemDi: "Nông trại Xanh", diemDen: "BigC Thăng Long", taiXe: "Nguyễn Văn A", 
-    status: "Đang giao",
-    details: { vehicle: "29C-123.45", type: "Rau củ", weight: "500kg", qrCode: "QR_DH001_SECURE" }
-  },
-  {
-    id: "DH-002 (Demo)",
-    diemDi: "Green Farm", diemDen: "VinMart", taiXe: "Chưa phân công", 
-    status: "Chờ lấy",
-    details: { vehicle: "---", type: "Dâu tây", weight: "200kg", qrCode: "QR_DH002_PENDING" }
-  }
-];
+import { useAuth } from "@/context/AuthContext";
 
 export default function ShipmentsPage() {
+  const { getAccessToken, loading: authLoading } = useAuth();
   const [shipments, setShipments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [filter, setFilter] = useState("all");
 
-  // --- KẾT NỐI API THẬT ---
+  // Modals
+  const [selectedOrder, setSelectedOrder] = useState<any>(null); // For QR
+  const [cancelTarget, setCancelTarget] = useState<any>(null); // For Cancel
+  const [cancelReason, setCancelReason] = useState("");
+  const [processing, setProcessing] = useState(false);
+
+  const fetchShipments = async () => {
+    try {
+      setLoading(true);
+      const token = await getAccessToken();
+      const res = await fetch("http://localhost:5001/api/shipments", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("Kết nối API thất bại");
+
+      const data = await res.json();
+      setShipments(data || []);
+    } catch (err) {
+      console.error("Lỗi API:", err);
+      // setShipments([]); // Keep empty if error
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchShipments = async () => {
-      try {
-        // Gọi API thật
-        const res = await fetch("http://localhost:5001/api/shipments");
-        
-        if (!res.ok) throw new Error("Kết nối API thất bại");
-        
-        const data = await res.json();
-        
-        // Nếu DB rỗng hoặc lỗi, dùng backup để không bị trắng trang
-        if (!data || data.length === 0) {
-            console.warn("DB rỗng, dùng dữ liệu mẫu.");
-            setShipments(BACKUP_DATA);
-        } else {
-            // Map dữ liệu từ API sang chuẩn hiển thị (đề phòng API trả về tên trường khác)
-            const mappedData = data.map((item: any) => ({
-                id: item.id || "DH-???",
-                diemDi: item.diemDi || item.pickupLocation || "Kho đi",
-                diemDen: item.diemDen || item.deliveryLocation || "Kho đến",
-                taiXe: item.taiXe || item.driver?.fullName || "Chưa phân công",
-                status: item.status === 'assigned' ? 'Đang giao' 
-                      : item.status === 'created' ? 'Chờ lấy' 
-                      : item.status || 'Chờ xử lý',
-                details: {
-                    qrCode: item.pickupQRCode || `SHIPMENT_${item.id}`,
-                    vehicle: "Xe tải 1.5 Tấn", // Giả lập nếu thiếu
-                    type: "Hàng hóa",
-                    weight: "---"
-                }
-            }));
-            setShipments(mappedData);
-        }
-      } catch (err) {
-        console.error("Lỗi API, chuyển sang chế độ Demo:", err);
-        setShipments(BACKUP_DATA); // Fallback về backup an toàn
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!authLoading) {
+      fetchShipments();
+    }
+  }, [authLoading]);
 
-    fetchShipments();
-  }, []);
+  const handleCancelShipment = async () => {
+    if (!cancelTarget) return;
+    try {
+      setProcessing(true);
+      const token = await getAccessToken();
+      const res = await fetch(`http://localhost:5001/api/shipments/${cancelTarget.id}/cancel`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: cancelReason })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.message || "Lỗi khi hủy đơn");
+        return;
+      }
+
+      alert("Hủy vận đơn thành công!");
+      setCancelTarget(null);
+      setCancelReason("");
+      fetchShipments();
+    } catch (error) {
+      console.error(error);
+      alert("Lỗi hệ thống");
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     const s = status?.toLowerCase() || "";
-    if (s.includes("đang") || s.includes("assigned")) return "bg-blue-100 text-blue-600 border-blue-200";
-    if (s.includes("chờ") || s.includes("created")) return "bg-orange-100 text-orange-600 border-orange-200";
-    if (s.includes("hoàn") || s.includes("delivered")) return "bg-green-100 text-green-600 border-green-200";
+    if (s === 'assigned' || s.includes("đang")) return "bg-blue-100 text-blue-600 border-blue-200";
+    if (s === 'shipping' || s.includes("vận chuyển")) return "bg-indigo-100 text-indigo-600 border-indigo-200";
+    if (s === 'picked_up') return "bg-purple-100 text-purple-600 border-purple-200";
+    if (s === 'created' || s === 'pending_pickup') return "bg-orange-100 text-orange-600 border-orange-200";
+    if (s === 'delivered' || s.includes("hoàn")) return "bg-green-100 text-green-600 border-green-200";
+    if (s === 'cancelled' || s === 'failed') return "bg-red-100 text-red-600 border-red-200";
     return "bg-gray-100 text-gray-600 border-gray-200";
   };
 
-  const handleScanQR = (action: string) => {
-    alert(`⚡ [Server Log] Đang gửi yêu cầu: ${action}\nĐơn hàng: ${selectedOrder.id}`);
+  const statusTranslation: any = {
+    created: 'Mới tạo',
+    pending_pickup: 'Chờ lấy hàng',
+    assigned: 'Đã gán xe',
+    picked_up: 'Đã lấy hàng',
+    shipping: 'Đang giao', // Legacy
+    delivering: 'Đang giao',
+    delivered: 'Hoàn thành',
+    cancelled: 'Đã hủy',
+    failed: 'Thất bại'
   };
 
+  // Filter Logic
+  const filteredShipments = shipments.filter(s => {
+    if (filter === 'all') return true;
+    if (filter === 'active') return ['created', 'pending_pickup', 'assigned', 'picked_up', 'delivering'].includes(s.status);
+    if (filter === 'completed') return s.status === 'delivered';
+    if (filter === 'cancelled') return ['cancelled', 'failed'].includes(s.status);
+    return s.status === filter;
+  });
+
   if (loading) return (
-      <div className="flex justify-center items-center h-[500px]">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
+    <div className="flex justify-center items-center h-[500px]">
+      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+    </div>
   );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          📦 Quản lý Đơn hàng Vận chuyển
-        </h2>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            📦 Quản lý Vận chuyển ({filteredShipments.length})
+          </h2>
+
+          <div className="flex gap-2">
+            {[
+              { id: 'all', label: 'Tất cả' },
+              { id: 'active', label: 'Đang chạy' },
+              { id: 'completed', label: 'Hoàn thành' },
+              { id: 'cancelled', label: 'Đã hủy' }
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${filter === f.id ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-gray-500 text-xs font-bold uppercase border-b bg-gray-50">
-                <th className="py-4 px-4">Mã đơn</th>
-                <th className="py-4 px-4">Điểm đi</th>
-                <th className="py-4 px-4">Điểm đến</th>
+                <th className="py-4 px-4">Mã Vận Đơn</th>
+                <th className="py-4 px-4">Điểm đi / Đến</th>
                 <th className="py-4 px-4">Tài xế</th>
                 <th className="py-4 px-4 text-center">Trạng thái</th>
-                <th className="py-4 px-4 text-center">Thao tác</th>
+                <th className="py-4 px-4 text-center">QR Code</th>
+                <th className="py-4 px-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {shipments.map((order, index) => (
-                <tr key={index} className="hover:bg-blue-50/50 transition">
-                  <td className="py-4 px-4 font-bold text-blue-600">{order.id}</td>
-                  <td className="py-4 px-4">{order.diemDi}</td>
-                  <td className="py-4 px-4">{order.diemDen}</td>
-                  <td className="py-4 px-4 font-medium">{order.taiXe}</td>
+              {filteredShipments.map((shipment) => (
+                <tr key={shipment.id} className="hover:bg-blue-50/50 transition">
+                  <td className="py-4 px-4">
+                    <span className="font-bold text-blue-600">#{shipment.id}</span>
+                    <div className="text-xs text-gray-400 mt-1">{new Date(shipment.createdAt).toLocaleDateString("vi-VN")}</div>
+                  </td>
+                  <td className="py-4 px-4 max-w-[250px]">
+                    <div className="text-sm font-medium truncate" title={shipment.diemDi}>{shipment.diemDi}</div>
+                    <div className="text-xs text-gray-400 text-center my-0.5">⬇</div>
+                    <div className="text-sm font-medium truncate" title={shipment.diemDen}>{shipment.diemDen}</div>
+                  </td>
+                  <td className="py-4 px-4 font-medium text-gray-700">
+                    {shipment.taiXe}
+                  </td>
                   <td className="py-4 px-4 text-center">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(order.status)}`}>
-                      {order.status}
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(shipment.status)} whitespace-nowrap`}>
+                      {statusTranslation[shipment.status] || shipment.status}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-center">
                     <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="text-blue-600 hover:text-blue-800 font-semibold text-sm hover:underline cursor-pointer"
+                      onClick={() => setSelectedOrder(shipment)}
+                      className="text-gray-500 hover:text-blue-600 text-2xl"
                     >
-                      Xem & Quét QR
+                      🔳
                     </button>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    {['created', 'pending_pickup', 'assigned'].includes(shipment.status) && (
+                      <button
+                        onClick={() => setCancelTarget(shipment)}
+                        className="text-red-500 hover:text-red-700 font-medium text-sm border border-red-200 bg-red-50 px-3 py-1 rounded hover:bg-red-100 transition"
+                      >
+                        Hủy
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -134,58 +197,47 @@ export default function ShipmentsPage() {
 
       {/* --- MODAL QUÉT QR --- */}
       {selectedOrder && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setSelectedOrder(null)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-blue-600 p-4 flex justify-between items-center text-white">
-              <h3 className="font-bold text-lg">Mã Vận Đơn: {selectedOrder.id}</h3>
-              <button onClick={() => setSelectedOrder(null)} className="hover:bg-blue-700 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setSelectedOrder(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 text-center" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-4">Mã QR Vận Đơn #{selectedOrder.id}</h3>
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SHIPMENT_${selectedOrder.id}`}
+              alt="QR Code"
+              className="w-48 h-48 mx-auto border"
+            />
+            <p className="text-sm text-gray-500 mt-2">Dùng App Tài xế để quét mã này</p>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL HỦY ĐƠN --- */}
+      {cancelTarget && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-4 bg-red-50 border-b border-red-100 text-red-700 font-bold flex justify-between">
+              <span>Hủy Vận Đơn #{cancelTarget.id}</span>
+              <button onClick={() => setCancelTarget(null)}>✕</button>
             </div>
-
-            <div className="p-6 flex flex-col items-center gap-4">
-                <div className="bg-white p-2 rounded shadow border border-gray-200">
-                    {/* QR Code hiển thị ở đây */}
-                    <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${selectedOrder.details?.qrCode || selectedOrder.id}`} 
-                        alt="QR Code"
-                        className="w-40 h-40"
-                    />
-                </div>
-                <p className="font-mono text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">
-                    {selectedOrder.details?.qrCode || selectedOrder.id}
-                </p>
-
-                <div className="w-full grid grid-cols-2 gap-3 mt-2">
-                    <button 
-                        onClick={() => handleScanQR("CONFIRM_PICKUP")}
-                        className="bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow-lg flex items-center justify-center gap-2"
-                    >
-                        📸 Nhận hàng
-                    </button>
-                    <button 
-                        onClick={() => handleScanQR("CONFIRM_DELIVERY")}
-                        className="bg-green-600 text-white py-2.5 rounded-lg font-bold hover:bg-green-700 shadow-lg flex items-center justify-center gap-2"
-                    >
-                        📸 Giao hàng
-                    </button>
-                </div>
-                
-                {/* Thông tin phụ */}
-                <div className="w-full text-sm text-gray-600 border-t pt-4 mt-2">
-                    <div className="flex justify-between mb-1">
-                        <span>Phương tiện:</span>
-                        <span className="font-bold">{selectedOrder.details?.vehicle}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span>Loại hàng:</span>
-                        <span className="font-bold">{selectedOrder.details?.type}</span>
-                    </div>
-                </div>
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">Bạn có chắc chắn muốn hủy chuyến vận chuyển này không? Hành động này không thể hoàn tác.</p>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Lý do hủy:</label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-red-500 outline-none"
+                rows={3}
+                placeholder="Nhập lý do hủy..."
+              ></textarea>
+            </div>
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <button onClick={() => setCancelTarget(null)} className="px-4 py-2 bg-white border rounded-lg text-gray-700">Đóng</button>
+              <button
+                onClick={handleCancelShipment}
+                disabled={!cancelReason.trim() || processing}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow font-bold disabled:opacity-50"
+              >
+                {processing ? 'Đang hủy...' : 'Xác nhận hủy'}
+              </button>
             </div>
           </div>
         </div>

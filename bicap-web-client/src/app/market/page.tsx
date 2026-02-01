@@ -12,6 +12,7 @@ interface Product {
     name: string;
     price: number;
     quantity: number;
+    image?: string;
     farm: {
         name: string;
         address: string;
@@ -39,13 +40,14 @@ const getProductIcon = (name: string) => {
 };
 
 export default function MarketplacePage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Tất cả');
+    const [selectedCertification, setSelectedCertification] = useState('Tất cả');
 
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [buyQuantity, setBuyQuantity] = useState(1);
@@ -61,14 +63,17 @@ export default function MarketplacePage() {
 
     const filteredProducts = products.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              p.farm.name.toLowerCase().includes(searchTerm.toLowerCase());
-        
+            p.farm.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.farm.address.toLowerCase().includes(searchTerm.toLowerCase());
+
         let matchesCategory = true;
         if (selectedCategory === 'Rau củ') matchesCategory = p.name.toLowerCase().includes('rau') || p.name.toLowerCase().includes('cải') || p.name.toLowerCase().includes('cà');
-        if (selectedCategory === 'Trái cây') matchesCategory = p.name.toLowerCase().includes('dưa') || p.name.toLowerCase().includes('dâu') || p.name.toLowerCase().includes('cam');
-        if (selectedCategory === 'Củ quả') matchesCategory = p.name.toLowerCase().includes('khoai') || p.name.toLowerCase().includes('sắn');
+        if (selectedCategory === 'Trái cây') matchesCategory = p.name.toLowerCase().includes('dưa') || p.name.toLowerCase().includes('dâu') || p.name.toLowerCase().includes('cam') || p.name.toLowerCase().includes('xoài');
+        if (selectedCategory === 'Củ quả') matchesCategory = p.name.toLowerCase().includes('khoai') || p.name.toLowerCase().includes('sắn') || p.name.toLowerCase().includes('ngô') || p.name.toLowerCase().includes('bắp');
 
-        return matchesSearch && matchesCategory;
+        const matchesCert = selectedCertification === 'Tất cả' || (p.farm.certification || 'VietGAP') === selectedCertification;
+
+        return matchesSearch && matchesCategory && matchesCert;
     });
 
     const handleBuyClick = (product: Product) => {
@@ -87,7 +92,7 @@ export default function MarketplacePage() {
         if (!selectedProduct) return;
         setBuying(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.post('http://localhost:5001/api/orders', {
                 productId: selectedProduct.id,
                 quantity: buyQuantity
@@ -112,7 +117,7 @@ export default function MarketplacePage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 font-sans pb-20">
-            
+
             {/* HEADER BANNER - Ultra Enhanced */}
             <div className="bg-gradient-to-r from-[#388E3C] via-[#7CB342] to-[#00C853] text-white py-20 px-4 shadow-2xl mb-12 relative overflow-hidden">
                 {/* Animated Background with Parallax */}
@@ -129,7 +134,7 @@ export default function MarketplacePage() {
                     <div className="absolute bottom-10 left-1/4 text-8xl opacity-20 animate-float" style={{ animationDelay: '1s' }}>🥕</div>
                     <div className="absolute bottom-20 right-1/3 text-6xl opacity-20 animate-float animate-wave">🌽</div>
                 </div>
-                
+
                 {/* Back Button */}
                 <Link href="/guest" className="absolute top-6 left-6 flex items-center gap-2 text-white/90 hover:text-white transition-all font-semibold z-10 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/20">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,16 +157,16 @@ export default function MarketplacePage() {
                         <span className="block text-4xl md:text-5xl mt-2 text-green-50">BICAP</span>
                     </h1>
                     <p className="text-green-50 mb-12 text-xl md:text-2xl max-w-3xl mx-auto font-light leading-relaxed animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-                        Kết nối trực tiếp từ <span className="font-bold">Nông trại</span> đến <span className="font-bold">Bàn ăn</span>. 
+                        Kết nối trực tiếp từ <span className="font-bold">Nông trại</span> đến <span className="font-bold">Bàn ăn</span>.
                         <span className="block mt-2">Minh bạch - An toàn - Chất lượng</span>
                     </p>
-                    
+
                     <div className="max-w-3xl mx-auto relative animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
                         <div className="relative group">
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="🔍 Tìm kiếm nông sản, tên trang trại..."
-                                className="w-full py-5 pl-8 pr-16 rounded-2xl text-gray-800 shadow-2xl focus:outline-none focus:ring-4 focus:ring-white/50 transition-all text-lg bg-white/95 backdrop-blur-sm border-2 border-transparent focus:border-white/50 hover:border-white/30" 
+                                className="w-full py-5 pl-8 pr-16 rounded-2xl text-gray-800 shadow-2xl focus:outline-none focus:ring-4 focus:ring-white/50 transition-all text-lg bg-white/95 backdrop-blur-sm border-2 border-transparent focus:border-white/50 hover:border-white/30"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -182,16 +187,16 @@ export default function MarketplacePage() {
 
             {/* NỘI DUNG CHÍNH */}
             <div className="container mx-auto px-4">
-                
-                {/* BỘ LỌC - Enhanced */}
-                <div className="flex gap-3 overflow-x-auto pb-4 mb-8 justify-center scrollbar-hide">
+
+                {/* BỘ LỌC CATEGORY - Enhanced */}
+                <div className="flex gap-3 overflow-x-auto pb-4 mb-4 justify-center scrollbar-hide">
                     {categories.map((cat) => (
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
                             className={`px-6 py-3 rounded-full font-bold transition-all duration-300 whitespace-nowrap border-2 transform hover:scale-105
-                                ${selectedCategory === cat 
-                                    ? "bg-gradient-to-r from-[#388E3C] to-[#7CB342] text-white border-transparent shadow-lg shadow-green-200" 
+                                ${selectedCategory === cat
+                                    ? "bg-gradient-to-r from-[#388E3C] to-[#7CB342] text-white border-transparent shadow-lg shadow-green-200"
                                     : "bg-white text-gray-600 hover:bg-gray-50 border-gray-200 hover:border-[#7CB342] hover:text-[#388E3C]"}`}
                         >
                             <span className="flex items-center gap-2">
@@ -201,6 +206,23 @@ export default function MarketplacePage() {
                                 {cat === 'Tất cả' && '🌾'}
                                 {cat}
                             </span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* BỘ LỌC CHỨNG NHẬN - NEW */}
+                <div className="flex gap-2 overflow-x-auto pb-4 mb-8 justify-center scrollbar-hide">
+                    {["Tất cả", "VietGAP", "GlobalGAP", "Organic"].map((cert) => (
+                        <button
+                            key={cert}
+                            onClick={() => setSelectedCertification(cert)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 whitespace-nowrap border-2
+                                ${selectedCertification === cert
+                                    ? "bg-green-100 text-green-700 border-green-300 shadow-sm"
+                                    : "bg-white text-gray-400 border-gray-100 hover:border-green-200 hover:text-green-500"}`}
+                        >
+                            {cert === 'Organic' && '🍃 '}
+                            {cert}
                         </button>
                     ))}
                 </div>
@@ -217,37 +239,47 @@ export default function MarketplacePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {filteredProducts.length > 0 ? (
                             filteredProducts.map((product, index) => {
-                                const isVegetable = product.name.toLowerCase().includes('rau') || 
-                                                   product.name.toLowerCase().includes('cải') || 
-                                                   product.name.toLowerCase().includes('cà');
-                                const isFruit = product.name.toLowerCase().includes('dưa') || 
-                                              product.name.toLowerCase().includes('dâu') || 
-                                              product.name.toLowerCase().includes('cam');
-                                const gradientClass = isVegetable 
-                                    ? 'gradient-vegetable' 
-                                    : isFruit 
-                                    ? 'gradient-fruit' 
-                                    : 'gradient-herb';
-                                
+                                const isVegetable = product.name.toLowerCase().includes('rau') ||
+                                    product.name.toLowerCase().includes('cải') ||
+                                    product.name.toLowerCase().includes('cà');
+                                const isFruit = product.name.toLowerCase().includes('dưa') ||
+                                    product.name.toLowerCase().includes('dâu') ||
+                                    product.name.toLowerCase().includes('cam');
+                                const gradientClass = isVegetable
+                                    ? 'gradient-vegetable'
+                                    : isFruit
+                                        ? 'gradient-fruit'
+                                        : 'gradient-herb';
+
                                 return (
-                                    <div 
-                                        key={product.id} 
+                                    <div
+                                        key={product.id}
                                         className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 group flex flex-col card-hover animate-fadeInUp"
                                         style={{ animationDelay: `${index * 0.1}s` }}
                                     >
                                         {/* Product Image/Icon with Gradient Background */}
                                         <div className={`h-48 ${gradientClass} flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-300 relative overflow-hidden`}>
-                                            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition-colors"></div>
-                                            <div className="relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
-                                                {getProductIcon(product.name)}
-                                            </div>
-                                            
+                                            {product.image ? (
+                                                <img
+                                                    src={`http://localhost:5001${product.image}`}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <>
+                                                    <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition-colors"></div>
+                                                    <div className="relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
+                                                        {getProductIcon(product.name)}
+                                                    </div>
+                                                </>
+                                            )}
+
                                             {/* Certification Badge */}
                                             <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm text-[#388E3C] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg border border-green-200 flex items-center gap-1">
                                                 <span className="text-green-600">✓</span>
                                                 {product.farm.certification || 'VietGAP'}
                                             </div>
-                                            
+
                                             {/* New Badge (if needed) */}
                                             {index < 3 && (
                                                 <div className="absolute top-3 left-3 bg-[#FFB300] text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
@@ -255,7 +287,7 @@ export default function MarketplacePage() {
                                                 </div>
                                             )}
                                         </div>
-                                        
+
                                         <div className="p-5 flex-1 flex flex-col">
                                             {/* Farm Name */}
                                             <div className="text-xs text-gray-500 mb-2 flex items-center gap-1.5">
@@ -264,12 +296,12 @@ export default function MarketplacePage() {
                                                 </svg>
                                                 <span className="font-medium">{product.farm.name}</span>
                                             </div>
-                                            
+
                                             {/* Product Name */}
                                             <h3 className="text-lg font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-[#388E3C] transition-colors" title={product.name}>
                                                 {product.name}
                                             </h3>
-                                            
+
                                             {/* Price and Action */}
                                             <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
                                                 <div>
@@ -283,13 +315,13 @@ export default function MarketplacePage() {
                                                         Còn: {product.quantity} kg
                                                     </p>
                                                 </div>
-                                                
-                                                <button 
+
+                                                <button
                                                     onClick={() => handleBuyClick(product)}
                                                     disabled={product.quantity <= 0}
                                                     className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 shadow-md btn-glow relative overflow-hidden
-                                                        ${product.quantity > 0 
-                                                            ? "bg-gradient-to-r from-[#388E3C] to-[#7CB342] hover:from-[#2E7D32] hover:to-[#388E3C] text-white transform hover:scale-105" 
+                                                        ${product.quantity > 0
+                                                            ? "bg-gradient-to-r from-[#388E3C] to-[#7CB342] hover:from-[#2E7D32] hover:to-[#388E3C] text-white transform hover:scale-105"
                                                             : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
                                                 >
                                                     <span className="relative z-10 flex items-center gap-1">
@@ -327,10 +359,10 @@ export default function MarketplacePage() {
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-100 animate-scaleIn relative overflow-hidden">
                         {/* Decorative gradient background */}
                         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-[#7CB342] to-[#388E3C] opacity-10"></div>
-                        
+
                         {/* Close Button */}
-                        <button 
-                            onClick={() => setShowModal(false)} 
+                        <button
+                            onClick={() => setShowModal(false)}
                             className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full"
                         >
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

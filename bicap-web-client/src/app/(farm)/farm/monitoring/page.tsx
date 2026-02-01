@@ -18,7 +18,7 @@ interface Farm {
 }
 
 export default function FarmMonitoringPage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [currentData, setCurrentData] = useState<EnvData | null>(null);
     const [history, setHistory] = useState<EnvData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function FarmMonitoringPage() {
         if (!user) return;
         const fetchFarms = async () => {
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const res = await axios.get('http://localhost:5001/api/farms/my-farms', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -56,7 +56,7 @@ export default function FarmMonitoringPage() {
 
         const fetchData = async () => {
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAccessToken();
                 const resCurrent = await axios.get(`http://localhost:5001/api/monitoring/current/${selectedFarmId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });

@@ -9,7 +9,7 @@ import { auth } from '@/lib/firebase'; // Direct import for token
 function CreateSeasonContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
 
     // Setup state
     const [farmId, setFarmId] = useState<string>('');
@@ -37,7 +37,7 @@ function CreateSeasonContent() {
         }
 
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             if (!token) throw new Error("Vui lòng đăng nhập");
 
             await axios.post('http://localhost:5001/api/seasons', {

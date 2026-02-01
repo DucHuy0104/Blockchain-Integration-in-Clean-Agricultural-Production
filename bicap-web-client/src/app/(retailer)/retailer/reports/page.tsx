@@ -20,7 +20,7 @@ interface Report {
 }
 
 export default function RetailerReports() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -37,7 +37,7 @@ export default function RetailerReports() {
     const fetchReports = async () => {
         setLoading(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get('http://localhost:5001/api/reports', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -54,7 +54,7 @@ export default function RetailerReports() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             // Receiver defaults to 'admin' in backend if not specified, 
             // or we might need to specify receiverRole='admin' or 'farm' if reporting farm.
             // Requirement says "Gửi báo cáo cho Admin"

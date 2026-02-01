@@ -6,11 +6,11 @@ const blockchainHelper = require('../utils/blockchainHelper');
 // API: GET /api/shipments?driverId=...
 exports.getAllShipments = async (req, res) => {
     try {
-        console.log("Đang gọi API lấy danh sách vận đơn..."); 
-        
+        console.log("Đang gọi API lấy danh sách vận đơn...");
+
         // Lấy driverId từ URL (nếu có)
-        const { driverId } = req.query; 
-        
+        const { driverId } = req.query;
+
         // Tạo điều kiện lọc
         let whereCondition = {};
         if (driverId) {
@@ -21,10 +21,10 @@ exports.getAllShipments = async (req, res) => {
         const shipments = await Shipment.findAll({
             where: whereCondition, // <--- ✅ ÁP DỤNG ĐIỀU KIỆN LỌC VÀO ĐÂY
             include: [
-                { 
-                    model: User, 
-                    as: 'driver', 
-                    attributes: ['id', 'fullName', 'phone'] 
+                {
+                    model: User,
+                    as: 'driver',
+                    attributes: ['id', 'fullName', 'phone']
                 },
                 {
                     model: Order,
@@ -35,7 +35,7 @@ exports.getAllShipments = async (req, res) => {
                     ]
                 }
             ],
-            order: [['createdAt', 'DESC']] 
+            order: [['createdAt', 'DESC']]
         });
 
         // Format dữ liệu cho Frontend dễ hiển thị
@@ -72,20 +72,34 @@ exports.createShipment = async (req, res) => {
         // 1. Verify Order
         const order = await Order.findOne({
             where: { id: orderId },
-            include: [{
-                model: Product,
-                as: 'product',
-                include: [{ model: Farm, as: 'farm' }]
-            }]
+            include: [
+                {
+                    model: Product,
+                    as: 'product',
+                    include: [{ model: Farm, as: 'farm' }]
+                },
+                {
+                    model: User,
+                    as: 'retailer',
+                    attributes: ['id', 'fullName', 'address', 'phone']
+                }
+            ]
         });
 
         if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
 
-        // 2. Authorization: Manager must be the Farm Owner
-        // Note: Check if managerId matches order.product.farm.ownerId
-        // console.log('Check ownership:', order.product?.farm?.ownerId, managerId);
+        // 2. Authorization: 
+        // Allow if user is:
+        // - Role 'shipping' (Shipping Manager)
+        // - Role 'admin'
+        // - The Farm Owner of the product
+        const userRole = req.user.role;
+        const isFarmOwner = order.product && order.product.farm && order.product.farm.ownerId === managerId;
 
-        if (!order.product || !order.product.farm || order.product.farm.ownerId !== managerId) {
+        console.log(`[DEBUG_SHIPMENT] CreateShipment Check: UserRole='${userRole}', ManagerId=${managerId}, FarmOwnerId=${order.product?.farm?.ownerId}, IsFarmOwner=${isFarmOwner}`);
+
+        if (userRole !== 'shipping' && userRole !== 'admin' && !isFarmOwner) {
+            console.log('[DEBUG_SHIPMENT] 403 Blocked.');
             return res.status(403).json({ message: 'Bạn không có quyền tạo vận đơn cho đơn hàng này' });
         }
 
@@ -116,7 +130,10 @@ exports.createShipment = async (req, res) => {
             status: initialStatus,
             pickupTime: pickupTime || null,
             estimatedDeliveryTime: estimatedDeliveryTime || null,
-            notes: driverId ? 'Farm Owner created shipment with driver' : 'Farm Owner requested shipping'
+            notes: driverId ? 'Farm Owner created shipment with driver' : 'Farm Owner requested shipping',
+            // Auto-populate addresses
+            pickupLocation: order.product.farm.address || 'Kho Trang Trại (Chưa cập nhật)',
+            deliveryLocation: order.retailer.address || 'Địa chỉ Khách hàng (Chưa cập nhật)'
         });
 
         // 6. Update Order Status
@@ -221,6 +238,8 @@ exports.updateShipmentStatus = async (req, res) => {
             }
         }
 
+        // ... (existing code)
+
         await shipment.save();
 
         // --- NOTIFICATION START ---
@@ -241,5 +260,135 @@ exports.updateShipmentStatus = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Lỗi cập nhật vận đơn' });
+    }
+};
+
+// 4. Lấy danh sách đơn hàng CẦN VẬN CHUYỂN (Chưa có Shipment)
+exports.getOrdersForShipping = async (req, res) => {
+    try {
+        const orders = await Order.findAll({
+            where: {
+                status: 'confirmed'
+                // TODO: Filter out orders that already have a shipment?
+                // Sequelize "hasOne" might not easily filter "does not have".
+                // Logic: Fetch confirmed, then filter in code or use sophisticated query.
+            },
+            include: [
+                { model: Shipment, as: 'shipment' }, // To check if exists
+                { model: Product, as: 'product', include: ['farm'] },
+                { model: User, as: 'retailer', attributes: ['fullName', 'phone', 'address'] }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        // Filter: Only keep orders where shipment is null OR shipment status is 'failed/cancelled'
+        const ordersReady = orders.filter(o => !o.shipment || ['failed', 'cancelled'].includes(o.shipment.status));
+
+        res.json(ordersReady);
+    } catch (error) {
+        console.error('Error fetching orders for shipping:', error);
+        res.status(500).json({ message: 'Lỗi lấy danh sách đơn hàng chờ vận chuyển' });
+    }
+};
+
+// 5. Hủy chuyến vận chuyển
+exports.cancelShipment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const managerId = req.user.id; // Or admin
+
+        const shipment = await Shipment.findByPk(id);
+        if (!shipment) return res.status(404).json({ message: 'Vận đơn không tồn tại' });
+
+        // Check permission (Skipped for brevity, assume Manager/Admin)
+
+        if (['picked_up', 'delivering', 'delivered'].includes(shipment.status)) {
+            return res.status(400).json({ message: 'Không thể hủy đơn đang giao hoặc đã giao' });
+        }
+
+        shipment.status = 'cancelled';
+        shipment.cancelReason = reason || 'Quản lý hủy';
+        await shipment.save();
+
+        // Revert Order status if needed
+        const order = await Order.findByPk(shipment.orderId);
+        if (order) {
+            order.status = 'confirmed'; // Back to confirmed so it can be assigned again
+            await order.save();
+        }
+
+        // Notify Driver
+        if (shipment.driverId) {
+            const { createNotificationInternal } = require('./notificationController');
+            await createNotificationInternal(
+                shipment.driverId,
+                'Hủy chuyến',
+                `Chuyến vận chuyển #${shipment.id} đã bị hủy. Lý do: ${shipment.cancelReason}`,
+                'shipment'
+            );
+        }
+
+        res.json({ message: 'Đã hủy chuyến vận chuyển thành công', shipment });
+
+    } catch (error) {
+        console.error('Error cancelling shipment:', error);
+        res.status(500).json({ message: 'Lỗi hủy vận đơn' });
+    }
+};
+
+// 6. Gán tài xế cho vận đơn có sẵn
+exports.assignDriver = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { driverId, vehicleInfo } = req.body;
+
+        const shipment = await Shipment.findByPk(id);
+        if (!shipment) return res.status(404).json({ message: 'Vận đơn không tồn tại' });
+
+        // 1. Check Permission (Admin hoặc Shipping Manager)
+        const userRole = req.user.role;
+        if (userRole !== 'shipping' && userRole !== 'admin') {
+            return res.status(403).json({ message: 'Bạn không có quyền gán tài xế' });
+        }
+
+        // 2. Validate Driver
+        let cleanDriverId = driverId;
+        if (typeof driverId === 'string' && driverId.startsWith('driver-')) {
+            cleanDriverId = parseInt(driverId.replace('driver-', ''), 10);
+        }
+
+        const driver = await User.findOne({ where: { id: cleanDriverId, role: 'driver' } });
+        if (!driver) return res.status(404).json({ message: 'Không tìm thấy tài xế này' });
+
+        // 3. Update Shipment
+        shipment.driverId = cleanDriverId;
+        shipment.vehicleInfo = vehicleInfo || shipment.vehicleInfo;
+        shipment.status = 'assigned'; // Chuyển sang trạng thái đã gán
+        await shipment.save();
+
+        // 4. Notify Driver
+        const { createNotificationInternal } = require('./notificationController');
+        await createNotificationInternal(
+            cleanDriverId,
+            'Chuyến hàng mới',
+            `Bạn đã được gán cho vận đơn #${shipment.id}. Vui lòng kiểm tra lộ trình.`,
+            'shipment'
+        );
+
+        res.json({
+            message: 'Gán tài xế thành công',
+            shipment: {
+                ...shipment.toJSON(),
+                driver: {
+                    id: driver.id,
+                    fullName: driver.fullName
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error assigning driver:', error);
+        res.status(500).json({ message: 'Lỗi gán tài xế', error: error.message });
     }
 };

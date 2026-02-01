@@ -7,7 +7,7 @@ import axios from 'axios';
 import { auth } from '@/lib/firebase';
 
 export default function RetailerProfile() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, getAccessToken } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -67,7 +67,7 @@ export default function RetailerProfile() {
             // Looking at `AuthContext.tsx` in `list_dir` output earlier... I didn't read it.
             // I'll assume I need to get the token.
 
-            const idToken = await auth.currentUser?.getIdToken();
+            const idToken = await getAccessToken();
 
             const res = await axios.put('http://localhost:5001/api/auth/profile', formData, {
                 headers: {

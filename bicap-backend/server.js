@@ -22,7 +22,7 @@ const publicRoutes = require('./src/routes/publicRoutes');
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:3001', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'],
   credentials: true
 }));
 app.use(express.json());
@@ -74,8 +74,10 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/monitoring', monitoringRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/driver', driverRoutes);
+app.use('/api/driver', driverRoutes); // Mobile App dùng cái này
+app.use('/api/drivers', driverRoutes); // Web Dashboard dùng cái này (Lấy danh sách)
 app.use('/api/admin', adminRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/tasks', require('./src/routes/seasonTaskRoutes'));
+app.use('/api/vehicles', require('./src/routes/vehicleRoutes'));

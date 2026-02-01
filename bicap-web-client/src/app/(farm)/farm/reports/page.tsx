@@ -19,7 +19,7 @@ interface Report {
 }
 
 export default function FarmReportManager() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -36,7 +36,7 @@ export default function FarmReportManager() {
     const fetchReports = async () => {
         setLoading(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get('http://localhost:5001/api/reports', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -52,7 +52,7 @@ export default function FarmReportManager() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.post('http://localhost:5001/api/reports', {
                 title,
                 content,

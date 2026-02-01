@@ -28,6 +28,20 @@ const Farm = sequelize.define('Farm', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'pending' // pending, active, rejected
+  },
+  registrationDate: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: DataTypes.NOW
+  },
+  adminNote: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   // Mỗi trang trại thuộc về một User (Chủ trại)
   ownerId: {
     type: DataTypes.INTEGER,

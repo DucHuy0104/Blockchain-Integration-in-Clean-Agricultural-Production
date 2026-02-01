@@ -11,6 +11,15 @@ const driverAuth = [verifyToken, requireRole(['driver', 'shipping', 'admin'])];
 // Lấy thống kê của Driver
 router.get('/stats', driverAuth, driverController.getDriverStats);
 
+// Lấy danh sách TẤT CẢ Driver (Cho Admin/Shipping Manager)
+router.get('/', driverAuth, driverController.getAllDrivers);
+
+// CRUD Driver (CHỈ Admin/Shipping Manager)
+const shippingManagerAuth = [verifyToken, requireRole(['shipping', 'admin'])];
+router.post('/', shippingManagerAuth, driverController.createDriver);
+router.put('/:id', shippingManagerAuth, driverController.updateDriver);
+router.delete('/:id', shippingManagerAuth, driverController.deleteDriver);
+
 // Lấy danh sách vận đơn của tôi
 router.get('/shipments', driverAuth, driverController.getMyShipments);
 
@@ -21,9 +30,11 @@ router.get('/shipments/:id', driverAuth, driverController.getShipmentById);
 router.put('/location', driverAuth, driverController.updateLocation);
 
 // Xác nhận nhận hàng (quét QR) - Note: shipmentId trong body, không phải params
+router.post('/confirm-pickup', driverAuth, driverController.confirmPickup);
 router.post('/shipments/pickup', driverAuth, driverController.confirmPickup);
 
 // Xác nhận giao hàng (quét QR) - Note: shipmentId trong body, không phải params
+router.post('/confirm-delivery', driverAuth, driverController.confirmDelivery);
 router.post('/shipments/delivery', driverAuth, driverController.confirmDelivery);
 
 // Sửa .get thành .post

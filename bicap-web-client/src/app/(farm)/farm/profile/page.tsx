@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [formData, setFormData] = useState({
         fullName: '',
         address: '',
@@ -15,14 +15,36 @@ export default function ProfilePage() {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        if (user) {
-            setFormData({
-                fullName: user.fullName || '',
-                address: (user as any).address || '',
-                businessLicense: (user as any).businessLicense || ''
-            });
-        }
-    }, [user]);
+        const fetchProfile = async () => {
+            try {
+                const token = await getAccessToken();
+                if (token) {
+                    const res = await axios.get('http://localhost:5001/api/auth/me', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (res.data) {
+                        setFormData({
+                            fullName: res.data.fullName || '',
+                            address: res.data.address || '',
+                            businessLicense: res.data.businessLicense || ''
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+                // Fallback to context user if API fails
+                if (user) {
+                    setFormData({
+                        fullName: user.fullName || '',
+                        address: (user as any).address || '',
+                        businessLicense: (user as any).businessLicense || ''
+                    });
+                }
+            }
+        };
+
+        fetchProfile();
+    }, [user, getAccessToken]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,7 +52,7 @@ export default function ProfilePage() {
         setMessage('');
 
         try {
-            const token = await auth?.currentUser?.getIdToken();
+            const token = await getAccessToken();
             if (!token) throw new Error("No token found");
 
             await axios.put('http://localhost:5001/api/auth/profile', formData, {
@@ -46,9 +68,7 @@ export default function ProfilePage() {
         }
     };
 
-    // Helper to get auth instance since it's not exported from context directly but available in firebase.ts
-    // We need to import auth from firebase config
-    const { auth } = require('@/lib/firebase');
+
 
     return (
         <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow">

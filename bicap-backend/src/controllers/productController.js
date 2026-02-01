@@ -1,6 +1,7 @@
 // src/controllers/productController.js
 const { Product, Farm, FarmingSeason } = require('../models');
 const { Op } = require('sequelize'); // Import Op
+const { sequelize: db } = require('../config/database');
 const blockchainHelper = require('../utils/blockchainHelper');
 const qrGenerator = require('../utils/qrGenerator');
 const { getFileUrl } = require('../middleware/uploadMiddleware');
@@ -39,7 +40,8 @@ exports.createProduct = async (req, res) => {
       price: price || 0,
       farmId,
       seasonId, // Link to season
-      status: 'available' // Ready to sell
+      status: 'available', // Ready to sell
+      image: req.file ? getFileUrl(req.file) : null // Save uploaded image path
     };
 
     // Ghi dữ liệu lên Blockchain (Mock)
@@ -130,7 +132,10 @@ exports.getAllProducts = async (req, res) => {
         },
         { model: FarmingSeason, as: 'season', attributes: ['id', 'name'] }
       ],
-      order: [['createdAt', 'DESC']],
+      order: [
+        [db.literal('CASE WHEN image IS NULL THEN 1 ELSE 0 END'), 'ASC'],
+        ['id', 'ASC']
+      ],
       subQuery: false // Necessary when filtering by associated model fields with limit/offset (though we don't have pagination yet)
     });
     res.json(products);
@@ -183,9 +188,9 @@ exports.getProductQRCode = async (req, res) => {
 
   } catch (error) {
     console.error('Error generating QR code:', error);
-    res.status(500).json({ 
-      message: 'Lỗi tạo mã QR', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Lỗi tạo mã QR',
+      error: error.message
     });
   }
 };
@@ -221,9 +226,9 @@ exports.getProductQRCodeDataURL = async (req, res) => {
 
   } catch (error) {
     console.error('Error generating QR code Data URL:', error);
-    res.status(500).json({ 
-      message: 'Lỗi tạo mã QR', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Lỗi tạo mã QR',
+      error: error.message
     });
   }
 };

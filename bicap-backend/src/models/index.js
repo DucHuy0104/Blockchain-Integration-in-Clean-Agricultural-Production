@@ -12,6 +12,7 @@ const Report = require('./Report');
 const Subscription = require('./Subscription');
 const SeasonTask = require('./SeasonTask');
 const Payment = require('./Payment');
+const Vehicle = require('./Vehicle');
 
 // --- Define Associations ---
 
@@ -82,6 +83,12 @@ SeasonTask.belongsTo(Farm, { foreignKey: 'farmId', as: 'farm', onDelete: 'NO ACT
 FarmingSeason.hasMany(SeasonTask, { foreignKey: 'seasonId', as: 'tasks', onDelete: 'NO ACTION' });
 SeasonTask.belongsTo(FarmingSeason, { foreignKey: 'seasonId', as: 'season', onDelete: 'NO ACTION' });
 
+// 11. Vehicle Associations
+User.hasMany(Vehicle, { foreignKey: 'ownerId', as: 'ownedVehicles' });
+Vehicle.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
+
+User.hasOne(Vehicle, { foreignKey: 'driverId', as: 'drivenVehicle' });
+Vehicle.belongsTo(User, { foreignKey: 'driverId', as: 'driver' });
 
 
 const initModels = async () => {
@@ -119,6 +126,15 @@ const initModels = async () => {
         allowNull: true // Should be false but set true for existing data safety
       });
     }*/
+
+    // Add 'image' if not exists
+    if (!tableDesc.image) {
+      console.log('⚡ Adding missing column: image to Products');
+      await queryInterface.addColumn('Products', 'image', {
+        type: require('sequelize').DataTypes.STRING,
+        allowNull: true
+      });
+    }
 
     // 3. Manual Migration for 'Users' table
     const userTableDesc = await queryInterface.describeTable('Users');
@@ -158,6 +174,32 @@ const initModels = async () => {
       });
     }
 
+    // 4b. Manual Migration for 'Farms' table
+    const farmTableDesc = await queryInterface.describeTable('Farms');
+    if (!farmTableDesc.status) {
+      console.log('⚡ Adding missing column: status to Farms');
+      await queryInterface.addColumn('Farms', 'status', {
+        type: require('sequelize').DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'pending'
+      });
+    }
+    if (!farmTableDesc.registrationDate) {
+      console.log('⚡ Adding missing column: registrationDate to Farms');
+      await queryInterface.addColumn('Farms', 'registrationDate', {
+        type: require('sequelize').DataTypes.DATE,
+        allowNull: true,
+        defaultValue: require('sequelize').DataTypes.NOW
+      });
+    }
+    if (!farmTableDesc.adminNote) {
+      console.log('⚡ Adding missing column: adminNote to Farms');
+      await queryInterface.addColumn('Farms', 'adminNote', {
+        type: require('sequelize').DataTypes.TEXT,
+        allowNull: true
+      });
+    }
+
     // 5. Manual Migration for 'Reports' table
     const reportTableDesc = await queryInterface.describeTable('Reports');
     if (!reportTableDesc.receiverRole) {
@@ -191,6 +233,18 @@ const initModels = async () => {
       console.log('⚡ Adding missing column: currentLocation to Shipments');
       await queryInterface.addColumn('Shipments', 'currentLocation', { type: require('sequelize').DataTypes.STRING, allowNull: true });
     }
+    if (!shipmentTableDesc.pickupImage) {
+      console.log('⚡ Adding missing column: pickupImage to Shipments');
+      await queryInterface.addColumn('Shipments', 'pickupImage', { type: require('sequelize').DataTypes.TEXT, allowNull: true });
+    }
+    if (!shipmentTableDesc.deliveryImage) {
+      console.log('⚡ Adding missing column: deliveryImage to Shipments');
+      await queryInterface.addColumn('Shipments', 'deliveryImage', { type: require('sequelize').DataTypes.TEXT, allowNull: true });
+    }
+    if (!shipmentTableDesc.cancelReason) {
+      console.log('⚡ Adding missing column: cancelReason to Shipments');
+      await queryInterface.addColumn('Shipments', 'cancelReason', { type: require('sequelize').DataTypes.STRING, allowNull: true });
+    }
 
     console.log('✅ Database Schema Updated Successfully!');
   } catch (error) {
@@ -212,5 +266,6 @@ module.exports = {
   Report,
   Subscription,
   SeasonTask,
-  Payment
+  Payment,
+  Vehicle
 };

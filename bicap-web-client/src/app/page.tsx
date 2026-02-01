@@ -11,7 +11,7 @@ export default function Home() {
 
     useEffect(() => {
         setIsLoaded(true);
-        
+
         const handleMouseMove = (e: MouseEvent) => {
             setMousePosition({ x: e.clientX, y: e.clientY });
         };
@@ -119,20 +119,20 @@ export default function Home() {
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50">
                 {/* Animated Background */}
                 <div className="absolute inset-0">
-                    <div 
+                    <div
                         className="absolute top-20 left-10 w-96 h-96 bg-green-200/40 rounded-full blur-3xl animate-float"
                         style={{
                             transform: `translate(${mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px)`,
                         }}
                     ></div>
-                    <div 
+                    <div
                         className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl animate-float"
                         style={{
                             animationDelay: '1s',
                             transform: `translate(${-mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px)`,
                         }}
                     ></div>
-                    <div 
+                    <div
                         className="absolute top-1/2 left-1/2 w-96 h-96 bg-lime-200/30 rounded-full blur-3xl animate-float"
                         style={{
                             animationDelay: '2s',
@@ -178,7 +178,7 @@ export default function Home() {
                     {/* Subtitle */}
                     <ScrollAnimation direction="up" delay={200}>
                         <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-4 leading-relaxed">
-                            Kết nối <span className="font-bold text-green-600">nông dân</span> và <span className="font-bold text-emerald-600">người tiêu dùng</span> 
+                            Kết nối <span className="font-bold text-green-600">nông dân</span> và <span className="font-bold text-emerald-600">người tiêu dùng</span>
                             <span className="block mt-2">với công nghệ Blockchain và IoT hiện đại</span>
                         </p>
                         <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-12">
@@ -186,24 +186,43 @@ export default function Home() {
                         </p>
                     </ScrollAnimation>
 
-<<<<<<< HEAD
-                        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-                            <Link href="/market" className="px-8 py-3 bg-white text-green-800 font-bold rounded-full shadow-lg hover:bg-green-50 hover:scale-105 transition transform flex items-center justify-center gap-2">
-                                <span>🏪</span> Tham quan Sàn Nông Sản
+                    {/* CTA Buttons */}
+                    <ScrollAnimation direction="up" delay={300}>
+                        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
+                            <Link
+                                href="/market"
+                                className="group relative px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden"
+                            >
+                                <span className="relative z-10 flex items-center gap-3">
+                                    <span className="text-2xl">🏪</span>
+                                    <span>Khám Phá Chợ Nông Sản</span>
+                                    <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </Link>
-                            <Link href="/login?role=guest" className="px-8 py-3 bg-green-700/50 backdrop-blur-sm border border-green-400 text-white font-bold rounded-full shadow-lg hover:bg-green-600/50 hover:scale-105 transition transform flex items-center justify-center gap-2">
-                                <span>🔍</span> Truy Xuất Nguồn Gốc
+                            <Link
+                                href="/login?role=guest"
+                                className="group px-8 py-4 bg-white border-3 border-green-600 text-green-600 font-bold text-lg rounded-2xl shadow-xl hover:bg-green-50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+                            >
+                                <span className="text-2xl">🔍</span>
+                                <span>Truy Xuất Nguồn Gốc</span>
+                                <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
                             </Link>
                         </div>
-                    </div>
+                    </ScrollAnimation>
                 </div>
+
                 {/* Decorative curve */}
                 <div className="absolute bottom-0 w-full overflow-hidden leading-none rotate-180">
                     <svg className="relative block w-[calc(114%+1.3px)] h-[60px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
                         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-slate-50 dark:fill-slate-900"></path>
                     </svg>
                 </div>
-            </div>
+            </section>
 
             {/* Portal Selection Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -312,70 +331,42 @@ export default function Home() {
                             <div className="mt-6 flex items-center text-teal-600 text-sm font-medium">
                                 Truy cập ngay <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                             </div>
-=======
-                    {/* CTA Buttons */}
-                    <ScrollAnimation direction="up" delay={300}>
-                        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-                            <Link 
-                                href="/market" 
-                                className="group relative px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden"
-                            >
-                                <span className="relative z-10 flex items-center gap-3">
-                                    <span className="text-2xl">🏪</span>
-                                    <span>Khám Phá Chợ Nông Sản</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </span>
-                                <div className="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            </Link>
-                            <Link 
-                                href="/login?role=guest" 
-                                className="group px-8 py-4 bg-white border-3 border-green-600 text-green-600 font-bold text-lg rounded-2xl shadow-xl hover:bg-green-50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
-                            >
-                                <span className="text-2xl">🔍</span>
-                                <span>Truy Xuất Nguồn Gốc</span>
-                                <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </Link>
->>>>>>> d46aed76bb19e2d4a118c2ec523f0d3ecd7180e6
                         </div>
-                    </ScrollAnimation>
-
-                    {/* Stats */}
-                    <ScrollAnimation direction="up" delay={400}>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                            {stats.map((stat, index) => (
-                                <div 
-                                    key={index}
-                                    className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-green-100 hover:shadow-xl hover:scale-105 transition-all duration-300"
-                                >
-                                    <div className="text-4xl mb-2">{stat.icon}</div>
-                                    <div className={`text-3xl font-extrabold ${stat.color} mb-1`}>
-                                        {stat.number}
-                                    </div>
-                                    <div className="text-sm text-gray-600 font-semibold">{stat.label}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </ScrollAnimation>
+                    </Link>
                 </div>
 
-                {/* Scroll Indicator */}
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce-slow">
-                    <div className="flex flex-col items-center gap-2">
-                        <span className="text-sm text-gray-500 font-medium">Cuộn xuống</span>
-                        <div className="w-6 h-10 border-2 border-green-600 rounded-full flex justify-center">
-                            <div className="w-1 h-3 bg-green-600 rounded-full mt-2 animate-pulse"></div>
-                        </div>
+                {/* Stats */}
+                <ScrollAnimation direction="up" delay={400}>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                        {stats.map((stat, index) => (
+                            <div
+                                key={index}
+                                className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-green-100 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                            >
+                                <div className="text-4xl mb-2">{stat.icon}</div>
+                                <div className={`text-3xl font-extrabold ${stat.color} mb-1`}>
+                                    {stat.number}
+                                </div>
+                                <div className="text-sm text-gray-600 font-semibold">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </ScrollAnimation>
+            </div>
+
+            {/* Scroll Indicator */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce-slow">
+                <div className="flex flex-col items-center gap-2">
+                    <span className="text-sm text-gray-500 font-medium">Cuộn xuống</span>
+                    <div className="w-6 h-10 border-2 border-green-600 rounded-full flex justify-center">
+                        <div className="w-1 h-3 bg-green-600 rounded-full mt-2 animate-pulse"></div>
                     </div>
                 </div>
-            </section>
+            </div>
 
             {/* ============================================
-                STORY SECTION - Farmer Stories
-                ============================================ */}
+            STORY SECTION - Farmer Stories
+            ============================================ */}
             <section className="py-24 bg-gradient-to-b from-white to-green-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <ScrollAnimation direction="up">
@@ -406,8 +397,8 @@ export default function Home() {
                                     </div>
                                     <div className={`h-1 bg-gradient-to-r ${story.color} rounded-full mb-6`}></div>
                                     <p className="text-gray-600 italic mb-6 leading-relaxed">
-                        "{story.quote}"
-                    </p>
+                                        "{story.quote}"
+                                    </p>
                                     <div className="flex items-center gap-2 text-sm text-gray-500">
                                         <span className="font-semibold">Sản phẩm:</span>
                                         <span>{story.product}</span>
@@ -420,8 +411,8 @@ export default function Home() {
             </section>
 
             {/* ============================================
-                FEATURES SECTION - Main Features
-                ============================================ */}
+            FEATURES SECTION - Main Features
+            ============================================ */}
             <section className="py-24 bg-gradient-to-b from-green-50 to-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <ScrollAnimation direction="up">
@@ -461,8 +452,8 @@ export default function Home() {
             </section>
 
             {/* ============================================
-                HOW IT WORKS SECTION
-                ============================================ */}
+            HOW IT WORKS SECTION
+            ============================================ */}
             <section className="py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <ScrollAnimation direction="up">
@@ -508,8 +499,8 @@ export default function Home() {
             </section>
 
             {/* ============================================
-                CTA SECTION - Call to Action
-                ============================================ */}
+            CTA SECTION - Call to Action
+            ============================================ */}
             <section className="py-24 bg-gradient-to-r from-green-600 via-emerald-600 to-lime-600 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20">
                     <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/pattern.svg')] bg-repeat"></div>
@@ -523,14 +514,14 @@ export default function Home() {
                             Tham gia cùng hàng nghìn nông dân và người tiêu dùng đang sử dụng BICAP
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
-                            <Link 
-                                href="/login?role=farm" 
+                            <Link
+                                href="/login?role=farm"
                                 className="px-8 py-4 bg-white text-green-600 font-bold text-lg rounded-2xl shadow-2xl hover:bg-green-50 hover:scale-105 transition-all duration-300"
                             >
                                 Tôi Là Nông Dân
                             </Link>
-                            <Link 
-                                href="/login?role=retailer" 
+                            <Link
+                                href="/login?role=retailer"
                                 className="px-8 py-4 bg-green-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:bg-green-800 hover:scale-105 transition-all duration-300 border-2 border-white/30"
                             >
                                 Tôi Là Nhà Bán Lẻ
@@ -541,8 +532,8 @@ export default function Home() {
             </section>
 
             {/* ============================================
-                PORTAL SELECTION SECTION
-                ============================================ */}
+            PORTAL SELECTION SECTION
+            ============================================ */}
             <section className="py-24 bg-gradient-to-b from-white to-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <ScrollAnimation direction="up">
@@ -567,8 +558,8 @@ export default function Home() {
                             { href: '/login?role=guest', icon: '👤', title: 'Khách', desc: 'Xem sản phẩm, truy xuất', color: 'from-teal-500 to-green-600' }
                         ].map((portal, index) => (
                             <ScrollAnimation key={index} direction="up" delay={index * 100}>
-                                <Link 
-                                    href={portal.href} 
+                                <Link
+                                    href={portal.href}
                                     className="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-green-200"
                                 >
                                     <div className={`w-16 h-16 bg-gradient-to-br ${portal.color} rounded-2xl flex items-center justify-center text-4xl mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
@@ -586,8 +577,8 @@ export default function Home() {
             </section>
 
             {/* ============================================
-                FOOTER
-                ============================================ */}
+            FOOTER
+            ============================================ */}
             <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-white py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
@@ -638,10 +629,5 @@ export default function Home() {
                 </div>
             </footer>
         </main>
-<<<<<<< HEAD
-    )
-}
-=======
     );
 }
->>>>>>> d46aed76bb19e2d4a118c2ec523f0d3ecd7180e6

@@ -30,7 +30,7 @@ interface Farm {
 }
 
 export default function FarmProductManager() {
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const [products, setProducts] = useState<Product[]>([]);
     const [farms, setFarms] = useState<Farm[]>([]);
     const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
@@ -43,6 +43,8 @@ export default function FarmProductManager() {
     const [productName, setProductName] = useState('');
     const [price, setPrice] = useState('');
     const [quantity, setQuantity] = useState('');
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [posting, setPosting] = useState(false);
 
     // 1. Fetch Farms
@@ -60,7 +62,7 @@ export default function FarmProductManager() {
 
     const fetchFarms = async () => {
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get('http://localhost:5001/api/farms/my-farms', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -79,7 +81,7 @@ export default function FarmProductManager() {
     const fetchProducts = async (farmId: number) => {
         setLoading(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get(`http://localhost:5001/api/products/farm/${farmId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -93,7 +95,7 @@ export default function FarmProductManager() {
 
     const fetchCompletedSeasons = async (farmId: number) => {
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.get(`http://localhost:5001/api/seasons/farm/${farmId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -105,20 +107,41 @@ export default function FarmProductManager() {
         }
     };
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handlePostProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         setPosting(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
-            await axios.post('http://localhost:5001/api/products', {
-                name: productName,
-                seasonId: selectedSeasonId ? Number(selectedSeasonId) : null,
-                farmId: selectedFarmId,
-                price: Number(price),
-                quantity: Number(quantity),
-                batchCode: `BATCH-${Date.now()}` // Auto-generate
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
+            const token = await getAccessToken();
+
+            // Use FormData to send file
+            const formData = new FormData();
+            formData.append('name', productName);
+            formData.append('seasonId', selectedSeasonId || '');
+            formData.append('farmId', String(selectedFarmId));
+            formData.append('price', price);
+            formData.append('quantity', quantity);
+            formData.append('batchCode', `BATCH-${Date.now()}`);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            await axios.post('http://localhost:5001/api/products', formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
             // Reset and Reload
@@ -127,6 +150,8 @@ export default function FarmProductManager() {
             setPrice('');
             setQuantity('');
             setSelectedSeasonId('');
+            setImageFile(null);
+            setImagePreview(null);
             fetchProducts(selectedFarmId!);
             alert('Đăng bán thành công!');
         } catch (error: any) {
@@ -143,7 +168,7 @@ export default function FarmProductManager() {
         <div className="max-w-6xl mx-auto p-4">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Quản Lý Nông Sản</h1>
-                <button 
+                <button
                     onClick={() => setShowModal(true)}
                     className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow"
                 >
@@ -153,16 +178,16 @@ export default function FarmProductManager() {
 
             {/* Farm Selector if multiple */}
             {farms.length > 1 && (
-                 <div className="mb-4">
-                     <label className="mr-2 font-semibold">Chọn trang trại:</label>
-                     <select 
+                <div className="mb-4">
+                    <label className="mr-2 font-semibold">Chọn trang trại:</label>
+                    <select
                         className="border p-2 rounded"
                         value={selectedFarmId || ''}
                         onChange={(e) => setSelectedFarmId(Number(e.target.value))}
                     >
                         {farms.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                     </select>
-                 </div>
+                </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -175,7 +200,7 @@ export default function FarmProductManager() {
                                 {product.status === 'available' ? 'Đang bán' : product.status}
                             </span>
                             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{product.name}</h3>
-                            
+
                             <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300 mb-4">
                                 <p>📦 Số lượng: <span className="font-semibold">{product.quantity} kg</span></p>
                                 <p>💰 Giá bán: <span className="font-semibold text-green-600">{product.price.toLocaleString('vi-VN')} đ/kg</span></p>
@@ -201,7 +226,7 @@ export default function FarmProductManager() {
                         <form onSubmit={handlePostProduct} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Chọn Vụ Mùa (Đã kết thúc)</label>
-                                <select 
+                                <select
                                     className="mt-1 block w-full rounded-md border border-gray-300 p-2"
                                     required
                                     value={selectedSeasonId}
@@ -217,9 +242,9 @@ export default function FarmProductManager() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tên Sản Phẩm</label>
-                                <input 
-                                    type="text" 
-                                    required 
+                                <input
+                                    type="text"
+                                    required
                                     className="mt-1 block w-full rounded-md border border-gray-300 p-2"
                                     value={productName}
                                     onChange={e => setProductName(e.target.value)}
@@ -230,9 +255,9 @@ export default function FarmProductManager() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Số lượng (kg)</label>
-                                    <input 
-                                        type="number" 
-                                        required 
+                                    <input
+                                        type="number"
+                                        required
                                         className="mt-1 block w-full rounded-md border border-gray-300 p-2"
                                         value={quantity}
                                         onChange={e => setQuantity(e.target.value)}
@@ -240,9 +265,9 @@ export default function FarmProductManager() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Giá (VND/kg)</label>
-                                    <input 
-                                        type="number" 
-                                        required 
+                                    <input
+                                        type="number"
+                                        required
                                         className="mt-1 block w-full rounded-md border border-gray-300 p-2"
                                         value={price}
                                         onChange={e => setPrice(e.target.value)}
@@ -250,16 +275,43 @@ export default function FarmProductManager() {
                                 </div>
                             </div>
 
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hình Ảnh Sản Phẩm</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                                />
+                                {imagePreview && (
+                                    <div className="mt-3 relative">
+                                        <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setImageFile(null);
+                                                setImagePreview(null);
+                                            }}
+                                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="flex justify-end gap-3 mt-6">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={() => setShowModal(false)}
                                     className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                                 >
                                     Hủy
                                 </button>
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     disabled={posting}
                                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                                 >

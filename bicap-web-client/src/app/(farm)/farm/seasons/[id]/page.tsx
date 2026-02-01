@@ -40,7 +40,7 @@ export default function SeasonDetailPage() {
 
 function SeasonDetailContent() {
     const { id } = useParams();
-    const { user } = useAuth();
+    const { user, getAccessToken } = useAuth();
     const router = useRouter();
 
     const [season, setSeason] = useState<Season | null>(null);
@@ -71,8 +71,9 @@ function SeasonDetailContent() {
             setSeason(res.data);
 
             // Also fetch tasks for this season
+            const token = await getAccessToken();
             const taskRes = await axios.get(`http://localhost:5001/api/tasks?seasonId=${id}`, {
-                headers: { Authorization: `Bearer ${await auth.currentUser?.getIdToken()}` }
+                headers: { Authorization: `Bearer ${token}` }
             });
             setTasks(taskRes.data.tasks);
 
@@ -86,7 +87,7 @@ function SeasonDetailContent() {
     const handleAddTask = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.post('http://localhost:5001/api/tasks', {
                 title: newTaskTitle,
                 seasonId: id,
@@ -107,7 +108,7 @@ function SeasonDetailContent() {
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t));
 
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             await axios.put(`http://localhost:5001/api/tasks/${taskId}/toggle`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -121,8 +122,8 @@ function SeasonDetailContent() {
         e.preventDefault();
         setAdding(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
-            if (!token) throw new Error("Login required");
+            const token = await getAccessToken();
+            // if (!token) throw new Error("Login required");
 
             await axios.post(`http://localhost:5001/api/seasons/${id}/process`, {
                 type: processType,
@@ -147,7 +148,7 @@ function SeasonDetailContent() {
         if (!confirm('Bạn có chắc muốn kết thúc vụ mùa và xuất mã QR không? Hành động này sẽ khóa vụ mùa.')) return;
         setExporting(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await getAccessToken();
             const res = await axios.post(`http://localhost:5001/api/seasons/${id}/export`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
