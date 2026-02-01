@@ -48,10 +48,10 @@ const Order = sequelize.define('Order', {
 }, {
     timestamps: true,
     indexes: [
-        { fields: ['buyerId'] },           // Queries by buyer
+        { fields: ['retailerId'] },           // Queries by buyer (retailer)
         { fields: ['productId'] },         // Queries by product
         { fields: ['status'] },            // Filter by status
-        { fields: ['buyerId', 'status'] }, // Combined queries
+        { fields: ['retailerId', 'status'] }, // Combined queries
         { fields: ['createdAt'] }          // Sort by date
     ]
 });

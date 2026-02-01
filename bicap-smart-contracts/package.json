@@ -12,5 +12,10 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "hardhat": "^2.22.0"
+  },
+  "dependencies": {
+    "@vechain/sdk-core": "^2.0.7",
+    "@vechain/sdk-hardhat-plugin": "^2.0.7",
+    "@vechain/sdk-network": "^2.0.7"
   }
 }

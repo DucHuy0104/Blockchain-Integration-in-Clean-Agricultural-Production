@@ -38,50 +38,55 @@
 | **Mobile App** | React Native, Expo | Ứng dụng cho Tài xế. |
 | **Backend** | Node.js, Express, Sequelize | Xử lý logic và API. |
 | **Database** | Azure SQL Edge (MSSQL) | Lưu trữ dữ liệu tập trung. |
-| **Cache Layer** | **Redis** (Docker/Cloud) | Tăng tốc API 10-50x. |
-| **Blockchain** | VeChainThor (Mock/TestNet) | Đảm bảo tính bất biến của dữ liệu. |
+| **Cache & Queue** | **Redis** (Docker/Cloud) | Tăng tốc API và xử lý Transaction ngầm. |
+| **Blockchain** | **VeChainThor (Real/Solo Node)** | Đảm bảo tính bất biến và minh bạch. |
 | **Đóng gói** | Docker & Docker Compose | Triển khai nhất quán. |
 
 ---
 
 ## ⚡ Performance & Security (NFRs)
 
-Hệ thống đã được tối ưu hóa theo các yêu cầu phi chức năng (Non-Functional Requirements):
+Hệ thống được thiết kế đáp ứng các tiêu chuẩn công nghiệp:
 
-- **Redis Caching**: Caching tầng API cho danh sách sản phẩm và chi tiết sản phẩm.
-- **Database Indexing**: Tối ưu hóa truy vấn cho các trường `farmId`, `status`, `createdAt`.
-- **API Rate Limiting**: Bảo vệ API khỏi tấn công Brute-force và DDoS (100 req/15p tổng quát, 5 req/15p cho Auth).
-- **Role-Based Access Control (RBAC)**: Phân quyền chặt chẽ 5 vai trò (Admin, Farm, Retailer, Shipping, Driver).
-- **Image Management**: Hỗ trợ upload ảnh sản phẩm trực tiếp và lưu trữ tập trung.
+- **High Concurrency (Blockchain)**: Sử dụng **Bull Queue & Redis** để xử lý giao dịch background, đảm bảo hệ thống ổn định khi dữ liệu IoT tăng đột biến.
+- **Data Integrity**: Dữ liệu sản phẩm được băm (Hashing) và lưu trữ trực tiếp lên VeChainThor Smart Contract.
+- **Redis Caching**: Tối ưu hóa truy vấn sản phẩm và mùa vụ với độ trễ cực thấp.
+- **API Rate Limiting**: Bảo vệ API khỏi tấn công Brute-force và DDoS (100 req/15p).
+- **Security**: Mã hóa chữ ký số (secp256k1) cho các giao dịch Blockchain.
 
 ---
 
-## 🔗 Blockchain Integration Note
+## 🔗 Blockchain Integration
 
-Đây là một **đồ án học tập (Academic Project)**. 
-- **Hiện tại**: Sử dụng **Mock Blockchain Helper** để mô phỏng quy trình ghi dữ liệu lên mạng lưới VeChainThor (tạo hash SHA-256 thực tế, giả lập độ trễ mạng).
-- **Sẵn sàng**: Kiến trúc (cấu trúc bảng `txHash`) và infrastructure (`bicap-smart-contracts`) đã sẵn sàng để tích hợp `thor-devkit` và deploy Smart Contracts thật lên TestNet.
+Hệ thống tích hợp **VeChainThor Blockchain** thực tế:
+- **Smart Contract**: `BicapTraceability.sol` lưu trữ lịch sử nguồn gốc sản phẩm.
+- **Local Solo Node**: Chạy môi trường Blockchain nội bộ chuyên nghiệp để demo và phát triển.
+- **Asynchronous Processing**: Mọi hành động ghi lên chain đều qua hàng đợi xử lý ngầm.
 
 ---
 
 ## 🛠️ Hướng dẫn Vận hành
 
-### 1. Khởi chạy bằng Docker
+### 1. Khởi chạy toàn bộ hệ thống (Docker)
 ```bash
-# Khởi động toàn bộ: SQL Server, Redis, Backend, Frontend
+# Khởi động Backend, DB, Redis và máy chủ Blockchain Solo Node
 docker-compose up -d --build
 ```
 
 **Services:**
 - **Web Portal:** [http://localhost:3000](http://localhost:3000)
 - **Backend API:** [http://localhost:5001](http://localhost:5001)
+- **Blockchain Node:** [http://localhost:8669](http://localhost:8669)
 
-### 2. Cấu hình Redis Cloud (Tùy chọn)
-Nếu muốn sử dụng Redis Cloud thay cho Docker Redis, cập nhật `.env`:
+### 2. Kiểm tra & Demo Blockchain
+Mở một Terminal mới tại thư mục `bicap-backend` để chạy các script kiểm tra:
+
 ```bash
-REDIS_HOST=your-redis-host
-REDIS_PORT=your-port
-REDIS_PASSWORD=your-password
+# 1. Kiểm tra số dư ví Admin (Solo Node)
+node scripts/check_balance.js
+
+# 2. Demo xử lý đồng thời (Concurrency Test với Bull Queue)
+node scripts/test_blockchain_queue.js
 ```
 
 ### 3. Chạy App di động
@@ -94,10 +99,10 @@ npx expo start
 ---
 
 ## 📂 Cấu trúc Thư mục
-- `bicap-backend/`: API Server và cấu hình Database/Redis.
-- `bicap-web-client/`: Giao diện Web (Next.js).
-- `bicap-mobile-driver/`: App Mobile (Expo).
-- `bicap-smart-contracts/`: Infrastructure cho Smart Contracts (Hardhat).
+- `bicap-backend/`: API Server, Blockchain Helpers & Bull Queue service.
+- `bicap-web-client/`: Giao diện Web (Next.js 14).
+- `bicap-mobile-driver/`: App Mobile (Expo + QR Scanner).
+- `bicap-smart-contracts/`: Smart Contracts (Solidity) và kịch bản Deploy (Hardhat).
 
 ---
 **🌱 BICAP - Vì một nền nông nghiệp minh bạch và sạch!**

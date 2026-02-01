@@ -20,6 +20,7 @@ const paymentRoutes = require('./src/routes/paymentRoutes');
 const driverRoutes = require('./src/routes/driverRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
+require('./src/services/blockchainQueue'); // Start blockchain worker
 
 const app = express();
 

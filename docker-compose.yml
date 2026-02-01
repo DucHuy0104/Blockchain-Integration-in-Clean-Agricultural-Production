@@ -87,6 +87,18 @@ services:
       retries: 5
     restart: always
 
+  # 5. VeChain Solo Node (Local Blockchain)
+  blockchain:
+    container_name: bicap_blockchain
+    image: vechain/thor:latest
+    ports:
+      - "8669:8669"
+    command: solo --api-addr 0.0.0.0:8669 --data-dir /data
+    volumes:
+      - blockchain_data:/data
+    restart: always
+
 volumes:
   sql_data:
   redis_data:
+  blockchain_data:
