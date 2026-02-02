@@ -104,20 +104,31 @@ exports.createShipment = async (req, res) => {
         }
 
         if (order.status !== 'confirmed') {
-            return res.status(400).json({ message: 'Đơn hàng phải được xác nhận trước khi tạo vận đơn' });
+            console.log(`[DEBUG_SHIPMENT] Order status invalid: ${order.status}`);
+            return res.status(400).json({ message: `Đơn hàng phải ở trạng thái 'confirmed' (Hiện tại: ${order.status})` });
         }
 
         // 3. Check for existing shipment
-        const existingShipment = await Shipment.findOne({ where: { orderId } });
+        const existingShipment = await Shipment.findOne({
+            where: {
+                orderId,
+                status: {
+                    [require('sequelize').Op.notIn]: ['cancelled', 'failed']
+                }
+            }
+        });
+
         if (existingShipment) {
-            return res.status(400).json({ message: 'Đơn hàng này đã có vận đơn' });
+            console.log(`[DEBUG_SHIPMENT] Active Shipment already exists: ${existingShipment.id}`);
+            return res.status(400).json({ message: `Đơn hàng này đang có vận đơn hoạt động (Mã: ${existingShipment.id})` });
         }
 
         // 4. Determine Status
-        // If driver info is missing, it's a request -> 'pending_pickup'
+        // Không dùng 'shipping' vì không có trong validate của Shipment model
         let initialStatus = 'pending_pickup';
         if (driverId && vehicleInfo) {
-            initialStatus = 'shipping';
+            // Nếu có driver ngay, chuyển sang 'assigned' (nhưng thực tế nên để Shipping Manager gán)
+            initialStatus = 'assigned';
         }
 
         // 5. Create Shipment
@@ -137,8 +148,9 @@ exports.createShipment = async (req, res) => {
         });
 
         // 6. Update Order Status
-        order.status = 'shipping';
-        await order.save();
+        // Do NOT update to 'shipping' here yet. Wait for Manager to assign driver.
+        // order.status = 'shipping';
+        // await order.save();
 
         // 7. Blockchain Log (Mock)
         const txHash = await blockchainHelper.writeToBlockchain({
@@ -281,8 +293,11 @@ exports.getOrdersForShipping = async (req, res) => {
             order: [['createdAt', 'DESC']]
         });
 
-        // Filter: Only keep orders where shipment is null OR shipment status is 'failed/cancelled'
-        const ordersReady = orders.filter(o => !o.shipment || ['failed', 'cancelled'].includes(o.shipment.status));
+        // Filter: Keep orders with NO shipment, OR shipment is 'failed', 'cancelled', 'created', 'pending_pickup'
+        const ordersReady = orders.filter(o =>
+            !o.shipment ||
+            ['failed', 'cancelled', 'created', 'pending_pickup'].includes(o.shipment.status)
+        );
 
         res.json(ordersReady);
     } catch (error) {
@@ -367,14 +382,29 @@ exports.assignDriver = async (req, res) => {
         shipment.status = 'assigned'; // Chuyển sang trạng thái đã gán
         await shipment.save();
 
+        // KHÔNG cập nhật Order status ngay khi gán driver
+        // Order chỉ chuyển sang 'shipping' khi Driver thực sự nhận hàng (picked_up)
+
         // 4. Notify Driver
         const { createNotificationInternal } = require('./notificationController');
         await createNotificationInternal(
             cleanDriverId,
             'Chuyến hàng mới',
-            `Bạn đã được gán cho vận đơn #${shipment.id}. Vui lòng kiểm tra lộ trình.`,
+            `Bạn đã được gán cho vận đơn #${shipment.id}. Vui lòng đến địa chỉ lấy hàng và quét QR code để xác nhận.`,
             'shipment'
         );
+
+        // 5. Notify Retailer
+        const Order = require('../models/Order');
+        const order = await Order.findByPk(shipment.orderId);
+        if (order) {
+            await createNotificationInternal(
+                order.retailerId,
+                'Đã phân công tài xế',
+                `Vận đơn cho đơn hàng #${order.id} đã được phân công tài xế. Tài xế sẽ đến lấy hàng sớm.`,
+                'shipment'
+            );
+        }
 
         res.json({
             message: 'Gán tài xế thành công',

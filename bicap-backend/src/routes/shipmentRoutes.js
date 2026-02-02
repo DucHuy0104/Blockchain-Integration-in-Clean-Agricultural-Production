@@ -4,7 +4,7 @@ const router = express.Router();
 const shipmentController = require('../controllers/shipmentController');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 // --- QUAN TRỌNG NHẤT: Dòng này mở cổng cho /api/shipments ---
-router.get('/', shipmentController.getAllShipments);
+router.get('/', verifyToken, shipmentController.getAllShipments);
 
 // Tạo vận đơn (Chủ trại)
 router.post('/', verifyToken, requireRole(['farm', 'admin', 'shipping']), shipmentController.createShipment);

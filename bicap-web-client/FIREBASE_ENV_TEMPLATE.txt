@@ -1,0 +1,47 @@
+# ============================================
+# Firebase Configuration Template
+# ============================================
+# HƯỚNG DẪN: Copy nội dung này vào file .env.local trong thư mục bicap-web-client
+# 
+# Lấy các giá trị từ Firebase Console:
+# 1. Vào https://console.firebase.google.com/
+# 2. Chọn project: bicap-bc2da
+# 3. Vào Project Settings (⚙️) > General
+# 4. Scroll xuống phần "Your apps" > Web app
+# 5. Copy các giá trị từ firebaseConfig object
+
+# API Key (bắt đầu bằng AIzaSy...)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
+
+# Auth Domain (thường là: project-id.firebaseapp.com)
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=bicap-bc2da.firebaseapp.com
+
+# Project ID (đã biết: bicap-bc2da)
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=bicap-bc2da
+
+# Storage Bucket (thường là: project-id.appspot.com)
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=bicap-bc2da.appspot.com
+
+# Messaging Sender ID (số dài, ví dụ: 123456789012)
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
+
+# App ID (bắt đầu bằng 1:, ví dụ: 1:123456789012:web:abcdef)
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
+
+# Measurement ID (tùy chọn, cho Google Analytics)
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-ZVDJEQN2Y4
+
+# ============================================
+# Backend API Configuration
+# ============================================
+# URL của backend API
+NEXT_PUBLIC_API_URL=http://localhost:5001/api
+
+# ============================================
+# CÁCH SỬ DỤNG:
+# ============================================
+# 1. Tạo file .env.local trong thư mục bicap-web-client
+# 2. Copy nội dung từ file này vào .env.local
+# 3. Thay thế tất cả "your_..._here" bằng giá trị thật từ Firebase Console
+# 4. Restart Next.js dev server để áp dụng thay đổi
+# 5. Nếu dùng Docker, rebuild: docker-compose build frontend

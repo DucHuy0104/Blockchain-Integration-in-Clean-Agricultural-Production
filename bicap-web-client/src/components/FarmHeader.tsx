@@ -21,7 +21,8 @@ export default function FarmHeader() {
                     <NavLink href="/farm/seasons" label="Mùa vụ" currentPath={pathname} />
                     <NavLink href="/farm/products" label="Sản phẩm" currentPath={pathname} />
                     <NavLink href="/farm/orders" label="Đơn hàng" currentPath={pathname} />
-                    <NavLink href="/farm/reports/shipping" label="Báo cáo" currentPath={pathname} />
+                    <NavLink href="/farm/reports" label="Hỗ trợ" currentPath={pathname} exact />
+                    <NavLink href="/farm/reports/shipping" label="Vận chuyển" currentPath={pathname} />
                     <NavLink href="/farm/monitoring" label="Giám sát" currentPath={pathname} />
                     <NavLink href="/farm/services" label="Dịch vụ" currentPath={pathname} />
                     <NavLink href="/farm/notifications" label="Thông báo" currentPath={pathname} highlight />
@@ -38,8 +39,10 @@ export default function FarmHeader() {
     );
 }
 
-function NavLink({ href, label, icon, highlight, target, currentPath }: { href: string, label: string, icon?: string, highlight?: boolean, target?: string, currentPath: string }) {
-    const isActive = currentPath === href || (href !== '/farm' && currentPath.startsWith(href));
+function NavLink({ href, label, icon, highlight, target, currentPath, exact }: { href: string, label: string, icon?: string, highlight?: boolean, target?: string, currentPath: string, exact?: boolean }) {
+    const isActive = exact
+        ? currentPath === href
+        : currentPath === href || (href !== '/farm' && currentPath.startsWith(href + '/'));
 
     return (
         <Link

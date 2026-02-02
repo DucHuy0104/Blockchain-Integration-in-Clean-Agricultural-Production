@@ -1,6 +1,7 @@
 // src/controllers/adminController.js
-const { User, Farm, Order, Product, Subscription, Payment, Report, Shipment, FarmingSeason } = require('../models');
+const { User, Farm, Order, Product, Subscription, Payment, Report, Shipment, FarmingSeason, PublicNotification } = require('../models');
 const { Op, Sequelize } = require('sequelize');
+const firebaseAdmin = require('../config/firebase');
 
 /**
  * Dashboard - Thống kê tổng quan
@@ -133,6 +134,57 @@ exports.getUsers = async (req, res) => {
     } catch (error) {
         console.error('Error getting users:', error);
         res.status(500).json({ message: 'Lỗi lấy danh sách users', error: error.message });
+    }
+};
+
+exports.createUser = async (req, res) => {
+    try {
+        const { fullName, email, password, role, phone, address } = req.body;
+
+        // 1. Kiểm tra email tồn tại trong SQL
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email đã tồn tại trong hệ thống' });
+        }
+
+        // 2. Tạo user trên Firebase
+        let firebaseUid = null;
+        try {
+            const firebaseUser = await firebaseAdmin.auth().createUser({
+                email,
+                password,
+                displayName: fullName,
+                phoneNumber: phone || undefined
+            });
+            firebaseUid = firebaseUser.uid;
+        } catch (fbError) {
+            // Nếu lỗi Firebase (VD: email đã tồn tại trên Firebase), lấy UID nếu có thể hoặc báo lỗi
+            if (fbError.code === 'auth/email-already-exists') {
+                return res.status(400).json({ message: 'Email đã tồn tại trên Firebase' });
+            }
+            throw fbError;
+        }
+
+        // 3. Tạo user trong SQL
+        const newUser = await User.create({
+            fullName,
+            email,
+            firebaseUid,
+            role: role || 'admin',
+            phone,
+            address,
+            status: 'active',
+            isActive: true
+        });
+
+        res.status(201).json({
+            message: 'Tạo tài khoản thành công',
+            user: newUser
+        });
+
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({ message: 'Lỗi tạo tài khoản', error: error.message });
     }
 };
 
@@ -369,6 +421,36 @@ exports.updateProductStatus = async (req, res) => {
     }
 };
 
+exports.updateProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, category, description, price, quantity, status } = req.body;
+
+        const product = await Product.findByPk(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
+        }
+
+        if (name !== undefined) product.name = name;
+        if (category !== undefined) product.category = category;
+        if (description !== undefined) product.description = description;
+        if (price !== undefined) product.price = price;
+        if (quantity !== undefined) product.quantity = quantity;
+        if (status !== undefined) product.status = status;
+
+        await product.save();
+
+        res.json({
+            message: 'Cập nhật sản phẩm thành công',
+            product
+        });
+
+    } catch (error) {
+        console.error('Error updating product:', error);
+        res.status(500).json({ message: 'Lỗi cập nhật sản phẩm', error: error.message });
+    }
+};
+
 /**
  * Quản lý Reports
  */
@@ -472,4 +554,122 @@ exports.getAllOrders = async (req, res) => {
         res.status(500).json({ message: 'Lỗi lấy danh sách orders', error: error.message });
     }
 };
+exports.deleteFarm = async (req, res) => {
+    try {
+        const { id } = req.params;
 
+        const farm = await Farm.findByPk(id);
+        if (!farm) {
+            return res.status(404).json({ message: 'Farm không tồn tại' });
+        }
+
+        await farm.destroy();
+
+        res.json({
+            message: 'Đã xóa farm thành công'
+        });
+
+    } catch (error) {
+        console.error('Error deleting farm:', error);
+        res.status(500).json({ message: 'Lỗi xóa farm', error: error.message });
+    }
+};
+
+/**
+ * Blockchain Management
+ */
+exports.getBlockchainStatus = async (req, res) => {
+    try {
+        // Trong thực tế, có thể query node VeChain hoặc cấu hình từ DB
+        res.json({
+            status: 'connected',
+            network: 'VeChain Thor Mainnet',
+            contract: '0x7442CDf28F50B4C84852928509F70E53f7FC1aEA',
+            version: 'v2.1.0',
+            lastBlock: 18234567,
+            tps: 5.2
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi kiểm tra blockchain', error: error.message });
+    }
+};
+
+exports.deployContract = async (req, res) => {
+    try {
+        // Mô phỏng quá trình deploy
+        console.log('🚀 Triggering Smart Contract Deployment on VeChain Thor...');
+
+        // Trả về response ngay lập tức với mã giao dịch (giả lập)
+        res.json({
+            message: 'Deployment triggered',
+            tx: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+            status: 'pending'
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi triển khai contract', error: error.message });
+    }
+};
+
+/**
+ * Public Notifications Management (for Guest)
+ */
+exports.getPublicNotifications = async (req, res) => {
+    try {
+        const notifications = await PublicNotification.findAll({
+            order: [['publishedAt', 'DESC'], ['createdAt', 'DESC']]
+        });
+        res.json({ notifications });
+    } catch (error) {
+        console.error('Error getting public notifications:', error);
+        res.status(500).json({ message: 'Lỗi lấy thông báo', error: error.message });
+    }
+};
+
+exports.updatePublicNotification = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, message, type, category, imageUrl, linkUrl, isActive, publishedAt } = req.body;
+
+        const notification = await PublicNotification.findByPk(id);
+        if (!notification) {
+            return res.status(404).json({ message: 'Thông báo không tồn tại' });
+        }
+
+        if (title !== undefined) notification.title = title;
+        if (message !== undefined) notification.message = message;
+        if (type !== undefined) notification.type = type;
+        if (category !== undefined) notification.category = category;
+        if (imageUrl !== undefined) notification.imageUrl = imageUrl;
+        if (linkUrl !== undefined) notification.linkUrl = linkUrl;
+        if (isActive !== undefined) notification.isActive = isActive;
+        if (publishedAt !== undefined) notification.publishedAt = publishedAt;
+
+        await notification.save();
+
+        res.json({
+            message: 'Cập nhật thông báo thành công',
+            notification
+        });
+    } catch (error) {
+        console.error('Error updating notification:', error);
+        res.status(500).json({ message: 'Lỗi cập nhật thông báo', error: error.message });
+    }
+};
+
+exports.deletePublicNotification = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const notification = await PublicNotification.findByPk(id);
+        if (!notification) {
+            return res.status(404).json({ message: 'Thông báo không tồn tại' });
+        }
+
+        await notification.destroy();
+
+        res.json({ message: 'Xóa thông báo thành công' });
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        res.status(500).json({ message: 'Lỗi xóa thông báo', error: error.message });
+    }
+};

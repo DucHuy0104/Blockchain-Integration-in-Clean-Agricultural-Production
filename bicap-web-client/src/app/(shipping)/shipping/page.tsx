@@ -19,17 +19,27 @@ export default function ShipmentsPage() {
     try {
       setLoading(true);
       const token = await getAccessToken();
+      
+      if (!token) {
+        console.error("Không có token, vui lòng đăng nhập lại");
+        throw new Error("Không có token xác thực");
+      }
+
       const res = await fetch("http://localhost:5001/api/shipments", {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (!res.ok) throw new Error("Kết nối API thất bại");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: 'Lỗi không xác định' }));
+        console.error("API Error:", res.status, errorData);
+        throw new Error(errorData.message || "Kết nối API thất bại");
+      }
 
       const data = await res.json();
       setShipments(data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Lỗi API:", err);
-      // setShipments([]); // Keep empty if error
+      setShipments([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -37,7 +47,11 @@ export default function ShipmentsPage() {
 
   useEffect(() => {
     if (!authLoading) {
-      fetchShipments();
+      // Wait a bit for token to be available
+      const timer = setTimeout(() => {
+        fetchShipments();
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [authLoading]);
 

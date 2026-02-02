@@ -22,22 +22,40 @@ Object.entries(requiredEnvVars).forEach(([key, value]) => {
     }
 });
 
-if (missingVars.length > 0 && typeof window !== 'undefined') {
-    console.error('❌ Firebase Configuration Error:', {
-        message: 'Firebase environment variables are missing or not configured properly.',
-        missing: missingVars,
-        instructions: 'Please configure Firebase in your .env file. See SETUP_DOCKER.md for instructions.',
-    });
+// Only show warning in development mode if missing vars but we have fallback values
+// Set to false to completely silence this warning
+const SHOW_FIREBASE_WARNING = false; // Set to true if you want to see warnings
+
+if (missingVars.length > 0 && typeof window !== 'undefined' && SHOW_FIREBASE_WARNING) {
+    // Only log once to avoid console spam
+    if (!(window as any).__FIREBASE_WARNING_SHOWN) {
+        console.warn('⚠️ Firebase Environment Variables:', {
+            message: 'Some Firebase environment variables are missing. Using fallback values for development.',
+            missing: missingVars,
+            note: 'For production, please configure Firebase in your .env.local file. See FIREBASE_ENV_TEMPLATE.txt for instructions.',
+        });
+        (window as any).__FIREBASE_WARNING_SHOWN = true;
+    }
 }
 
+// Helper function to check if value is a placeholder
+const isPlaceholder = (value: string | undefined): boolean => {
+    if (!value) return true;
+    const placeholderPatterns = ['your_', 'placeholder', 'example', 'change_this'];
+    return placeholderPatterns.some(pattern => value.toLowerCase().includes(pattern));
+};
+
+// Firebase Configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Use fallback values if env vars are missing or contain placeholders
 const firebaseConfig = {
-    apiKey: requiredEnvVars.apiKey || '',
-    authDomain: requiredEnvVars.authDomain || '',
-    projectId: requiredEnvVars.projectId || '',
-    storageBucket: requiredEnvVars.storageBucket || '',
-    messagingSenderId: requiredEnvVars.messagingSenderId || '',
-    appId: requiredEnvVars.appId || '',
-    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-ZVDJEQN2Y4"
+    apiKey: (!isPlaceholder(requiredEnvVars.apiKey) && requiredEnvVars.apiKey) || "AIzaSyB_TQhMlq-AK0K17NBJJ-y5RW0ayS2qCOo",
+    authDomain: (!isPlaceholder(requiredEnvVars.authDomain) && requiredEnvVars.authDomain) || "bicap-bc2da.firebaseapp.com",
+    projectId: (!isPlaceholder(requiredEnvVars.projectId) && requiredEnvVars.projectId) || "bicap-bc2da",
+    storageBucket: (!isPlaceholder(requiredEnvVars.storageBucket) && requiredEnvVars.storageBucket) || "bicap-bc2da.firebasestorage.app",
+    messagingSenderId: (!isPlaceholder(requiredEnvVars.messagingSenderId) && requiredEnvVars.messagingSenderId) || "434741285818",
+    appId: (!isPlaceholder(requiredEnvVars.appId) && requiredEnvVars.appId) || "1:434741285818:web:f29609bb153ed7e78c4383",
+    measurementId: (!isPlaceholder(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) && process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) || "G-N2JNRLSV95"
 };
 
 // Initialize Firebase (prevent multiple initializations)

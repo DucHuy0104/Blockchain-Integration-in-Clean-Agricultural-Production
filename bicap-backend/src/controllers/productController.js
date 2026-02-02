@@ -22,6 +22,11 @@ exports.createProduct = async (req, res) => {
       return res.status(403).json({ message: 'Bạn không có quyền thêm sản phẩm vào trại này' });
     }
 
+    // New: Kiểm tra trạng thái trang trại
+    if (farm.status !== 'active') {
+      return res.status(403).json({ message: 'Trang trại của bạn chưa được duyệt hoặc đã bị khóa. Bạn không thể đăng bán sản phẩm.' });
+    }
+
     // Validate Season if provided (Traceability)
     if (seasonId) {
       const season = await FarmingSeason.findOne({ where: { id: seasonId, farmId } });
@@ -127,8 +132,9 @@ exports.getAllProducts = async (req, res) => {
         {
           model: Farm,
           as: 'farm',
-          attributes: ['name', 'address', 'certification'],
-          // required: true ensures INNER JOIN so filtering by farm works if strict
+          attributes: ['name', 'address', 'certification', 'status'],
+          where: { status: 'active' }, // Only show products from active farms
+          required: true
         },
         { model: FarmingSeason, as: 'season', attributes: ['id', 'name'] }
       ],

@@ -7,6 +7,14 @@ export default function FirebaseConfigWarning() {
 
     useEffect(() => {
         // Check if Firebase config is missing
+        // Disabled because we have fallback values in firebase.ts
+        // Set ENABLE_FIREBASE_WARNING=true to show this warning
+        const ENABLE_FIREBASE_WARNING = false;
+        
+        if (!ENABLE_FIREBASE_WARNING) {
+            return; // Don't show warning if disabled
+        }
+
         const checkConfig = () => {
             const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
             const placeholderPatterns = ['your_', 'placeholder', 'example', 'change_this'];

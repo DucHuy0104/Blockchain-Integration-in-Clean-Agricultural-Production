@@ -282,12 +282,16 @@ exports.confirmDelivery = async (req, res) => {
             shipment.currentLocation = `${latitude},${longitude}`;
         }
 
+        if (deliveryImage) {
+            shipment.deliveryImage = deliveryImage;
+        }
+
         await shipment.save();
 
-        // Cập nhật trạng thái đơn hàng
+        // Cập nhật trạng thái đơn hàng thành 'delivered' (chờ Retailer xác nhận)
         const order = await Order.findByPk(shipment.orderId);
         if (order) {
-            order.status = 'completed';
+            order.status = 'delivered'; // Thay đổi từ 'completed' thành 'delivered'
             if (deliveryImage) {
                 order.deliveryImage = deliveryImage;
             }
@@ -298,7 +302,7 @@ exports.confirmDelivery = async (req, res) => {
         await createNotificationInternal(
             shipment.order.retailerId,
             'Đã giao hàng',
-            `Vận đơn #${shipment.id} đã được giao thành công. Đơn hàng #${shipment.orderId} đã hoàn tất.`,
+            `Vận đơn #${shipment.id} đã được giao thành công. Vui lòng xác nhận nhận hàng.`,
             'shipment'
         );
 
@@ -307,8 +311,8 @@ exports.confirmDelivery = async (req, res) => {
         if (farm) {
             await createNotificationInternal(
                 farm.ownerId,
-                'Giao hàng thành công',
-                `Đơn hàng #${shipment.orderId} đã được giao thành công.`,
+                'Đã giao hàng',
+                `Đơn hàng #${shipment.orderId} đã được tài xế giao. Đang chờ khách hàng xác nhận.`,
                 'order'
             );
         }
@@ -366,10 +370,15 @@ exports.updateShipmentStatus = async (req, res) => {
         // Cập nhật trạng thái đơn hàng tương ứng
         const order = await Order.findByPk(shipment.orderId);
         if (order) {
-            if (status === 'delivering') {
+            if (status === 'picked_up') {
+                // Khi driver nhận hàng, order chuyển sang shipping
+                order.status = 'shipping';
+            } else if (status === 'delivering') {
+                // Đang giao hàng, giữ nguyên shipping
                 order.status = 'shipping';
             } else if (status === 'delivered') {
-                order.status = 'completed';
+                // Khi driver giao hàng, order chuyển sang delivered (chờ retailer xác nhận)
+                order.status = 'delivered';
             }
             await order.save();
         }

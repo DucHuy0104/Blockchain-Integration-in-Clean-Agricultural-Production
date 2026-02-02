@@ -60,15 +60,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     setUser(null);
                 }
             } else {
-                // If not firebase user, check if we have a custom mock session?
                 // If not firebase user, check if we have a custom mock session
                 // Check localStorage as well for persistence
                 const storedToken = localStorage.getItem('mockToken');
                 const storedUser = localStorage.getItem('mockUser');
 
                 if (storedToken && storedUser) {
+                    console.log('🔄 Restoring session from localStorage');
                     setCustomToken(storedToken);
-                    setUser(JSON.parse(storedUser));
+                    try {
+                        setUser(JSON.parse(storedUser));
+                    } catch (parseErr) {
+                        console.error('Error parsing stored user:', parseErr);
+                        setUser(null);
+                    }
                 } else if (!customToken) {
                     setUser(null);
                 }
@@ -80,10 +85,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, [customToken]); // Add customToken dependency
 
     const getAccessToken = async (): Promise<string | null> => {
-        if (auth.currentUser) {
-            return await auth.currentUser.getIdToken();
+        try {
+            if (auth.currentUser) {
+                return await auth.currentUser.getIdToken();
+            }
+            // Try customToken first, then localStorage
+            const token = customToken || localStorage.getItem('mockToken');
+            if (!token) {
+                console.warn('⚠️ No access token available. User may need to login again.');
+            }
+            return token;
+        } catch (error) {
+            console.error('Error getting access token:', error);
+            // Fallback to localStorage
+            return localStorage.getItem('mockToken');
         }
-        return customToken || localStorage.getItem('mockToken');
     };
 
     const syncUserWithBackend = async (token: string, desiredRole?: string, fullName?: string) => {
@@ -257,12 +273,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 if (res.data.success && res.data.token && res.data.user) {
                     console.log("✅ Mock Login Successful!");
+                    console.log("💾 Saving token to localStorage:", res.data.token.substring(0, 20) + "...");
+                    
                     setCustomToken(res.data.token);
                     setUser(res.data.user);
 
                     // Persist to localStorage
                     localStorage.setItem('mockToken', res.data.token);
                     localStorage.setItem('mockUser', JSON.stringify(res.data.user));
+
+                    // Verify token was saved
+                    const savedToken = localStorage.getItem('mockToken');
+                    if (savedToken) {
+                        console.log("✅ Token saved successfully to localStorage");
+                    } else {
+                        console.error("❌ Failed to save token to localStorage");
+                    }
 
                     return; // Success!
                 }

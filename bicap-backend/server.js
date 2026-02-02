@@ -20,6 +20,7 @@ const paymentRoutes = require('./src/routes/paymentRoutes');
 const driverRoutes = require('./src/routes/driverRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
+const retailerRoutes = require('./src/routes/retailerRoutes');
 require('./src/services/blockchainQueue'); // Start blockchain worker
 
 const app = express();
@@ -30,11 +31,10 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ===== RATE LIMITING =====
-// General API rate limiter: 100 requests per 15 minutes
+// General API rate limiter: 1000 requests per 15 minutes (Increased for dev experience)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 1000, // Limit each IP to 1000 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
@@ -110,3 +110,5 @@ app.use('/api/public', publicRoutes);
 app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/tasks', require('./src/routes/seasonTaskRoutes'));
 app.use('/api/vehicles', require('./src/routes/vehicleRoutes'));
+app.use('/api/retailer', retailerRoutes);
+app.use('/api/public/notifications', require('./src/routes/publicNotificationRoutes'));

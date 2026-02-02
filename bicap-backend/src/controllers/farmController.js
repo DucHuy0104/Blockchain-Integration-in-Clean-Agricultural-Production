@@ -1,5 +1,5 @@
 // src/controllers/farmController.js
-const { Farm, FarmingSeason, FarmingProcess } = require('../models');
+const { Farm, FarmingSeason, FarmingProcess, Order, User, Product, RetailerProfile } = require('../models');
 const { Op } = require('sequelize');
 
 // 1. Tạo trang trại mới
@@ -71,6 +71,11 @@ exports.updateFarm = async (req, res) => {
     farm.description = description || farm.description;
     farm.certification = certification || farm.certification;
     farm.location_coords = location_coords || farm.location_coords;
+
+    // Nếu farm đang bị rejected, khi update sẽ chuyển về pending để admin duyệt lại
+    if (farm.status === 'rejected') {
+      farm.status = 'pending';
+    }
 
     await farm.save();
 
@@ -168,5 +173,94 @@ exports.getFarmStats = async (req, res) => {
   } catch (error) {
     console.error("Get Farm Stats Error:", error);
     res.status(500).json({ message: 'Lỗi lấy thống kê', error: error.message });
+  }
+};
+
+// 5. Xem danh sách Retailer đã ký hợp đồng (đã có order với farm của mình)
+exports.getContractRetailers = async (req, res) => {
+  try {
+    const ownerId = req.user.id;
+    const { farmId } = req.query;
+
+    // Lấy danh sách farms của owner
+    const farms = await Farm.findAll({ where: { ownerId } });
+    const farmIds = farms.map(f => f.id);
+
+    // Nếu có farmId, chỉ lấy orders của farm đó (và verify ownership)
+    let targetFarmIds = farmIds;
+    if (farmId) {
+      const targetId = parseInt(farmId);
+      if (farmIds.includes(targetId)) {
+        targetFarmIds = [targetId];
+      } else {
+        return res.status(403).json({ message: 'Bạn không sở hữu trang trại này' });
+      }
+    }
+
+    // Lấy tất cả orders từ các farms của owner (chỉ lấy confirmed, shipping, delivered, completed)
+    const orders = await Order.findAll({
+      where: {
+        status: { [Op.in]: ['confirmed', 'shipping', 'delivered', 'completed'] }
+      },
+      include: [
+        {
+          model: Product,
+          as: 'product',
+          where: { farmId: { [Op.in]: targetFarmIds } },
+          required: true
+        },
+        {
+          model: User,
+          as: 'retailer',
+          attributes: ['id', 'fullName', 'email', 'phone', 'address'],
+          include: [{
+            model: RetailerProfile,
+            as: 'retailerProfile',
+            required: false
+          }]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Nhóm theo retailer để tránh trùng lặp
+    const retailerMap = new Map();
+    orders.forEach(order => {
+      const retailerId = order.retailer.id;
+      if (!retailerMap.has(retailerId)) {
+        retailerMap.set(retailerId, {
+          retailer: order.retailer,
+          totalOrders: 0,
+          totalValue: 0,
+          lastOrderDate: order.createdAt,
+          orders: []
+        });
+      }
+      const retailerInfo = retailerMap.get(retailerId);
+      retailerInfo.totalOrders += 1;
+      retailerInfo.totalValue += parseFloat(order.totalPrice) || 0;
+      if (order.createdAt > retailerInfo.lastOrderDate) {
+        retailerInfo.lastOrderDate = order.createdAt;
+      }
+      retailerInfo.orders.push({
+        id: order.id,
+        productName: order.product.name,
+        quantity: order.quantity,
+        totalPrice: order.totalPrice,
+        status: order.status,
+        createdAt: order.createdAt
+      });
+    });
+
+    const retailers = Array.from(retailerMap.values());
+
+    res.json({
+      retailers,
+      total: retailers.length
+    });
+
+  } catch (error) {
+    console.error("Get Contract Retailers Error:", error);
+    res.status(500).json({ message: 'Lỗi lấy danh sách nhà bán lẻ', error: error.message });
   }
 };

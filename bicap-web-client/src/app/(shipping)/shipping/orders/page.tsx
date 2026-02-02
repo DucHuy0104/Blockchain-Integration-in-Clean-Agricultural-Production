@@ -23,10 +23,22 @@ export default function ShippingOrdersPage() {
             setLoading(true);
             const token = await getAccessToken();
 
+            if (!token) {
+                console.error("Không có token, vui lòng đăng nhập lại");
+                throw new Error("Không có token xác thực");
+            }
+
             // 1. Fetch Orders Waiting for Shipping
             const resOrders = await fetch("http://localhost:5001/api/shipments/orders-ready", {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            
+            if (!resOrders.ok) {
+                const errorData = await resOrders.json().catch(() => ({ message: 'Lỗi không xác định' }));
+                console.error("API Error (orders-ready):", resOrders.status, errorData);
+                throw new Error(errorData.message || "Lỗi tải đơn hàng");
+            }
+            
             const dataOrders = await resOrders.json();
 
             // 2. Fetch Active Drivers
@@ -58,35 +70,60 @@ export default function ShippingOrdersPage() {
             setProcessing(selectedOrder.id);
             const token = await getAccessToken();
 
-            const payload = {
-                orderId: selectedOrder.id,
-                driverId: selectedDriverId || null, // Optional (request pickup without driver initially)
-                vehicleInfo: vehicleInfo || "Xe tải tiêu chuẩn",
-                pickupTime: new Date().toISOString()
-            };
+            // Check if order already has a shipment (requested by Farm)
+            if (selectedOrder.shipment && ['created', 'pending_pickup'].includes(selectedOrder.shipment.status)) {
+                // CASE 1: Assign to EXISTING Shipment / Approve Request
+                const res = await fetch(`http://localhost:5001/api/shipments/${selectedOrder.shipment.id}/assign-driver`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        driverId: selectedDriverId || null,
+                        vehicleInfo: vehicleInfo || "Xe tải tiêu chuẩn"
+                    })
+                });
 
-            const res = await fetch("http://localhost:5001/api/shipments", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.message || "Lỗi gán tài xế");
+                    return;
+                }
+                alert("✅ Đã duyệt và gán tài xế thành công!");
 
-            if (!res.ok) {
-                const err = await res.json();
-                alert(err.message || "Lỗi tạo vận đơn");
-                return;
+            } else {
+                // CASE 2: Create NEW Shipment (Manager initiated)
+                const payload = {
+                    orderId: selectedOrder.id,
+                    driverId: selectedDriverId || null,
+                    vehicleInfo: vehicleInfo || "Xe tải tiêu chuẩn",
+                    pickupTime: new Date().toISOString()
+                };
+
+                const res = await fetch("http://localhost:5001/api/shipments", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.message || "Lỗi tạo vận đơn");
+                    return;
+                }
+                alert("🎉 Đã tạo vận đơn mới thành công!");
             }
 
-            alert("🎉 Đã tạo vận đơn thành công!");
             setSelectedOrder(null);
             setSelectedDriverId("");
             fetchData(); // Reload list
 
         } catch (error) {
-            console.error("Lỗi tạo vận đơn:", error);
+            console.error("Lỗi xử lý vận đơn:", error);
             alert("Có lỗi xảy ra");
         } finally {
             setProcessing(null);

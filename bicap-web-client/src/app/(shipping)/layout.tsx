@@ -2,7 +2,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import RoleGuard from '@/components/RoleGuard';
 
 export default function ShippingLayout({
   children,
@@ -11,8 +12,15 @@ export default function ShippingLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login?role=shipping');
+    }
+  }, [user, loading, router]);
 
   // Danh sách các link điều hướng
   const navLinks = [
@@ -90,7 +98,9 @@ export default function ShippingLayout({
 
       {/* --- NỘI DUNG CHÍNH (PAGE) --- */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <RoleGuard allowedRoles={['shipping', 'admin']}>
+          {children}
+        </RoleGuard>
       </main>
     </div>
   );

@@ -59,12 +59,24 @@ const verifyToken = async (req, res, next) => {
                     if (parsed && (parsed.email || parsed.id)) {
                         decodedToken = {
                             ...parsed,
-                            uid: parsed.id || 'mock-uid', // Map id to uid for consistency
+                            uid: parsed.uid || parsed.id || 'mock-uid', // Map id to uid for consistency
                         };
-                        console.log("✅ Verified with Base64 Mock Token:", parsed.email);
+                        console.log("✅ Verified with Base64 Mock Token:", parsed.email || parsed.id);
                     }
                 } catch (parseErr) {
-                    console.error("Base64 Parse Error:", parseErr.message);
+                    // 3. Try direct JSON parse (in case token is already JSON string)
+                    try {
+                        const parsed = JSON.parse(token);
+                        if (parsed && (parsed.email || parsed.id)) {
+                            decodedToken = {
+                                ...parsed,
+                                uid: parsed.uid || parsed.id || 'mock-uid',
+                            };
+                            console.log("✅ Verified with JSON Token:", parsed.email || parsed.id);
+                        }
+                    } catch (jsonErr) {
+                        console.error("Token Parse Error (Base64 & JSON):", parseErr.message, jsonErr.message);
+                    }
                 }
             }
         }
@@ -111,6 +123,10 @@ const verifyToken = async (req, res, next) => {
 const requireRole = (roles) => {
     return async (req, res, next) => {
         try {
+            if (!req.userFirebase) {
+                return res.status(401).json({ message: 'Unauthorized: Token not verified' });
+            }
+
             const { uid, email, role, id } = req.userFirebase;
 
             // 1. Try finding user in DB

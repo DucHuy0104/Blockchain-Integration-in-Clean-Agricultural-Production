@@ -268,7 +268,7 @@ export default function DriverShipmentDetail() {
             {/* SCAN MODAL */}
             {isScanning && (
                 <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-md animate-in fade-in">
-                    <div className="bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar">
                         <div className="p-6 border-b flex justify-between items-center">
                             <h3 className="font-bold text-gray-800">📸 Quét mã {scanType === 'PICKUP' ? 'từ trang trại' : 'đối soát'}</h3>
                             <button onClick={() => { setIsScanning(false); setQrInput(""); }} className="bg-gray-100 p-2 rounded-full">✕</button>

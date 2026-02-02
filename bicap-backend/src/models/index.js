@@ -13,6 +13,8 @@ const Subscription = require('./Subscription');
 const SeasonTask = require('./SeasonTask');
 const Payment = require('./Payment');
 const Vehicle = require('./Vehicle');
+const RetailerProfile = require('./RetailerProfile');
+const PublicNotification = require('./PublicNotification');
 
 // --- Define Associations ---
 
@@ -90,6 +92,10 @@ Vehicle.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
 User.hasOne(Vehicle, { foreignKey: 'driverId', as: 'drivenVehicle' });
 Vehicle.belongsTo(User, { foreignKey: 'driverId', as: 'driver' });
 
+// 12. User & RetailerProfile (1-1 relationship)
+User.hasOne(RetailerProfile, { foreignKey: 'retailerId', as: 'retailerProfile', onDelete: 'CASCADE' });
+RetailerProfile.belongsTo(User, { foreignKey: 'retailerId', as: 'retailer' });
+
 
 const initModels = async () => {
   try {
@@ -132,6 +138,22 @@ const initModels = async () => {
       console.log('⚡ Adding missing column: image to Products');
       await queryInterface.addColumn('Products', 'image', {
         type: require('sequelize').DataTypes.STRING,
+        allowNull: true
+      });
+    }
+
+    if (!tableDesc.category) {
+      console.log('⚡ Adding missing column: category to Products');
+      await queryInterface.addColumn('Products', 'category', {
+        type: require('sequelize').DataTypes.STRING,
+        allowNull: true
+      });
+    }
+
+    if (!tableDesc.description) {
+      console.log('⚡ Adding missing column: description to Products');
+      await queryInterface.addColumn('Products', 'description', {
+        type: require('sequelize').DataTypes.TEXT,
         allowNull: true
       });
     }
@@ -246,6 +268,22 @@ const initModels = async () => {
       await queryInterface.addColumn('Shipments', 'cancelReason', { type: require('sequelize').DataTypes.STRING, allowNull: true });
     }
 
+    // 7. Check RetailerProfiles table
+    try {
+      const retailerProfileTableDesc = await queryInterface.describeTable('RetailerProfiles');
+      console.log('✅ RetailerProfiles table exists');
+    } catch (err) {
+      console.log('⚡ RetailerProfiles table will be created by Sequelize sync');
+    }
+
+    // 8. Check PublicNotifications table
+    try {
+      const publicNotificationTableDesc = await queryInterface.describeTable('PublicNotifications');
+      console.log('✅ PublicNotifications table exists');
+    } catch (err) {
+      console.log('⚡ PublicNotifications table will be created by Sequelize sync');
+    }
+
     console.log('✅ Database Schema Updated Successfully!');
   } catch (error) {
     console.error('❌ Database Sync Error:', error);
@@ -267,5 +305,7 @@ module.exports = {
   Subscription,
   SeasonTask,
   Payment,
-  Vehicle
+  Vehicle,
+  RetailerProfile,
+  PublicNotification
 };

@@ -17,4 +17,7 @@ router.get('/my-farms', verifyToken, requireRole(['farm', 'admin']), farmControl
 // Cập nhật thông tin trang trại
 router.put('/:id', verifyToken, requireRole(['farm', 'admin']), farmController.updateFarm);
 
+// Xem danh sách Retailer đã ký hợp đồng
+router.get('/contract-retailers', verifyToken, requireRole(['farm', 'admin']), farmController.getContractRetailers);
+
 module.exports = router;

@@ -75,6 +75,36 @@ exports.getCurrentEnvironment = async (req, res) => {
                     console.log(`[IoT Alert] Sent to User ${farm.ownerId}: ${alert.msg}`);
                 }
             }
+
+            // Gửi thông báo hàng ngày về nhiệt độ, độ ẩm, pH (vào cuối ngày)
+            const now = new Date();
+            const hour = now.getHours();
+            // Gửi vào 20:00 (8 PM) mỗi ngày
+            if (hour === 20) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                // Kiểm tra xem đã gửi thông báo hôm nay chưa
+                const dailyNotification = await Notification.findOne({
+                    where: {
+                        userId: farm.ownerId,
+                        title: { [Op.like]: '%Báo cáo môi trường hàng ngày%' },
+                        createdAt: { [Op.between]: [today, tomorrow] }
+                    }
+                });
+
+                if (!dailyNotification) {
+                    await createNotificationInternal(
+                        farm.ownerId,
+                        'Báo cáo môi trường hàng ngày',
+                        `Nhiệt độ: ${data.temperature}°C | Độ ẩm: ${data.humidity}% | pH: ${data.ph}`,
+                        'monitoring'
+                    );
+                    console.log(`[Daily Monitoring] Sent to User ${farm.ownerId}`);
+                }
+            }
         }
         // --- END ALERT LOGIC ---
 

@@ -10,23 +10,23 @@ export default function GuestLayout({ children }: { children: React.ReactNode })
   // --- HÀM ĐĂNG XUẤT SẠCH SÀNH SANH ---
   const handleLogout = async () => {
     try {
-        // 1. Cắt đứt kết nối với Firebase (Quan trọng nhất)
-        await signOut(auth);
-        
-        // 2. Xóa sạch bộ nhớ trình duyệt (localStorage, sessionStorage)
-        if (typeof window !== 'undefined') {
-            localStorage.clear();
-            sessionStorage.clear();
-        }
+      // 1. Cắt đứt kết nối với Firebase (Quan trọng nhất)
+      await signOut(auth);
 
-        // 3. Ép trình duyệt tải lại và về trang Login
-        // Dùng window.location.href để đảm bảo nó reload lại từ đầu, không lưu cache cũ
-        window.location.href = "/login";
-        
+      // 2. Xóa sạch bộ nhớ trình duyệt (localStorage, sessionStorage)
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+
+      // 3. Ép trình duyệt tải lại và về trang Login
+      // Dùng window.location.href để đảm bảo nó reload lại từ đầu, không lưu cache cũ
+      window.location.href = "/login";
+
     } catch (error) {
-        console.error("Lỗi khi đăng xuất:", error);
-        // Dù lỗi cũng ép về login
-        window.location.href = "/login";
+      console.error("Lỗi khi đăng xuất:", error);
+      // Dù lỗi cũng ép về login
+      window.location.href = "/login";
     }
   };
 
@@ -49,9 +49,13 @@ export default function GuestLayout({ children }: { children: React.ReactNode })
               <span>📚</span>
               <span className="hidden sm:inline">Kiến thức</span>
             </Link>
+            <Link href="/guest" className="hover:bg-white/20 px-4 py-2 rounded-xl transition-all flex items-center gap-2 backdrop-blur-sm">
+              <span>🔍</span>
+              <span className="hidden sm:inline">Truy xuất</span>
+            </Link>
 
             {/* Nút Đăng Xuất */}
-            <button 
+            <button
               onClick={handleLogout}
               className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-all shadow-md font-bold flex items-center gap-2 border border-white/30"
             >

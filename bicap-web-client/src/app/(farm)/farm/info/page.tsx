@@ -1,8 +1,6 @@
-'use client';
-
+"use client";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 
 interface Farm {
@@ -12,6 +10,8 @@ interface Farm {
     description: string;
     certification: string;
     location_coords: string;
+    status: 'pending' | 'active' | 'rejected';
+    adminNote?: string;
 }
 
 export default function FarmInfoPage() {
@@ -21,7 +21,6 @@ export default function FarmInfoPage() {
     const [view, setView] = useState<'list' | 'form'>('list');
     const [editingFarm, setEditingFarm] = useState<Farm | null>(null);
 
-    // Form State
     const [formData, setFormData] = useState({
         name: '',
         address: '',
@@ -30,47 +29,21 @@ export default function FarmInfoPage() {
         location_coords: ''
     });
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
-    const [debugLog, setDebugLog] = useState<string[]>([]);
-
-    const addLog = (msg: string) => setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
 
     useEffect(() => {
-        if (user) {
-            addLog(`User detected: ${user.email} (Role: ${user.role || 'N/A'})`);
-            fetchFarms();
-        } else {
-            addLog("No user detected yet...");
-            // If auth is still loading, we might want to wait, or if no user, stop loading
-            // But AuthContext handles 'loading' state.
-        }
+        if (user) fetchFarms();
     }, [user]);
 
     const fetchFarms = async () => {
-        setLoading(true);
-        addLog("Starting fetchFarms...");
         try {
-            addLog("Attempting to get access token...");
+            setLoading(true);
             const token = await getAccessToken();
-            if (!token) {
-                addLog("No token found!");
-                return;
-            }
-            addLog("Token found. Calling API...");
-
             const res = await axios.get('http://localhost:5001/api/farms/my-farms', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
-            addLog(`API Success: ${res.data.farms?.length} farms found.`);
-
-            if (res.data.farms) {
-                setFarms(res.data.farms);
-            }
-        } catch (err: any) {
-            console.error("Fetch farm error:", err);
-            addLog(`API Error: ${err.message}`);
+            setFarms(res.data.farms || []);
+        } catch (err) {
+            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -78,15 +51,7 @@ export default function FarmInfoPage() {
 
     const handleAddNew = () => {
         setEditingFarm(null);
-        setFormData({
-            name: '',
-            address: '',
-            description: '',
-            certification: '',
-            location_coords: ''
-        });
-        setMessage('');
-        setError('');
+        setFormData({ name: '', address: '', description: '', certification: '', location_coords: '' });
         setView('form');
     };
 
@@ -99,184 +64,179 @@ export default function FarmInfoPage() {
             certification: farm.certification || '',
             location_coords: farm.location_coords || ''
         });
-        setMessage('');
-        setError('');
         setView('form');
-    };
-
-    const handleCancel = () => {
-        setView('list');
-        setEditingFarm(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
-        setMessage('');
-        setError('');
-
         try {
             const token = await getAccessToken();
-            if (!token) throw new Error("Vui lòng đăng nhập lại");
-
             if (editingFarm) {
-                // Update
                 await axios.put(`http://localhost:5001/api/farms/${editingFarm.id}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setMessage('Cập nhật trang trại thành công!');
+                alert('Cập nhật thành công! Trạng thái sẽ được Admin duyệt lại.');
             } else {
-                // Create
                 await axios.post('http://localhost:5001/api/farms', formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setMessage('Tạo trang trại mới thành công!');
+                alert('Đăng ký thành công! Vui lòng chờ Admin phê duyệt.');
             }
-
-            // Refresh list and go back
             await fetchFarms();
             setView('list');
         } catch (err: any) {
-            console.error(err);
-            setError(err.response?.data?.message || err.message || 'Lỗi xử lý');
+            alert(err.response?.data?.message || 'Lỗi xử lý');
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading && farms.length === 0) return <div className="p-8">Đang tải...</div>;
+    if (loading && farms.length === 0) return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        </div>
+    );
 
     return (
-        <div className="max-w-4xl mx-auto p-4">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {view === 'list' ? 'Danh Sách Trang Trại' : (editingFarm ? 'Cập Nhật Trang Trại' : 'Tạo Trang Trại Mới')}
-                </h1>
-                {view === 'list' && (
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-black text-gray-800 dark:text-white">Thông Tin Trang Trại</h1>
+                    <p className="text-sm text-gray-400 mt-1">Quản lý và đăng ký các cơ sở sản xuất của bạn</p>
+                </div>
+                {view === 'list' ? (
                     <button
                         onClick={handleAddNew}
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow"
+                        className="bg-green-600 text-white px-6 py-3 rounded-2xl font-black text-sm tracking-widest shadow-lg shadow-green-500/30 hover:bg-green-700 transition-all flex items-center gap-2"
                     >
-                        + Thêm Trang Trại
+                        <span>➕</span> THÊM TRANG TRẠI
                     </button>
-                )}
-                {view === 'form' && (
+                ) : (
                     <button
-                        onClick={handleCancel}
-                        className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded shadow"
+                        onClick={() => setView('list')}
+                        className="bg-gray-100 text-gray-500 px-6 py-3 rounded-2xl font-black text-sm tracking-widest hover:bg-gray-200 transition-all"
                     >
-                        Quay lại
+                        QUAY LẠI
                     </button>
                 )}
             </div>
 
-            {message && <div className="p-4 mb-4 bg-green-100 text-green-700 rounded">{message}</div>}
-            {error && <div className="p-4 mb-4 bg-red-100 text-red-700 rounded">{error}</div>}
-
             {view === 'list' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                     {farms.length === 0 ? (
-                        <div className="col-span-full text-center py-10 bg-white dark:bg-gray-800 rounded shadow">
-                            <p className="text-gray-500">Bạn chưa có trang trại nào.</p>
-                            <button onClick={handleAddNew} className="mt-4 text-green-600 font-medium hover:underline">
-                                Tạo ngay trang trại đầu tiên
+                        <div className="col-span-full bg-white dark:bg-gray-800 p-12 rounded-[2rem] border border-dashed border-gray-200 text-center">
+                            <div className="text-5xl mb-4">🚜</div>
+                            <h3 className="text-xl font-bold text-gray-700">Chưa có trang trại nào</h3>
+                            <button onClick={handleAddNew} className="mt-4 text-green-600 font-black text-sm uppercase tracking-widest hover:underline">
+                                Đăng ký ngay trang trại đầu tiên
                             </button>
                         </div>
                     ) : (
                         farms.map((farm) => (
-                            <div key={farm.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden border border-gray-100 dark:border-gray-700">
-                                <div className="p-5">
-                                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{farm.name}</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 h-10 overflow-hidden text-ellipsis line-clamp-2">
-                                        {farm.address}
-                                    </p>
-                                    <div className="flex justify-end">
-                                        <button
-                                            onClick={() => handleEdit(farm)}
-                                            className="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded hover:bg-blue-100 font-medium"
-                                        >
-                                            Chỉnh sửa
-                                        </button>
+                            <div key={farm.id} className="bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                        🏘️
                                     </div>
+                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${farm.status === 'active' ? 'bg-green-100 text-green-600' :
+                                        farm.status === 'pending' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'
+                                        }`}>
+                                        {farm.status === 'active' ? 'Đang hoạt động' : farm.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                                    </span>
+                                </div>
+                                <h3 className="text-xl font-black text-gray-800 dark:text-white mb-2">{farm.name}</h3>
+                                <p className="text-sm text-gray-400 mb-6 flex items-center gap-1">
+                                    📍 {farm.address}
+                                </p>
+
+                                {farm.status === 'rejected' && farm.adminNote && (
+                                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/10 border-l-4 border-red-400 rounded-xl">
+                                        <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Cần chỉnh sửa</p>
+                                        <p className="text-xs text-red-700 dark:text-red-300 font-bold">{farm.adminNote}</p>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between items-center pt-6 border-t border-gray-50 dark:border-gray-700">
+                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{farm.certification || 'Chưa cập nhật chứng nhận'}</span>
+                                    <button
+                                        onClick={() => handleEdit(farm)}
+                                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-black shadow-sm hover:bg-blue-600 hover:text-white transition-all"
+                                    >
+                                        CHỈNH SỬA
+                                    </button>
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
             ) : (
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl p-10 border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tên Trang Trại *</label>
+                                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 ml-1">Tên Trang Trại</label>
                                 <input
-                                    type="text"
                                     required
+                                    type="text"
+                                    className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 dark:bg-gray-900 outline-none focus:ring-2 focus:ring-green-500 font-bold transition-all"
                                     value={formData.name}
+                                    placeholder="Vd: Trang trại Xanh Organic"
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Địa chỉ *</label>
+                                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 ml-1">Địa chỉ sản xuất</label>
                                 <input
-                                    type="text"
                                     required
+                                    type="text"
+                                    className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 dark:bg-gray-900 outline-none focus:ring-2 focus:ring-green-500 font-bold transition-all"
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2"
                                 />
                             </div>
 
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 ml-1">Chứng nhận</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 dark:bg-gray-900 outline-none focus:ring-2 focus:ring-green-500 font-bold transition-all"
+                                        placeholder="Vd: VietGAP"
+                                        value={formData.certification}
+                                        onChange={(e) => setFormData({ ...formData, certification: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 ml-1">Tọa độ GPS</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 dark:bg-gray-900 outline-none focus:ring-2 focus:ring-green-500 font-bold transition-all"
+                                        placeholder="10.123, 106.123"
+                                        value={formData.location_coords}
+                                        onChange={(e) => setFormData({ ...formData, location_coords: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mô tả</label>
+                                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 ml-1">Mô tả quy trình</label>
                                 <textarea
-                                    rows={3}
+                                    className="w-full px-5 py-4 h-32 rounded-2xl border border-gray-100 dark:border-gray-700 dark:bg-gray-900 outline-none focus:ring-2 focus:ring-green-500 transition-all"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Chứng Nhận (VietGAP, GlobalGAP...)</label>
-                                <input
-                                    type="text"
-                                    value={formData.certification}
-                                    onChange={(e) => setFormData({ ...formData, certification: e.target.value })}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tọa độ (Location Coords)</label>
-                                <input
-                                    type="text"
-                                    value={formData.location_coords}
-                                    onChange={(e) => setFormData({ ...formData, location_coords: e.target.value })}
-                                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm p-2"
-                                    placeholder="Vd: 10.762622, 106.660172"
                                 />
                             </div>
                         </div>
 
-                        <div className="pt-4 flex gap-3">
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                            >
-                                {saving ? 'Đang lưu...' : (editingFarm ? 'Cập Nhật' : 'Tạo Mới')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCancel}
-                                className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                            >
-                                Hủy Bỏ
-                            </button>
-                        </div>
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="w-full py-4 bg-green-600 text-white rounded-2xl font-black text-sm tracking-widest shadow-lg shadow-green-500/30 hover:bg-green-700 transition-all disabled:opacity-50"
+                        >
+                            {saving ? 'ĐANG XỬ LÝ...' : (editingFarm ? 'CẬP NHẬT THÔNG TIN' : 'ĐĂNG KÝ TRANG TRẠI')}
+                        </button>
                     </form>
                 </div>
             )}

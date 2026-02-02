@@ -24,11 +24,21 @@ export default function ShipmentsPage() {
       setLoading(true);
       const token = await getAccessToken();
 
+      if (!token) {
+        console.error("Không có token, vui lòng đăng nhập lại");
+        throw new Error("Không có token xác thực");
+      }
+
       // 1. Fetch Shipments
       const resShipments = await fetch("http://localhost:5001/api/shipments", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!resShipments.ok) throw new Error("Lỗi tải vận đơn");
+      
+      if (!resShipments.ok) {
+        const errorData = await resShipments.json().catch(() => ({ message: 'Lỗi không xác định' }));
+        console.error("API Error:", resShipments.status, errorData);
+        throw new Error(errorData.message || "Lỗi tải vận đơn");
+      }
       const data = await resShipments.json();
 
       // 2. Fetch Drivers

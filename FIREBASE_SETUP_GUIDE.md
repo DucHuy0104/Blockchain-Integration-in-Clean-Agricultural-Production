@@ -1,136 +1,95 @@
-# 🔥 Hướng Dẫn Cấu Hình Firebase cho BICAP
+# Firebase Configuration Protocol
 
-## ⚠️ Lỗi Thường Gặp
+This document details the standardized procedures for configuring Firebase Authentication and Application services for the BICAP platform.
 
-Nếu bạn gặp lỗi: **"Firebase: Error (auth/api-key-not-valid)"**, điều này có nghĩa là Firebase chưa được cấu hình đúng.
+## Error Identification
 
-## 📋 Bước 1: Tạo Firebase Project
+If the system returns an "auth/api-key-not-valid" exception, verify that the environment variables match the credentials provided in the Firebase Console exactly.
 
-1. Truy cập [Firebase Console](https://console.firebase.google.com/)
-2. Click **"Add project"** hoặc chọn project có sẵn
-3. Điền tên project (ví dụ: "BICAP")
-4. Chọn **Google Analytics** (tùy chọn)
-5. Click **"Create project"**
+## Step 1: Project Provisioning
 
-## 📋 Bước 2: Thêm Web App vào Firebase Project
+1. Access the Firebase Management Console.
+2. Initialize a new project or select an existing instance.
+3. Configure project naming and data residency settings.
 
-1. Trong Firebase Console, chọn project của bạn
-2. Click vào icon **Web** (`</>`) ở trang chủ
-3. Điền **App nickname** (ví dụ: "BICAP Web Client")
-4. **KHÔNG** tích vào "Also set up Firebase Hosting"
-5. Click **"Register app"**
-6. Copy các giá trị từ `firebaseConfig`:
+## Step 2: Application Registration
+
+1. Within the project dashboard, select the Web platform icon (`</>`).
+2. Provide a descriptive nickname for the application instance.
+3. Finalize registration and extract the `firebaseConfig` parameters.
 
 ```javascript
+// Reference Configuration Object
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890"
+  apiKey: "REDACTED_API_KEY",
+  authDomain: "project-id.firebaseapp.com",
+  projectId: "project-id",
+  storageBucket: "project-id.appspot.com",
+  messagingSenderId: "ID_STRING",
+  appId: "APP_STRING"
 };
 ```
 
-## 📋 Bước 3: Bật Authentication
+## Step 3: Authentication Provider Configuration
 
-1. Trong Firebase Console, vào **Authentication** (bên trái)
-2. Click **"Get started"**
-3. Bật các **Sign-in providers** bạn muốn sử dụng:
-   - ✅ **Email/Password** (bắt buộc)
-   - ✅ **Google** (khuyến nghị)
-4. Lưu ý: Với Google, bạn cần thêm **Authorized domains** nếu chạy trên domain khác localhost
+1. Navigate to the Authentication module in the sidebar.
+2. Initialize the service and enable the following providers:
+   - Email/Password (Primary)
+   - Google (Optional/OAuth)
+3. Ensure authorized domains include `localhost` and any production endpoints.
 
-## 📋 Bước 4: Cấu Hình File .env
+## Step 4: Environment Variable Implementation
 
-Tạo hoặc chỉnh sửa file `.env` trong thư mục root (`E:\XDLTHDT\.env`):
+Populate the project root `.env` file with the following keys. Note that placeholder values must be replaced with operational credentials.
 
 ```env
-# Firebase Configuration (REQUIRED - Thay thế bằng giá trị thực từ Firebase Console)
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890
+# Production Credentials Required
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
 
-# API URL
+# Backend Proxy Configuration
 NEXT_PUBLIC_API_URL=http://localhost:5001/api
 ```
 
-**⚠️ QUAN TRỌNG:**
-- Thay thế TẤT CẢ các giá trị `your_*` và placeholder bằng giá trị thực từ Firebase Console
-- KHÔNG để các giá trị như `your_firebase_api_key_here` hoặc `your_project_id`
-- File `.env` không được commit lên Git (đã có trong .gitignore)
+## Step 5: Validation Procedures
 
-## 📋 Bước 5: Kiểm Tra Cấu Hình
+To verify successful configuration, execute the following diagnostic commands:
 
-Sau khi cấu hình xong, kiểm tra:
+1.  **File Integrity Check:**
+    ```bash
+    ls -a .env
+    ```
 
-1. **File .env có tồn tại không:**
-   ```powershell
-   Test-Path .env
-   ```
+2.  **Variable Masking Check:**
+    Review the file to ensure no "placeholder" or "your_key_here" strings remain.
 
-2. **File .env có giá trị thực không:**
-   ```powershell
-   Get-Content .env | Select-String "NEXT_PUBLIC_FIREBASE"
-   ```
-   
-   Kết quả phải KHÔNG chứa các từ như: `your_`, `placeholder`, `example`
+3.  **Clean Build Execution:**
+    ```bash
+    docker-compose down
+    docker-compose build frontend
+    docker-compose up
+    ```
 
-3. **Rebuild Docker container:**
-   ```powershell
-   docker-compose down
-   docker-compose build frontend
-   docker-compose up
-   ```
+## Technical Support and Troubleshooting
 
-## 🔍 Troubleshooting
+### Exception: auth/api-key-not-valid
+- Ensure compliance with key casing (Case Sensitive).
+- Verify the environment file is loaded within the container scope.
 
-### Lỗi: "Firebase: Error (auth/api-key-not-valid)"
+### Exception: auth/unauthorized-domain
+- Confirm that the current execution environment domain is whitelisted in the Firebase Console Settings.
 
-**Nguyên nhân:**
-- API key chưa được cấu hình hoặc sai
-- File .env chưa được load đúng trong Docker
+### Exception: auth/popup-blocked
+- Disable browser popup blockers for the development domain to allow OAuth flow completion.
 
-**Giải pháp:**
-1. Kiểm tra file `.env` có đúng format không
-2. Đảm bảo các giá trị không có khoảng trắng thừa
-3. Rebuild Docker container: `docker-compose build frontend`
-4. Kiểm tra logs: `docker-compose logs frontend`
+## Compliance and Requirements Checklist
 
-### Lỗi: "Firebase: Error (auth/unauthorized-domain)"
-
-**Nguyên nhân:**
-- Domain hiện tại chưa được thêm vào Authorized domains trong Firebase
-
-**Giải pháp:**
-1. Vào Firebase Console > Authentication > Settings
-2. Thêm domain vào **Authorized domains**:
-   - `localhost` (đã có sẵn)
-   - Domain của bạn nếu deploy
-
-### Lỗi: "Firebase: Error (auth/popup-blocked)"
-
-**Nguyên nhân:**
-- Trình duyệt đã chặn popup
-
-**Giải pháp:**
-1. Cho phép popup cho localhost
-2. Thử lại đăng nhập
-
-## 📚 Tài Liệu Tham Khảo
-
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [Firebase Authentication](https://firebase.google.com/docs/auth)
-- [Next.js Environment Variables](https://nextjs.org/docs/basic-features/environment-variables)
-
-## ✅ Checklist
-
-- [ ] Firebase project đã được tạo
-- [ ] Web app đã được thêm vào Firebase project
-- [ ] Authentication đã được bật (Email/Password, Google)
-- [ ] File `.env` đã được tạo với các giá trị thực
-- [ ] Docker container đã được rebuild
-- [ ] Đã test đăng nhập thành công
+- [ ] Project initialized in Firebase Console.
+- [ ] Authentication providers enabled and configured.
+- [ ] Environment variables populated with verified credentials.
+- [ ] Frontend service rebuilt after configuration changes.
+- [ ] Authentication flow validated via manual testing.

@@ -1,16 +1,18 @@
-# 🐳 Hướng dẫn Setup Docker để Test Web Client
+# Docker Deployment Documentation
 
-## 📋 Yêu cầu
+This document outlines the procedures for deploying the BICAP Web Client environment using containerization.
 
-1. **Docker Desktop** đã được cài đặt và đang chạy
-2. **Firebase Project** với các thông tin cấu hình
+## System Prerequisites
 
-## 🔧 Bước 1: Tạo file `.env` trong thư mục root
+1.  **Container Runtime:** Docker Desktop installed and operational.
+2.  **API Credentials:** Active Firebase Project with associated configuration keys.
 
-Tạo file `.env` trong thư mục `E:\XDLTHDT` với nội dung sau:
+## Configuration Phase 1: Global Environment Setup
+
+Create an `.env` file in the project root with the following specifications:
 
 ```env
-# Firebase Configuration (Required for Web Client Build)
+# Firebase Authentication Keys
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
@@ -18,114 +20,92 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-# API URL
+# Network Configuration
 NEXT_PUBLIC_API_URL=http://localhost:5001/api
 ```
 
-**Lấy Firebase Config:**
-1. Vào [Firebase Console](https://console.firebase.google.com/)
-2. Chọn project của bạn
-3. Vào **Project Settings** > **General**
-4. Scroll xuống phần **Your apps** > chọn Web app
-5. Copy các giá trị từ `firebaseConfig`
+### Retrieval of Firebase Credentials:
+1. Login to the Firebase Console.
+2. Access Project Settings under the General tab.
+3. Scroll to the Web Application section and extract values from the configuration object.
 
-## 🔧 Bước 2: Tạo file `.env` cho Backend (nếu chưa có)
+## Configuration Phase 2: Backend Environment Specification
 
-Tạo file `bicap-backend/.env` với nội dung:
+Ensure the `bicap-backend/.env` file contains the following parameters:
 
 ```env
-# Database
+# Database Connectivity
 DB_HOST=sql_server
 DB_NAME=BICAP
 DB_USER=sa
 DB_PASSWORD=BiCapProject@123
 DB_PORT=1433
 
-# JWT
-JWT_SECRET=your_jwt_secret_key_here_change_this_in_production
+# Authentication Security
+JWT_SECRET=your_jwt_secret_key_here
 
-# Firebase Admin (Optional - nếu có serviceAccountKey.json thì không cần)
-# FIREBASE_SERVICE_ACCOUNT=./src/config/serviceAccountKey.json
-
-# VNPay (Optional - chỉ cần nếu test payment)
-# VNPAY_TMN_CODE=your_tmn_code
-# VNPAY_HASH_SECRET=your_hash_secret
-# VNPAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-# VNPAY_RETURN_URL=http://localhost:5001/api/payments/vnpay-return
-# VNPAY_IP_ADDR=127.0.0.1
-
-# Server
+# System Port Allocation
 PORT=5001
 CLIENT_URL=http://localhost:3000
 ```
 
-## 🚀 Bước 3: Build và Chạy
+## Deployment Phase 3: Initialization
 
-### Cách 1: Chạy toàn bộ hệ thống (Database + Backend + Frontend)
+### Comprehensive Initialization
+To build and start all integrated services (Database, Backend, Frontend):
 
-```powershell
-cd E:\XDLTHDT
+```bash
 docker-compose up --build
 ```
 
-### Cách 2: Chạy từng service riêng
+### Modular Deployment
+To deploy services sequentially for troubleshooting or resource management:
 
-```powershell
-# 1. Chạy Database
+```bash
+# 1. Database Initialization
 docker-compose up sql_server -d
 
-# 2. Chạy Backend (sau khi database sẵn sàng)
+# 2. Application Layer Build
 docker-compose up backend --build
 
-# 3. Chạy Frontend (sau khi backend sẵn sàng)
+# 3. Presentation Layer Build
 docker-compose up frontend --build
 ```
 
-## 🌐 Truy cập ứng dụng
+## System Monitoring and Termination
 
-- **Web Client:** http://localhost:3000
-- **Backend API:** http://localhost:5001/api
-- **SQL Server:** localhost:1433 (Username: `sa`, Password: `BiCapProject@123`)
-
-## 🔍 Kiểm tra Logs
-
-```powershell
-# Xem logs tất cả services
+### Monitoring Logs
+```bash
+# Aggregate Log Output
 docker-compose logs -f
 
-# Xem logs từng service
+# Service Filtering
 docker-compose logs -f frontend
 docker-compose logs -f backend
-docker-compose logs -f sql_server
 ```
 
-## 🛑 Dừng hệ thống
-
-```powershell
-# Dừng tất cả
+### Global Termination
+```bash
+# Stop Services
 docker-compose stop
 
-# Dừng và xóa containers
+# Remove Containers
 docker-compose down
 
-# Dừng và xóa containers + volumes (xóa database)
+# Complete Volume Reset (Warning: Data Loss)
 docker-compose down -v
 ```
 
-## ⚠️ Troubleshooting
+## Troubleshooting Specifications
 
-### Lỗi: "Firebase: Error (auth/invalid-api-key)"
-- Kiểm tra file `.env` trong root đã có đầy đủ Firebase config chưa
-- Đảm bảo các giá trị Firebase đúng và không có khoảng trắng thừa
+### Configuration Errors
+- Verify credential accuracy in both root and backend `.env` files.
+- Ensure formatting adheres to standard environment variable syntax.
 
-### Lỗi: "env file not found"
-- Tạo file `bicap-backend/.env` với nội dung như hướng dẫn ở Bước 2
+### Resource Conflicts
+- Check for port occupancy on local host (3000, 5001, 1433).
+- Utilize `docker-compose ps` to verify container health status.
 
-### Lỗi: Port đã được sử dụng
-- Kiểm tra xem có ứng dụng nào đang dùng port 3000, 5001, hoặc 1433 không
-- Dừng các ứng dụng đó hoặc đổi port trong `docker-compose.yml`
-
-### Build bị lỗi
-- Xóa cache Docker: `docker system prune -a`
-- Build lại: `docker-compose build --no-cache`
-
+### Build Failures
+- Perform a systematic cache clearance: `docker system prune -a`.
+- Reinitialize with a clean build: `docker-compose build --no-cache`.

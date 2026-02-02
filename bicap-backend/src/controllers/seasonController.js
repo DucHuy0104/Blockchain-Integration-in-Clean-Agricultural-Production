@@ -22,6 +22,11 @@ exports.createSeason = async (req, res) => {
             return res.status(403).json({ message: 'Bạn không phải chủ sở hữu nông trại này' });
         }
 
+        // 1.1 Verify farm status
+        if (farm.status !== 'active') {
+            return res.status(403).json({ message: 'Trang trại này đang chờ duyệt hoặc đã bị khóa. Bạn không thể tạo mùa vụ.' });
+        }
+
         // 2. Create Season
         const newSeason = await FarmingSeason.create({
             name,
@@ -62,7 +67,7 @@ exports.addProcess = async (req, res) => {
     try {
         const { seasonId } = req.params;
         const { type, description } = req.body;
-        
+
         // Lấy imageUrl từ uploaded file hoặc từ body
         let imageUrl = req.body.imageUrl;
         if (req.file) {
@@ -79,6 +84,11 @@ exports.addProcess = async (req, res) => {
         const farm = await Farm.findByPk(season.farmId);
         if (farm.ownerId !== req.user.id) {
             return res.status(403).json({ message: 'Bạn không có quyền thêm hoạt động vào mùa vụ này' });
+        }
+
+        // 2.1 Verify Farm Status
+        if (farm.status !== 'active') {
+            return res.status(403).json({ message: 'Trang trại này đang chờ duyệt hoặc đã bị khóa. Bạn không thể ghi nhật ký.' });
         }
 
         // 3. Create Process Record
@@ -267,9 +277,9 @@ exports.getSeasonQRCode = async (req, res) => {
 
     } catch (error) {
         console.error('Error generating QR code:', error);
-        res.status(500).json({ 
-            message: 'Lỗi tạo mã QR', 
-            error: error.message 
+        res.status(500).json({
+            message: 'Lỗi tạo mã QR',
+            error: error.message
         });
     }
 };
@@ -304,9 +314,9 @@ exports.getSeasonQRCodeDataURL = async (req, res) => {
 
     } catch (error) {
         console.error('Error generating QR code Data URL:', error);
-        res.status(500).json({ 
-            message: 'Lỗi tạo mã QR', 
-            error: error.message 
+        res.status(500).json({
+            message: 'Lỗi tạo mã QR',
+            error: error.message
         });
     }
 };

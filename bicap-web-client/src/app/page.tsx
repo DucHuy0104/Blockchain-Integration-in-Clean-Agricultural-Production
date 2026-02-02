@@ -203,7 +203,7 @@ export default function Home() {
                                 <div className="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </Link>
                             <Link
-                                href="/login?role=guest"
+                                href="/guest"
                                 className="group px-8 py-4 bg-white border-3 border-green-600 text-green-600 font-bold text-lg rounded-2xl shadow-xl hover:bg-green-50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
                             >
                                 <span className="text-2xl">🔍</span>
@@ -318,7 +318,7 @@ export default function Home() {
                     </Link>
 
                     {/* 6. Guest (Đã chỉnh lại cho cân grid 3 cột) */}
-                    <Link href="/login?role=guest" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
+                    <Link href="/market" className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
                         <div className="absolute top-0 w-full h-2 bg-teal-500"></div>
                         <div className="p-8">
                             <div className="bg-teal-100 dark:bg-teal-900/30 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -555,7 +555,7 @@ export default function Home() {
                             { href: '/login?role=retailer', icon: '🛒', title: 'Nhà Bán Lẻ', desc: 'Quản lý đơn hàng, kho', color: 'from-blue-500 to-cyan-600' },
                             { href: '/login?role=shipping', icon: '🚚', title: 'Vận Chuyển', desc: 'Quản lý giao hàng', color: 'from-orange-500 to-red-600' },
                             { href: '/login?role=admin', icon: '🛡️', title: 'Quản Trị', desc: 'Quản lý hệ thống', color: 'from-purple-500 to-pink-600' },
-                            { href: '/login?role=guest', icon: '👤', title: 'Khách', desc: 'Xem sản phẩm, truy xuất', color: 'from-teal-500 to-green-600' }
+                            { href: '/market', icon: '👤', title: 'Khách', desc: 'Xem sản phẩm, truy xuất', color: 'from-teal-500 to-green-600' }
                         ].map((portal, index) => (
                             <ScrollAnimation key={index} direction="up" delay={index * 100}>
                                 <Link

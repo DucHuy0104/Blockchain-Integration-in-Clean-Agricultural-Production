@@ -17,6 +17,14 @@ const Product = sequelize.define('Product', {
     allowNull: false,
     unique: true
   },
+  category: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   quantity: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -36,7 +44,7 @@ const Product = sequelize.define('Product', {
     defaultValue: 'cultivating',
     // cultivating: đang trồng, harvested: đã thu hoạch, processing: đang sơ chế, distributed: đã phân phối, available: đang bán
     validate: {
-      isIn: [['cultivating', 'harvested', 'processing', 'distributed', 'available']]
+      isIn: [['cultivating', 'harvested', 'processing', 'distributed', 'available', 'hidden', 'rejected']]
     }
   },
   farmId: {

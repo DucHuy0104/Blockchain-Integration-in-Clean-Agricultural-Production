@@ -135,13 +135,22 @@ export default function MarketplacePage() {
                     <div className="absolute bottom-20 right-1/3 text-6xl opacity-20 animate-float animate-wave">🌽</div>
                 </div>
 
-                {/* Back Button */}
-                <Link href="/guest" className="absolute top-6 left-6 flex items-center gap-2 text-white/90 hover:text-white transition-all font-semibold z-10 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/20">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    <span>Quay lại</span>
-                </Link>
+                <div className="absolute top-6 left-6 flex items-center gap-4 z-10">
+                    <Link href="/" className="flex items-center gap-2 text-white/90 hover:text-white transition-all font-semibold bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/20">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Trang chủ</span>
+                    </Link>
+                    <Link href="/guest" className="flex items-center gap-2 text-white/90 hover:text-white transition-all font-semibold bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/20">
+                        <span>🔍</span>
+                        <span>Truy xuất</span>
+                    </Link>
+                    <Link href="/guest/education" className="flex items-center gap-2 text-white/90 hover:text-white transition-all font-semibold bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/20">
+                        <span>📚</span>
+                        <span>Kiến thức</span>
+                    </Link>
+                </div>
 
                 <div className="container mx-auto text-center relative z-10">
                     <div className="inline-block mb-6 px-6 py-3 bg-white/20 backdrop-blur-md rounded-full border-2 border-white/30 shadow-xl animate-zoom-in">

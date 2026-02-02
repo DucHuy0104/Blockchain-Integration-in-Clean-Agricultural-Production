@@ -40,7 +40,7 @@ export default function FarmReportManager() {
             const res = await axios.get('http://localhost:5001/api/reports', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setReports(res.data.reports);
+            setReports(res.data || []);
         } catch (error) {
             console.error(error);
         } finally {

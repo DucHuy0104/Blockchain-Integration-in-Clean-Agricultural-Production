@@ -237,11 +237,16 @@ exports.confirmDelivery = async (req, res) => {
 
         if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
         if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
-        if (order.status !== 'shipping') return res.status(400).json({ message: 'Đơn hàng chưa ở trạng thái vận chuyển' });
+        
+        // Kiểm tra order.status = 'delivered' (Driver đã giao, chờ Retailer xác nhận)
+        if (order.status !== 'delivered') {
+            return res.status(400).json({ 
+                message: `Đơn hàng phải ở trạng thái 'delivered' (Hiện tại: ${order.status}). Vui lòng đợi tài xế giao hàng.` 
+            });
+        }
 
         // Update status and image
-        // Update status and image
-        order.status = 'delivered';
+        order.status = 'completed'; // Retailer xác nhận -> completed
         if (deliveryImage) order.deliveryImage = deliveryImage;
         await order.save();
 
@@ -252,7 +257,7 @@ exports.confirmDelivery = async (req, res) => {
             await createNotificationInternal(
                 farm.ownerId,
                 'Đơn hàng hoàn tất',
-                `Đơn hàng #${order.id} đã được nhận thành công`,
+                `Đơn hàng #${order.id} đã được khách hàng xác nhận nhận hàng thành công.`,
                 'order'
             );
         }

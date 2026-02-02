@@ -17,9 +17,8 @@ const QUICK_ACTIONS = [
 interface Farm {
     id: number;
     name: string;
+    status: 'pending' | 'active' | 'rejected';
 }
-
-
 
 interface SeasonTask {
     id: number;
@@ -94,79 +93,44 @@ export default function FarmPage() {
         }
     }, [user]);
 
-    // Fetch stats when selectedFarm changes
+    // 2. Fetch Stats and Grouped Tasks when selectedFarm changes
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchDashboardData = async () => {
             if (!selectedFarm) return;
-            // Keep loading true while switching or initial load? 
-            // Maybe not full page loading, but specific section. 
-            // For simplicity, we won't toggle full page `loading` here to avoid flashing, 
-            // but we could have a `statsLoading` state.
-
             try {
                 const token = await getAccessToken();
                 const headers = { Authorization: `Bearer ${token}` };
 
-                // Pass farmId query param
-                const res = await axios.get(`http://localhost:5001/api/farms/stats?farmId=${selectedFarm.id}`, { headers });
+                // Parallel fetch everything needed for the dashboard
+                const [statsRes, seasonRes, taskRes] = await Promise.all([
+                    axios.get(`http://localhost:5001/api/farms/stats?farmId=${selectedFarm.id}`, { headers }),
+                    axios.get(`http://localhost:5001/api/seasons/farm/${selectedFarm.id}?status=active`, { headers }),
+                    axios.get(`http://localhost:5001/api/tasks`, { headers })
+                ]);
 
-                if (res.data) {
-                    setStats(res.data);
-                }
-            } catch (error) {
-                console.error("Fetch Stats Error:", error);
-            } finally {
-                setLoading(false); // Ensure loading is off after first stats fetch
-            }
-        };
+                // Update Stats
+                if (statsRes.data) setStats(statsRes.data);
 
-        fetchStats();
-    }, [selectedFarm]);
-
-    // Fetch Tasks Grouped by Season
-    useEffect(() => {
-        const fetchGroupedTasks = async () => {
-            if (!selectedFarm) return;
-            try {
-                const token = await getAccessToken();
-                // 1. Fetch Active Seasons
-                const seasonRes = await axios.get(`http://localhost:5001/api/seasons/farm/${selectedFarm.id}?status=active`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                // Update & Group Tasks
                 const activeSeasons = seasonRes.data || [];
+                const allTasks = taskRes.data.tasks || [];
 
-                // 2. Fetch Tasks for ALL these seasons
-                // Optimization: Backend could support include=tasks, but for now we parallel fetch or fetch all my tasks and group
-                // Better: Fetch all tasks for this user, then filter/group by the active season IDs
-                const taskRes = await axios.get(`http://localhost:5001/api/tasks`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const allTasks = taskRes.data.tasks as SeasonTask[];
-
-                // 3. Group
-                const grouped: SeasonWithTasks[] = activeSeasons.map((s: any) => ({
-                    id: s.id,
-                    name: s.name,
-                    tasks: allTasks.filter(t => t.seasonId === s.id && !t.isCompleted) // Only show uncompleted for "To Do"
-                })).filter((g: SeasonWithTasks) => g.tasks.length > 0); // Only show seasons with pending tasks? Or show all active? User said "list tasks of that season".
-
-                // If user wants to see seasons even if empty tasks, remove filter. 
-                // But "liệt kê công việc", implying if no work, maybe don't list? 
-                // Let's keep filter to keep dashboard clean, or show "No tasks" under season.
-                // Better to show Season Name -> No tasks.
                 const groupedAll: SeasonWithTasks[] = activeSeasons.map((s: any) => ({
                     id: s.id,
                     name: s.name,
-                    tasks: allTasks.filter(t => t.seasonId === s.id && !t.isCompleted)
+                    tasks: allTasks.filter((t: any) => t.seasonId === s.id && !t.isCompleted)
                 }));
 
                 setSeasonTasks(groupedAll);
 
             } catch (error) {
-                console.error("Fetch Grouped Tasks Error:", error);
+                console.error("Dashboard Data Fetch Error:", error);
+            } finally {
+                setLoading(false);
             }
         };
-        fetchGroupedTasks();
+
+        fetchDashboardData();
     }, [selectedFarm]);
 
 
@@ -219,17 +183,29 @@ export default function FarmPage() {
                                     Đang quản lý:
                                 </span>
                                 {farms.length > 1 ? (
-                                    <select
-                                        className="bg-white/90 backdrop-blur-sm border-2 border-white/30 rounded-xl px-4 py-2 font-bold text-[#388E3C] cursor-pointer focus:ring-2 focus:ring-white focus:outline-none shadow-lg hover:bg-white transition-all"
-                                        value={selectedFarm?.id || ''}
-                                        onChange={handleFarmChange}
-                                    >
-                                        {farms.map(f => (
-                                            <option key={f.id} value={f.id}>{f.name}</option>
-                                        ))}
-                                    </select>
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            className="bg-white/90 backdrop-blur-sm border-2 border-white/30 rounded-xl px-4 py-2 font-bold text-[#388E3C] cursor-pointer focus:ring-2 focus:ring-white focus:outline-none shadow-lg hover:bg-white transition-all"
+                                            value={selectedFarm?.id || ''}
+                                            onChange={handleFarmChange}
+                                        >
+                                            {farms.map(f => (
+                                                <option key={f.id} value={f.id}>{f.name}</option>
+                                            ))}
+                                        </select>
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/20 border border-white/30 whitespace-nowrap`}>
+                                            {selectedFarm?.status === 'active' ? 'Đang hoạt động' :
+                                                selectedFarm?.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                                        </span>
+                                    </div>
                                 ) : (
-                                    <span className="font-bold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl">{selectedFarm?.name}</span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="font-bold bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl">{selectedFarm?.name}</span>
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/20 border border-white/30 whitespace-nowrap`}>
+                                            {selectedFarm?.status === 'active' ? 'Đang hoạt động' :
+                                                selectedFarm?.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                                        </span>
+                                    </div>
                                 )}
                             </>
                         ) : (
@@ -252,6 +228,32 @@ export default function FarmPage() {
                     🚜
                 </div>
             </div>
+
+            {/* 1.1 Pending Approval Banner */}
+            {selectedFarm && selectedFarm.status === 'pending' && (
+                <div className="bg-orange-50 border-l-8 border-orange-400 p-6 rounded-3xl shadow-lg animate-pulse flex items-center gap-4">
+                    <div className="text-4xl">⏳</div>
+                    <div>
+                        <p className="text-lg text-orange-800 font-black">TRANG TRẠI ĐANG CHỜ PHÊ DUYỆT</p>
+                        <p className="text-sm text-orange-700 font-medium">
+                            Admin đang kiểm tra thông tin của "{selectedFarm.name}". Các chức năng kinh doanh sẽ được mở sau khi duyệt.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {selectedFarm && selectedFarm.status === 'rejected' && (
+                <div className="bg-red-50 border-l-8 border-red-400 p-6 rounded-3xl shadow-lg flex items-center gap-4">
+                    <div className="text-4xl">❌</div>
+                    <div>
+                        <p className="text-lg text-red-800 font-black">TRANG TRẠI BỊ TỪ CHỐI / TẠM KHÓA</p>
+                        <p className="text-sm text-red-700 font-medium">
+                            Có vấn đề với hồ sơ trang trại. Vui lòng vào mục <Link href="/farm/info" className="underline font-black">Thông Tin Trang Trại</Link> để xem lý do và cập nhật lại.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* 2. Overview Stats Cards - Enhanced */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Link href="/farm/seasons" className="group">
@@ -376,16 +378,28 @@ export default function FarmPage() {
                     Truy Cập Nhanh
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {QUICK_ACTIONS.map((action, idx) => (
-                        <Link href={action.href} key={idx} className="block group">
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-300 text-center h-full flex flex-col items-center justify-center card-hover">
-                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 ${action.color} group-hover:scale-110 transition-transform shadow-md`}>
-                                    {action.icon}
+                    {QUICK_ACTIONS.map((action, idx) => {
+                        const isDisabled = selectedFarm?.status !== 'active';
+                        return isDisabled ? (
+                            <div key={idx} className="block cursor-not-allowed opacity-50 grayscale">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 text-center h-full flex flex-col items-center justify-center">
+                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 ${action.color} shadow-md`}>
+                                        {action.icon}
+                                    </div>
+                                    <span className="font-bold text-gray-400">{action.title}</span>
                                 </div>
-                                <span className="font-bold text-gray-700 dark:text-gray-200 group-hover:text-[#388E3C] transition-colors">{action.title}</span>
                             </div>
-                        </Link>
-                    ))}
+                        ) : (
+                            <Link href={action.href} key={idx} className="block group">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-300 text-center h-full flex flex-col items-center justify-center card-hover">
+                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 ${action.color} group-hover:scale-110 transition-transform shadow-md`}>
+                                        {action.icon}
+                                    </div>
+                                    <span className="font-bold text-gray-700 dark:text-gray-200 group-hover:text-[#388E3C] transition-colors">{action.title}</span>
+                                </div>
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
 
