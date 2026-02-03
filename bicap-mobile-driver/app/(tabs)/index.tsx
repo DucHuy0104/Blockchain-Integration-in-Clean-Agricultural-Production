@@ -20,6 +20,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  console.log("🚀 HomeScreen Component Rendering (v1.1)");
   const { user, token, logout, isLoading } = useAuth();
   const router = useRouter();
 
@@ -63,6 +64,10 @@ export default function HomeScreen() {
       });
 
       setShipments(response.data.shipments || []);
+      console.log(`📡 Đã tải ${response.data.shipments?.length || 0} đơn hàng.`);
+      if (response.data.shipments?.length > 0) {
+        console.log("Sample status:", response.data.shipments[0].status);
+      }
 
     } catch (error: any) {
       console.error("Lỗi tải đơn:", error);
@@ -203,6 +208,83 @@ export default function HomeScreen() {
     }
   };
 
+  const handleDemoPickup = (item: any) => {
+    Alert.alert(
+      "Xác nhận (Demo)",
+      `Bạn có muốn xác nhận ĐÃ NHẬN vận đơn #${item.id} ? (Bỏ qua quét QR)`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Đồng ý",
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const token = await AsyncStorage.getItem('userToken');
+              const coords = await getLocation();
+              const demoQR = `SHIPMENT_${item.id}`; // Giả lập QR chuẩn
+
+              const response = await axios.post(`${API_URL}/driver/confirm-pickup`, {
+                shipmentId: item.id,
+                qrCode: demoQR,
+                latitude: coords?.latitude || 0,
+                longitude: coords?.longitude || 0
+              }, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+
+              Alert.alert('Thành công', 'Đã nhận hàng thành công (Demo)');
+              fetchMyShipments();
+            } catch (error: any) {
+              console.error(error);
+              Alert.alert('Lỗi', error.response?.data?.message || 'Không thể nhận hàng');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDemoDelivery = (item: any) => {
+    Alert.alert(
+      "Xác nhận (Demo)",
+      `Bạn có muốn xác nhận ĐÃ GIAO vận đơn #${item.id} ? (Bỏ qua quét QR & chụp ảnh)`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Đồng ý",
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const token = await AsyncStorage.getItem('userToken');
+              const coords = await getLocation();
+              const demoQR = `SHIPMENT_${item.id}`; // Giả lập QR chuẩn
+
+              const response = await axios.post(`${API_URL}/driver/confirm-delivery`, {
+                shipmentId: item.id,
+                qrCode: demoQR,
+                latitude: coords?.latitude || 0,
+                longitude: coords?.longitude || 0,
+                deliveryImage: null // Bỏ qua ảnh
+              }, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+
+              Alert.alert('Thành công', 'Đã giao hàng thành công (Demo)');
+              fetchMyShipments();
+            } catch (error: any) {
+              console.error(error);
+              Alert.alert('Lỗi', error.response?.data?.message || 'Không thể xác nhận giao hàng');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
 
 
   const onRefresh = () => {
@@ -212,6 +294,7 @@ export default function HomeScreen() {
 
   // Giao diện từng thẻ đơn hàng
   const renderItem = ({ item }: { item: any }) => {
+    console.log(`Render Item ${item.id}: Status = ${item.status}`);
     const pickupLoc = item.diemDi || item.order?.product?.farm?.name || "N/A";
     const deliveryLoc = item.diemDen || item.order?.retailer?.fullName || "N/A";
 
@@ -276,17 +359,28 @@ export default function HomeScreen() {
 
         <View style={{ marginTop: 16 }}>
           {(item.status === 'created' || item.status === 'assigned') && (
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: Colors.light.tint }]}
-              onPress={() => {
-                setActiveShipmentId(item.id);
-                setScannerTitle('Quét QR Nhận Hàng');
-                setIsScannerVisible(true);
-              }}
-            >
-              <FontAwesome name="qrcode" size={18} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.actionButtonText}>Quét QR Nhận Hàng</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: Colors.light.tint }]}
+                onPress={() => {
+                  setActiveShipmentId(item.id);
+                  setScannerTitle('Quét QR Nhận Hàng');
+                  setIsScannerVisible(true);
+                }}
+              >
+                <FontAwesome name="qrcode" size={18} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.actionButtonText}>Quét QR Nhận Hàng</Text>
+              </TouchableOpacity>
+
+              {/* DEMO BUTTON */}
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#6366F1', marginTop: 10 }]}
+                onPress={() => handleDemoPickup(item)}
+              >
+                <FontAwesome name="hand-pointer-o" size={18} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.actionButtonText}>Đã nhận hàng (Demo)</Text>
+              </TouchableOpacity>
+            </>
           )}
 
           {item.status === 'picked_up' && (
@@ -300,17 +394,28 @@ export default function HomeScreen() {
           )}
 
           {(item.status === 'delivering' || item.status === 'shipping') && (
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-              onPress={() => {
-                setActiveShipmentId(item.id);
-                setScannerTitle('Quét QR Giao Hàng');
-                setIsScannerVisible(true);
-              }}
-            >
-              <FontAwesome name="check-circle" size={18} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.actionButtonText}>Quét QR Giao Hàng</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#10B981' }]}
+                onPress={() => {
+                  setActiveShipmentId(item.id);
+                  setScannerTitle('Quét QR Giao Hàng');
+                  setIsScannerVisible(true);
+                }}
+              >
+                <FontAwesome name="check-circle" size={18} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.actionButtonText}>Quét QR Giao Hàng</Text>
+              </TouchableOpacity>
+
+              {/* DEMO BUTTON */}
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#6366F1', marginTop: 10 }]}
+                onPress={() => handleDemoDelivery(item)}
+              >
+                <FontAwesome name="hand-pointer-o" size={18} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.actionButtonText}>Đã giao hàng (Demo)</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>
@@ -322,7 +427,7 @@ export default function HomeScreen() {
       {/* Header trên cùng */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Xin chào, {user?.fullName || 'Bác tài'} 👋</Text>
+          <Text style={styles.greeting}>Xin chào, {user?.fullName || 'Bác tài'} 👋 (v1.1)</Text>
           <Text style={styles.subGreeting}>Chúc bạn vạn dặm bình an!</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 15 }}>
