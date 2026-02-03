@@ -18,6 +18,7 @@ interface Product {
         certification: string;
     };
     season: {
+        id: number;
         name: string;
     } | null;
     batchCode: string;
@@ -33,7 +34,7 @@ export default function RetailerMarketPage() {
     useEffect(() => {
         const delaySearch = setTimeout(() => {
             setLoading(true);
-            axios.get(`http://localhost:5001/api/products${search ? `?search=${search}` : ''}`)
+            axios.get(`http://localhost:5001/api/products?t=${new Date().getTime()}${search ? `&search=${search}` : ''}`)
                 .then(res => setProducts(res.data))
                 .catch(err => console.error(err))
                 .finally(() => setLoading(false));
@@ -100,6 +101,14 @@ export default function RetailerMarketPage() {
 
             {/* Product List */}
             <div className="container mx-auto p-4">
+                <div className="mb-6 flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                        📦 Danh Sách Sản Phẩm
+                        <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-sm">
+                            {products.length} sản phẩm
+                        </span>
+                    </h2>
+                </div>
                 {loading ? (
                     <div className="text-center py-10">Đang tải sản phẩm...</div>
                 ) : (
@@ -158,10 +167,16 @@ export default function RetailerMarketPage() {
                                             {product.quantity === 0 ? 'Hết hàng' : 'Xem Chi Tiết & Đặt Mua'}
                                         </button>
 
-                                        {product.season && (
-                                            <Link href={`/traceability/${(product as any).seasonId || '#'}`} className="text-xs text-blue-500 hover:underline flex items-center justify-center gap-1 py-1">
-                                                🔍 Truy xuất nguồn gốc
-                                            </Link>
+                                        {product.season && product.season.id && (
+                                            <div className="flex justify-center">
+                                                <Link
+                                                    href={`/traceability/${product.season.id}`}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 font-bold text-xs transition-all duration-300 hover:scale-105"
+                                                >
+                                                    <span className="text-sm">🔍</span>
+                                                    <span>Truy xuất</span>
+                                                </Link>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

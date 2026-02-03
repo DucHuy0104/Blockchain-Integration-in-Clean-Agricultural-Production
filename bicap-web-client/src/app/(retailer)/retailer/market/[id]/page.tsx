@@ -25,6 +25,7 @@ interface Product {
     batchCode: string;
     status: string;
     description?: string;
+    image?: string;
 }
 
 export default function ProductDetailPage() {
@@ -58,7 +59,7 @@ export default function ProductDetailPage() {
         // or I can try to access logic if I add endpoint.
         // I will fetch all for now.
 
-        axios.get('http://localhost:5001/api/products')
+        axios.get(`http://localhost:5001/api/products?t=${new Date().getTime()}`)
             .then(res => {
                 const found = res.data.find((p: Product) => p.id === Number(id));
                 setProduct(found || null);
@@ -104,8 +105,16 @@ export default function ProductDetailPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
                 <div className="md:flex">
-                    <div className="md:w-1/2 bg-gray-200 dark:bg-gray-700 min-h-[300px] flex items-center justify-center p-8">
-                        <span className="text-9xl">🌾</span>
+                    <div className="md:w-1/2 bg-gray-200 dark:bg-gray-700 min-h-[300px] flex items-center justify-center relative overflow-hidden">
+                        {product.image ? (
+                            <img
+                                src={`http://localhost:5001${product.image}`}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="text-9xl">🌾</span>
+                        )}
                     </div>
                     <div className="p-8 md:w-1/2">
                         <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">{product.name}</h1>
@@ -162,12 +171,15 @@ export default function ProductDetailPage() {
                                 </button>
 
                                 {product.season && (
-                                    <Link
-                                        href={`/traceability/${product.season.id}`}
-                                        className="block w-full text-center border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 font-bold py-3 rounded-lg transition"
-                                    >
-                                        🔍 Quét QR / Truy xuất quy trình
-                                    </Link>
+                                    <div className="pt-2">
+                                        <Link
+                                            href={`/traceability/${product.season.id}`}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 font-bold text-sm transition-all duration-300"
+                                        >
+                                            <span>🔍</span>
+                                            <span>Truy xuất nguồn gốc vụ mùa</span>
+                                        </Link>
+                                    </div>
                                 )}
                             </div>
                         </div>

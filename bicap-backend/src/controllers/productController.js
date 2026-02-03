@@ -5,6 +5,7 @@ const { sequelize: db } = require('../config/database');
 const blockchainHelper = require('../utils/blockchainHelper');
 const qrGenerator = require('../utils/qrGenerator');
 const { getFileUrl } = require('../middleware/uploadMiddleware');
+const { checkLimit } = require('../utils/permissionHelper');
 
 // 1. Tạo lô sản phẩm mới (Đăng bán từ vụ mùa)
 exports.createProduct = async (req, res) => {
@@ -22,9 +23,19 @@ exports.createProduct = async (req, res) => {
       return res.status(403).json({ message: 'Bạn không có quyền thêm sản phẩm vào trại này' });
     }
 
-    // New: Kiểm tra trạng thái trang trại
+    // Check: Active farm
     if (farm.status !== 'active') {
       return res.status(403).json({ message: 'Trang trại của bạn chưa được duyệt hoặc đã bị khóa. Bạn không thể đăng bán sản phẩm.' });
+    }
+
+    // NEW: Check Package Limits (Max Products)
+    // Farm Owner is the user.id
+    const allowCreate = await checkLimit(req.user.id, 'create_product');
+    if (!allowCreate) {
+      return res.status(403).json({
+        message: 'Bạn đã đạt giới hạn số lượng sản phẩm của gói dịch vụ hiện tại. Vui lòng nâng cấp gói để tiếp tục.',
+        code: 'LIMIT_REACHED'
+      });
     }
 
     // Validate Season if provided (Traceability)
@@ -50,7 +61,7 @@ exports.createProduct = async (req, res) => {
     };
 
     // Ghi dữ liệu lên Blockchain (Mock)
-    const txHash = await blockchainHelper.writeToBlockchain(newProductData);
+    const txHash = await blockchainHelper.writeToBlockchain(`PRODUCT-${batchCode}`, newProductData);
 
     const newProduct = await Product.create({
       ...newProductData,
@@ -80,7 +91,7 @@ exports.getProductsByFarm = async (req, res) => {
 
     const products = await Product.findAll({
       where: { farmId },
-      include: [{ model: FarmingSeason, as: 'season', attributes: ['name', 'startDate', 'endDate'] }],
+      include: [{ model: FarmingSeason, as: 'season', attributes: ['id', 'name', 'startDate', 'endDate'] }],
       order: [['createdAt', 'DESC']]
     });
 

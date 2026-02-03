@@ -225,7 +225,7 @@ exports.confirmDelivery = async (req, res) => {
         const { id } = req.params;
         let deliveryImage = req.body.deliveryImage;
         const userId = req.user.id;
-        
+
         // Lấy image từ uploaded file nếu có
         if (req.file) {
             deliveryImage = getFileUrl(req, req.file.path);
@@ -237,11 +237,13 @@ exports.confirmDelivery = async (req, res) => {
 
         if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
         if (order.retailerId !== userId) return res.status(403).json({ message: 'Bạn không có quyền' });
-        
-        // Kiểm tra order.status = 'delivered' (Driver đã giao, chờ Retailer xác nhận)
-        if (order.status !== 'delivered') {
-            return res.status(400).json({ 
-                message: `Đơn hàng phải ở trạng thái 'delivered' (Hiện tại: ${order.status}). Vui lòng đợi tài xế giao hàng.` 
+
+        // Kiểm tra order.status = 'delivered' hoặc 'shipping' (Tài xế đang giao hoặc đã giao)
+        console.log(`[DEBUG] Order ID: ${id}, Current Status: ${order.status}`);
+        if (order.status !== 'delivered' && order.status !== 'shipping') {
+            console.log(`[DEBUG] Rejecting confirmation: status is ${order.status}`);
+            return res.status(400).json({
+                message: `Đơn hàng phải ở trạng thái 'shipping' hoặc 'delivered' (Hiện tại: ${order.status}).`
             });
         }
 
@@ -287,7 +289,7 @@ exports.payDeposit = async (req, res) => {
         const depositAmount = order.totalPrice * 0.3;
 
         // Trả về thông tin để frontend gọi payment API
-        res.json({ 
+        res.json({
             message: 'Vui lòng thanh toán tiền cọc',
             order: {
                 id: order.id,

@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         // Tạo thư mục con theo loại file
         let subfolder = 'general';
-        
+
         if (req.route && req.route.path) {
             if (req.route.path.includes('process')) {
                 subfolder = 'processes';
@@ -24,6 +24,8 @@ const storage = multer.diskStorage({
                 subfolder = 'deliveries';
             } else if (req.route.path.includes('farm')) {
                 subfolder = 'farms';
+            } else if (req.route.path.includes('profile')) {
+                subfolder = 'profiles';
             }
         }
 
@@ -31,7 +33,7 @@ const storage = multer.diskStorage({
         if (!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true });
         }
-        
+
         cb(null, folderPath);
     },
     filename: (req, file, cb) => {
@@ -47,7 +49,7 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     // Chỉ cho phép ảnh
     const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    
+
     if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);
     } else {
@@ -90,12 +92,12 @@ const uploadFields = (fields) => {
  */
 const getFileUrl = (req, filename) => {
     if (!filename) return null;
-    
+
     // Nếu đã là URL đầy đủ thì trả về luôn
     if (filename.startsWith('http://') || filename.startsWith('https://')) {
         return filename;
     }
-    
+
     // Tạo URL từ path
     const baseUrl = process.env.API_URL || 'http://localhost:5001';
     const relativePath = filename.replace(uploadsDir, '').replace(/\\/g, '/');

@@ -17,6 +17,7 @@ interface Product {
         name: string;
     } | null;
     txHash: string | null;
+    image?: string;
 }
 
 interface Season {
@@ -199,6 +200,19 @@ export default function FarmProductManager() {
                             <span className="absolute top-4 right-4 text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
                                 {product.status === 'available' ? 'Đang bán' : product.status}
                             </span>
+                            {/* Product Image Section */}
+                            <div className="h-40 bg-gray-200 dark:bg-gray-700 -mx-6 -mt-6 mb-4 flex items-center justify-center overflow-hidden">
+                                {product.image ? (
+                                    <img
+                                        src={`http://localhost:5001${product.image}`}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-5xl">🌾</span>
+                                )}
+                            </div>
+
                             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{product.name}</h3>
 
                             <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300 mb-4">

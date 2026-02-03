@@ -35,18 +35,33 @@ function LoginForm() {
     // ============================================================
     useEffect(() => {
         if (user) {
-            // ƯU TIÊN: Lấy role từ ô chọn trên màn hình (selectedRole) nếu user.role chưa chuẩn
-            const currentRole = user.role || selectedRole;
+            // FIX: Không tự động redirect nếu user đang là 'guest' HOẶC muốn chuyển vai trò khác
+            // Điều này cho phép người dùng đang ở chế độ Guest có thể thấy form để đăng nhập tài khoản thật
+            // Và cho phép người dùng chuyển đổi giữa các vai trò (ví dụ: đang là Retailer muốn log vào Farm)
 
-            console.log("Quyết định điều hướng theo role:", currentRole);
+            // 1. Nếu đang là Guest -> Ở lại trang Login để cho phép đăng nhập/đăng ký
+            if (user.role === 'guest') {
+                return;
+            }
+
+            // 2. Nếu có role trên URL và role này KHÁC role hiện tại -> Ở lại để switch account
+            if (roleParam && user.role !== roleParam) {
+                console.log(`User ${user.email} (${user.role}) muốn login role ${roleParam}. Dừng redirect.`);
+                return;
+            }
+
+            // 3. Chỉ redirect nếu đã là User xịn (Farm, Retailer...) và không có ý định đổi Role
+            const currentRole = user.role;
+
+            console.log("Redirecting logged-in user:", currentRole);
             if (currentRole === 'driver') router.push('/driver/dashboard'); // Vào thẳng Dashboard
             else if (currentRole === 'farm') router.push('/farm');
             else if (currentRole === 'retailer') router.push('/retailer/market');
             else if (currentRole === 'shipping') router.push('/shipping');
             else if (currentRole === 'admin') router.push('/admin');
-            else router.push('/guest');
+            // Không redirect Guest ở đây nữa
         }
-    }, [user, router, selectedRole]); // Thêm selectedRole vào dependency
+    }, [user, router, roleParam]); // Bỏ selectedRole khỏi dependency để tránh trigger khi user đổi dropdown
 
     // ============================================================
     // 👇 XỬ LÝ ĐĂNG NHẬP / ĐĂNG KÝ (DÙNG CHUNG CHO TẤT CẢ)

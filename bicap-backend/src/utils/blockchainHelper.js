@@ -18,6 +18,12 @@ const blockchainHelper = {
      * @returns {Promise<string>} - Transaction Hash
      */
     writeToBlockchain: async (identifier, data) => {
+        // Handle single-argument call: writeToBlockchain({ ... })
+        if (data === undefined && typeof identifier === 'object') {
+            data = identifier;
+            identifier = `GENERIC-${Date.now()}`;
+        }
+
         // If mode is NOT real, use mock
         if (process.env.BLOCKCHAIN_MODE !== 'real') {
             return blockchainHelper.mockWrite(identifier, data);

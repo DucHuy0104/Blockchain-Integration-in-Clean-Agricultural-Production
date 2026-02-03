@@ -29,6 +29,7 @@ interface AuthContextType {
     loginWithEmail: (email: string, password: string, role?: string) => Promise<void>;
     logout: () => Promise<void>;
     getAccessToken: () => Promise<string | null>;
+    updateUser: (newData: any) => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -39,6 +40,7 @@ export const AuthContext = createContext<AuthContextType>({
     loginWithEmail: async () => { },
     logout: async () => { },
     getAccessToken: async () => null,
+    updateUser: () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -217,7 +219,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     console.log("⚠️ Register Sync failed, trying Mock Login/Register...");
                     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
                     // Using login endpoint for mock register is fine as my backend handles it
-                    const res = await axios.post(`${apiUrl}/auth/login`, { email });
+                    const res = await axios.post(`${apiUrl}/auth/login`, { email, role });
 
                     if (res.data.success && res.data.token && res.data.user) {
                         setCustomToken(res.data.token);
@@ -269,12 +271,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             try {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-                const res = await axios.post(`${apiUrl}/auth/login`, { email, password });
+                const res = await axios.post(`${apiUrl}/auth/login`, { email, password, role });
 
                 if (res.data.success && res.data.token && res.data.user) {
                     console.log("✅ Mock Login Successful!");
                     console.log("💾 Saving token to localStorage:", res.data.token.substring(0, 20) + "...");
-                    
+
                     setCustomToken(res.data.token);
                     setUser(res.data.user);
 
@@ -344,8 +346,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const updateUser = (newData: any) => {
+        setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, ...newData };
+
+            // If we are in mock mode (have a customToken or mock localStorage), sync localStorage
+            if (customToken || localStorage.getItem('mockToken')) {
+                localStorage.setItem('mockUser', JSON.stringify(updated));
+            }
+
+            return updated;
+        });
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, loginWithGoogle, registerWithEmail, loginWithEmail, logout, getAccessToken }}>
+        <AuthContext.Provider value={{
+            user,
+            loading,
+            loginWithGoogle,
+            registerWithEmail,
+            loginWithEmail,
+            logout,
+            getAccessToken,
+            updateUser
+        }}>
             {children}
         </AuthContext.Provider>
     );

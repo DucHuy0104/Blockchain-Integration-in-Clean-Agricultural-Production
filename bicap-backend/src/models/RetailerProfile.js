@@ -25,6 +25,10 @@ const RetailerProfile = sequelize.define('RetailerProfile', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    businessLicenseImage: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     businessAddress: {
         type: DataTypes.STRING,
         allowNull: true

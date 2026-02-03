@@ -26,11 +26,24 @@ require('./src/services/blockchainQueue'); // Start blockchain worker
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'],
+  origin: '*',
   credentials: true
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Debug Logging Middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+    if (req.method !== 'GET' && req.body) {
+      console.log(`   Body: ${JSON.stringify(req.body)}`);
+    }
+  });
+  next();
+});
 // General API rate limiter: 1000 requests per 15 minutes (Increased for dev experience)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -55,6 +68,7 @@ app.use('/api/auth/register', authLimiter); // Stricter limit for register
 
 // Serve static files (uploads)
 const path = require('path');
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Debug Middleware: Log all requests
@@ -77,8 +91,8 @@ const startServer = async () => {
 
     // 4. Chạy Server
     const PORT = process.env.PORT || 5001;
-    app.listen(PORT, () => {
-      console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server đang chạy tại: http://0.0.0.0:${PORT}`);
     });
   } catch (error) {
     console.error('Không thể khởi động server:', error);

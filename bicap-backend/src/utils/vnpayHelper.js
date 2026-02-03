@@ -30,31 +30,51 @@ class VNPayHelper {
     }
 
     /**
+     * Định dạng ngày theo chuẩn VNPay (yyyyMMddHHmmss)
+     * Luôn sử dụng múi giờ Việt Nam (GMT+7)
+     * @param {Date} date - Đối tượng ngày
+     * @returns {string} - Chuỗi ngày định dạng
+     */
+    formatDate(date) {
+        // VNPay yêu cầu GMT+7
+        const vntzDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+        const year = vntzDate.getUTCFullYear();
+        const month = (vntzDate.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = vntzDate.getUTCDate().toString().padStart(2, '0');
+        const hour = vntzDate.getUTCHours().toString().padStart(2, '0');
+        const minute = vntzDate.getUTCMinutes().toString().padStart(2, '0');
+        const second = vntzDate.getUTCSeconds().toString().padStart(2, '0');
+        return `${year}${month}${day}${hour}${minute}${second}`;
+    }
+
+    /**
+     * Tạo secure hash cho VNPay
+     * @param {Object} params - Object chứa các tham số
+     * @returns {string} - Secure hash
+     */
+    /**
      * Tạo secure hash cho VNPay
      * @param {Object} params - Object chứa các tham số
      * @returns {string} - Secure hash
      */
     createSecureHash(params) {
-        // Sắp xếp params theo thứ tự alphabet và tạo query string
-        const sortedParams = Object.keys(params)
-            .sort()
-            .reduce((result, key) => {
-                if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-                    result[key] = params[key];
-                }
-                return result;
-            }, {});
+        const sortedKeys = Object.keys(params).sort();
 
-        const signData = querystring.stringify(sortedParams, null, null, {
-            encodeURIComponent: (str) => {
-                return querystring.escape(str);
-            }
-        });
+        // VNPay 2.1.0: Thử nghiệm - SignData là chuỗi đã ENCODE (Standard %20)
+        const signData = sortedKeys
+            .map(key => {
+                const val = params[key];
+                if (val === null || val === undefined || val === '') return null;
+                return `${encodeURIComponent(key)}=${encodeURIComponent(val)}`;
+            })
+            .filter(Boolean)
+            .join('&');
 
-        // Tạo hash SHA512
-        const hmac = crypto.createHmac('sha512', this.vnp_HashSecret);
-        hmac.update(signData);
-        return hmac.digest('hex');
+        console.log('🔑 signData for Hash (ENCODED):', signData);
+
+        const hmac = crypto.createHmac('sha512', this.vnp_HashSecret.trim());
+        return hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
     }
 
     /**
@@ -82,6 +102,7 @@ class VNPayHelper {
 
         // Validate
         if (!this.vnp_TmnCode || !this.vnp_HashSecret) {
+            console.error('❌ VNPay Config Missing:', { tmn: !!this.vnp_TmnCode, secret: !!this.vnp_HashSecret });
             throw new Error('VNPay configuration is missing. Please check VNPAY_TMN_CODE and VNPAY_HASH_SECRET in .env');
         }
 
@@ -92,47 +113,46 @@ class VNPayHelper {
         // Tạo TxnRef nếu chưa có
         const finalTxnRef = txnRef || this.generateTxnRef(orderType.substring(0, 3).toUpperCase(), orderId);
 
-        // Tạo date string theo format VNPay yêu cầu
-        const createDate = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + '';
+        // Chuẩn hoá IP Address: Strip ::ffff: (IPv4-mapped IPv6)
+        let finalIpAddr = ipAddr || this.vnp_IpAddr;
+        if (finalIpAddr.includes('::ffff:')) {
+            finalIpAddr = finalIpAddr.replace('::ffff:', '');
+        }
 
-        // Tạo expire date (15 phút sau)
-        const expireDate = new Date(Date.now() + 15 * 60 * 1000)
-            .toISOString()
-            .replace(/[-:]/g, '')
-            .split('.')[0] + '';
-
-        // Chuẩn bị params
+        // Chuẩn bị params (Sắp xếp theo thứ tự alphabet)
         const vnp_Params = {
             vnp_Version: '2.1.0',
             vnp_Command: 'pay',
             vnp_TmnCode: this.vnp_TmnCode,
-            vnp_Amount: Math.round(amount * 100), // VNPay yêu cầu số tiền nhân 100
+            vnp_Amount: Math.round(amount * 100),
             vnp_CurrCode: 'VND',
             vnp_TxnRef: finalTxnRef,
-            vnp_OrderInfo: orderInfo,
-            vnp_OrderType: orderType,
+            vnp_OrderInfo: orderInfo.substring(0, 255),
+            vnp_OrderType: 'other', // Quay lại giá trị 'other' (an toàn nhất cho sandbox)
             vnp_Locale: locale,
             vnp_ReturnUrl: this.vnp_ReturnUrl,
-            vnp_IpAddr: ipAddr || this.vnp_IpAddr,
-            vnp_CreateDate: createDate,
-            vnp_ExpireDate: expireDate
+            vnp_IpAddr: '127.0.0.1', // Force IP v4 loopback
+            vnp_CreateDate: this.formatDate(new Date()),
+            vnp_ExpireDate: this.formatDate(new Date(Date.now() + 15 * 60 * 1000))
         };
 
-        // Tạo secure hash
+        // 1. Tạo secure hash (SignData là ENCODED)
         const secureHash = this.createSecureHash(vnp_Params);
-        vnp_Params.vnp_SecureHash = secureHash;
 
-        // Tạo payment URL
-        const paymentUrl = this.vnp_Url + '?' + querystring.stringify(vnp_Params, null, null, {
-            encodeURIComponent: (str) => {
-                return querystring.escape(str);
-            }
-        });
+        // 2. Tạo payment URL (Dùng chuỗi ENCODED giống hệt signData)
+        const queryStr = Object.keys(vnp_Params)
+            .sort()
+            .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(vnp_Params[key])}`)
+            .join('&');
+
+        const finalUrl = `${this.vnp_Url}?${queryStr}&vnp_SecureHash=${secureHash}`;
+
+        console.log('🌐 Generated VNPay URL:', finalUrl);
 
         return {
-            paymentUrl,
+            paymentUrl: finalUrl,
             txnRef: finalTxnRef,
-            secureHash,
+            secureHash: secureHash,
             params: vnp_Params
         };
     }

@@ -168,6 +168,14 @@ const initModels = async () => {
       });
     }
 
+    if (!userTableDesc.businessLicenseImage) {
+      console.log('⚡ Adding missing column: businessLicenseImage to Users');
+      await queryInterface.addColumn('Users', 'businessLicenseImage', {
+        type: require('sequelize').DataTypes.STRING,
+        allowNull: true
+      });
+    }
+
     // 4. Manual Migration for 'Orders' table
     const orderTableDesc = await queryInterface.describeTable('Orders');
 
@@ -272,6 +280,13 @@ const initModels = async () => {
     try {
       const retailerProfileTableDesc = await queryInterface.describeTable('RetailerProfiles');
       console.log('✅ RetailerProfiles table exists');
+      if (!retailerProfileTableDesc.businessLicenseImage) {
+        console.log('⚡ Adding missing column: businessLicenseImage to RetailerProfiles');
+        await queryInterface.addColumn('RetailerProfiles', 'businessLicenseImage', {
+          type: require('sequelize').DataTypes.STRING,
+          allowNull: true
+        });
+      }
     } catch (err) {
       console.log('⚡ RetailerProfiles table will be created by Sequelize sync');
     }

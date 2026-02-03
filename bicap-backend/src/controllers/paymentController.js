@@ -8,9 +8,16 @@ const { createNotificationInternal } = require('./notificationController');
  */
 exports.createPayment = async (req, res) => {
     try {
+        console.log('📬 Create Payment Request:', req.body);
         const { paymentType, orderId, subscriptionId, amount, description } = req.body;
         const userId = req.user.id;
-        const ipAddr = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
+
+        // Safer IP address detection
+        const ipAddr = req.ip ||
+            (req.headers['x-forwarded-for'] || '').split(',')[0] ||
+            (req.socket && req.socket.remoteAddress) ||
+            (req.connection && req.connection.remoteAddress) ||
+            '127.0.0.1';
 
         // Validate payment type
         if (!['subscription', 'order_deposit', 'order_full'].includes(paymentType)) {
@@ -132,10 +139,11 @@ exports.createPayment = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error creating payment:', error);
-        res.status(500).json({ 
-            message: 'Lỗi tạo yêu cầu thanh toán', 
-            error: error.message 
+        console.error('❌ Error creating payment:', error);
+        res.status(500).json({
+            message: 'Lỗi tạo yêu cầu thanh toán',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };
@@ -149,9 +157,9 @@ exports.vnpayReturn = async (req, res) => {
         const verification = vnpayHelper.verifyCallback(req.query);
 
         if (!verification.isValid) {
-            return res.status(400).json({ 
-                message: 'Chữ ký không hợp lệ', 
-                error: verification.error 
+            return res.status(400).json({
+                message: 'Chữ ký không hợp lệ',
+                error: verification.error
             });
         }
 
@@ -175,7 +183,7 @@ exports.vnpayReturn = async (req, res) => {
         payment.vnp_TransactionStatus = transactionStatus;
         payment.vnp_SecureHash = data.secureHash;
         payment.status = isSuccess ? 'success' : 'failed';
-        
+
         if (isSuccess) {
             payment.paidAt = new Date();
         }
@@ -210,9 +218,9 @@ exports.vnpayIpn = async (req, res) => {
         const verification = vnpayHelper.verifyCallback(req.query);
 
         if (!verification.isValid) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 RspCode: '97',
-                Message: 'Checksum failed' 
+                Message: 'Checksum failed'
             });
         }
 
@@ -223,17 +231,17 @@ exports.vnpayIpn = async (req, res) => {
         const payment = await Payment.findOne({ where: { vnp_TxnRef: txnRef } });
 
         if (!payment) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 RspCode: '01',
-                Message: 'Order not found' 
+                Message: 'Order not found'
             });
         }
 
         // Nếu đã xử lý rồi thì không xử lý lại
         if (payment.status === 'success') {
-            return res.json({ 
+            return res.json({
                 RspCode: '00',
-                Message: 'Success' 
+                Message: 'Success'
             });
         }
 
@@ -246,7 +254,7 @@ exports.vnpayIpn = async (req, res) => {
         payment.vnp_TransactionNo = transactionNo;
         payment.vnp_TransactionStatus = transactionStatus;
         payment.status = isSuccess ? 'success' : 'failed';
-        
+
         if (isSuccess) {
             payment.paidAt = new Date();
         }
@@ -258,16 +266,16 @@ exports.vnpayIpn = async (req, res) => {
             await handlePaymentSuccess(payment);
         }
 
-        res.json({ 
+        res.json({
             RspCode: '00',
-            Message: 'Success' 
+            Message: 'Success'
         });
 
     } catch (error) {
         console.error('Error processing VNPay IPN:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             RspCode: '99',
-            Message: 'Unknown error' 
+            Message: 'Unknown error'
         });
     }
 };
@@ -408,4 +416,49 @@ async function handlePaymentSuccess(payment) {
         // Không throw error để không ảnh hưởng đến response
     }
 }
+
+/**
+ * Xác nhận thanh toán thủ công (Simulated for Manual Transfer)
+ */
+exports.confirmManualPayment = async (req, res) => {
+    try {
+        const { subscriptionId, amount, description } = req.body;
+        const userId = req.user.id;
+
+        console.log('📬 Confirm Manual Payment:', req.body);
+
+        // 1. Validate
+        if (!subscriptionId) return res.status(400).json({ message: 'Thiếu subscriptionId' });
+
+        const subscription = await Subscription.findByPk(subscriptionId);
+        if (!subscription) return res.status(404).json({ message: 'Gói dịch vụ không tồn tại' });
+        if (subscription.userId !== userId) return res.status(403).json({ message: 'Không có quyền' });
+
+        // 2. Tạo bản ghi Payment đã thanh toán thành công
+        const paymentRecord = await Payment.create({
+            userId,
+            subscriptionId,
+            paymentType: 'subscription',
+            amount: subscription.amount,
+            currency: 'VND',
+            vnp_TxnRef: `MANUAL_${Date.now()}`,
+            status: 'success', // Auto success for manual transfer confirm
+            description: description || `Manual Transfer for ${subscription.packageType}`,
+            ipAddress: req.ip || '127.0.0.1',
+            paidAt: new Date()
+        });
+
+        // 3. Kích hoạt Subscription logic
+        await handlePaymentSuccess(paymentRecord);
+
+        res.json({
+            message: 'Xác nhận thanh toán thủ công thành công',
+            payment: paymentRecord
+        });
+
+    } catch (error) {
+        console.error('❌ Error confirming manual payment:', error);
+        res.status(500).json({ message: 'Lỗi xác nhận thanh toán', error: error.message });
+    }
+};
 

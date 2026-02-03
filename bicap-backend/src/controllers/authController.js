@@ -1,5 +1,6 @@
 // src/controllers/authController.js
-const { User } = require('../models');
+const { User, RetailerProfile } = require('../models');
+const { getFileUrl } = require('../middleware/uploadMiddleware');
 
 // @desc    Sync user from Firebase to SQL Server (Login/Register)
 // @route   POST /api/auth/sync-user
@@ -60,6 +61,15 @@ exports.syncUser = async (req, res) => {
         role: role || 'retailer', // Default role
         status: 'active'
       });
+
+      // Create initial RetailerProfile if role is retailer
+      if (newUser.role === 'retailer') {
+        await RetailerProfile.create({
+          retailerId: newUser.id,
+          businessName: newUser.fullName,
+          businessAddress: newUser.address
+        });
+      }
 
       return res.status(201).json({
         message: 'Đăng ký tài khoản mới thành công!',
@@ -150,7 +160,29 @@ exports.updateProfile = async (req, res) => {
     user.businessLicense = businessLicense || user.businessLicense;
     user.phone = phone || user.phone;
 
+    if (req.file) {
+      user.businessLicenseImage = getFileUrl(req, req.file.path);
+    }
+
     await user.save();
+
+    // Nếu là Retailer, đồng bộ sang RetailerProfile
+    if (user.role === 'retailer') {
+      let profile = await RetailerProfile.findOne({ where: { retailerId: user.id } });
+
+      if (!profile) {
+        // Tạo mới nếu chưa có
+        profile = await RetailerProfile.create({
+          retailerId: user.id,
+          businessName: user.fullName
+        });
+      }
+
+      profile.businessLicenseNumber = user.businessLicense;
+      profile.businessLicenseImage = user.businessLicenseImage;
+      profile.businessAddress = user.address;
+      await profile.save();
+    }
 
     res.json({
       message: 'Cập nhật thông tin thành công!',

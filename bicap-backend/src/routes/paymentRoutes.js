@@ -19,5 +19,8 @@ router.get('/txn-ref/:txnRef', verifyToken, paymentController.getPaymentByTxnRef
 // Lấy danh sách payments của tôi (Private)
 router.get('/my-payments', verifyToken, paymentController.getMyPayments);
 
+// Xác nhận thanh toán thủ công (Private - Cho MVP)
+router.post('/confirm-manual', verifyToken, paymentController.confirmManualPayment);
+
 module.exports = router;
 

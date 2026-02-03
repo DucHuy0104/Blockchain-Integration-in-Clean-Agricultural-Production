@@ -12,6 +12,14 @@ module.exports = {
         count: 10,
         path: "m/44'/818'/0'/0",
       },
+    },
+    vechain_testnet: {
+      url: "https://testnet.vechain.org/",
+      accounts: {
+        mnemonic: "denial kitchen pet squirrel other broom bar gas better priority spoil cross",
+        count: 10,
+        path: "m/44'/818'/0'/0",
+      },
     }
   }
 };

@@ -37,13 +37,30 @@ export default function TraceabilityPage() {
 
     useEffect(() => {
         if (id) {
-            axios.get(`http://localhost:5001/api/seasons/${id}`)
+            // Validate ID - must be a number, not "XXX" or other placeholder
+            const seasonId = typeof id === 'string' ? id : String(id);
+            if (seasonId === 'XXX' || seasonId === 'null' || seasonId === 'undefined' || isNaN(Number(seasonId))) {
+                setError('ID vụ mùa không hợp lệ. Vui lòng quét mã QR hoặc nhập ID chính xác.');
+                setLoading(false);
+                return;
+            }
+
+            axios.get(`http://localhost:5001/api/seasons/${seasonId}`)
                 .then(res => setSeason(res.data))
                 .catch(err => {
                     console.error(err);
-                    setError('Không tìm thấy thông tin vụ mùa hoặc lỗi kết nối.');
+                    if (err.response?.status === 404) {
+                        setError(`Không tìm thấy thông tin vụ mùa với ID "${seasonId}". Vui lòng kiểm tra lại ID hoặc chạy script seed để tạo dữ liệu mẫu.`);
+                    } else if (err.response?.status === 400) {
+                        setError('ID vụ mùa không hợp lệ. ID phải là số nguyên.');
+                    } else {
+                        setError('Không tìm thấy thông tin vụ mùa hoặc lỗi kết nối.');
+                    }
                 })
                 .finally(() => setLoading(false));
+        } else {
+            setError('Vui lòng cung cấp ID vụ mùa.');
+            setLoading(false);
         }
     }, [id]);
 

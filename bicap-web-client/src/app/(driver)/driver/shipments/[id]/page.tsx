@@ -52,23 +52,21 @@ export default function DriverShipmentDetail() {
         }
     };
 
-    const submitScan = async () => {
-        if (!scanType || !shipment) return;
-
+    const performConfirm = async (type: "PICKUP" | "DELIVERY", qrValue: string) => {
+        if (!shipment) return;
         try {
             setProcessing(true);
             const token = await getAccessToken();
-            const endpoint = scanType === "PICKUP" ? "confirm-pickup" : "confirm-delivery";
+            const endpoint = type === "PICKUP" ? "confirm-pickup" : "confirm-delivery";
 
             const payload: any = {
                 shipmentId: shipment.id,
-                qrCode: qrInput,
+                qrCode: qrValue,
                 latitude: 10.7769, // Mock GPS
                 longitude: 106.7009
             };
 
-            // If delivery, mocked image
-            if (scanType === "DELIVERY") {
+            if (type === "DELIVERY") {
                 payload.deliveryImage = "https://via.placeholder.com/300x200?text=Pod+Proof+Image";
             }
 
@@ -87,11 +85,12 @@ export default function DriverShipmentDetail() {
                 return;
             }
 
-            alert(`✅ ${scanType === "PICKUP" ? "Nhận hàng" : "Giao hàng"} thành công!`);
+            alert(`✅ ${type === "PICKUP" ? "Nhận hàng" : "Giao hàng"} thành công!`);
             setIsScanning(false);
+            setQrInput("");
             fetchShipment(); // Reload
 
-            if (scanType === "DELIVERY") {
+            if (type === "DELIVERY") {
                 router.push("/driver/dashboard");
             }
 
@@ -100,6 +99,19 @@ export default function DriverShipmentDetail() {
             alert("Lỗi kết nối");
         } finally {
             setProcessing(false);
+        }
+    };
+
+    const submitScan = () => {
+        if (!scanType) return;
+        performConfirm(scanType, qrInput);
+    };
+
+    const handleQuickConfirm = (type: "PICKUP" | "DELIVERY") => {
+        if (!shipment) return;
+        const quickQr = `SHIPMENT_${shipment.id}`;
+        if (confirm(`Bạn muốn xác nhận nhanh ${type === "PICKUP" ? "nhận hàng" : "giao hàng"}?`)) {
+            performConfirm(type, quickQr);
         }
     };
 
@@ -227,15 +239,24 @@ export default function DriverShipmentDetail() {
             </div>
 
             {/* ACTION BUTTONS (STICKY BOTTOM) */}
-            <div className="fixed bottom-16 left-0 right-0 p-4 max-w-md mx-auto z-40">
+            <div className="fixed bottom-16 left-0 right-0 p-4 max-w-md mx-auto z-40 space-y-3">
                 {shipment.status === 'assigned' && (
-                    <button
-                        onClick={() => handleScanAction("PICKUP")}
-                        disabled={processing}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center gap-2 text-lg active:scale-95 transition"
-                    >
-                        📷 Quét QR Nhận Hàng
-                    </button>
+                    <>
+                        <button
+                            onClick={() => handleScanAction("PICKUP")}
+                            disabled={processing}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center gap-2 text-lg active:scale-95 transition"
+                        >
+                            📷 Quét QR Nhận Hàng
+                        </button>
+                        <button
+                            onClick={() => handleQuickConfirm("PICKUP")}
+                            disabled={processing}
+                            className="w-full text-blue-600 font-bold py-2 text-sm text-center active:opacity-60 transition"
+                        >
+                            ⚡ Xác nhận nhanh (Không cần quét)
+                        </button>
+                    </>
                 )}
 
                 {shipment.status === 'picked_up' && (
@@ -249,13 +270,22 @@ export default function DriverShipmentDetail() {
                 )}
 
                 {shipment.status === 'delivering' && (
-                    <button
-                        onClick={() => handleScanAction("DELIVERY")}
-                        disabled={processing}
-                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-orange-200 flex items-center justify-center gap-2 text-lg active:scale-95 transition"
-                    >
-                        📷 Quét QR Giao Hàng
-                    </button>
+                    <>
+                        <button
+                            onClick={() => handleScanAction("DELIVERY")}
+                            disabled={processing}
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-orange-200 flex items-center justify-center gap-2 text-lg active:scale-95 transition"
+                        >
+                            📷 Quét QR Giao Hàng
+                        </button>
+                        <button
+                            onClick={() => handleQuickConfirm("DELIVERY")}
+                            disabled={processing}
+                            className="w-full text-orange-600 font-bold py-2 text-sm text-center active:opacity-60 transition"
+                        >
+                            ⚡ Xác nhận nhanh (Giao hàng)
+                        </button>
+                    </>
                 )}
 
                 {shipment.status === 'delivered' && (

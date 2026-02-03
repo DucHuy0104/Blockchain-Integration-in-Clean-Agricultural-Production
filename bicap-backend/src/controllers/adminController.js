@@ -663,9 +663,7 @@ exports.deletePublicNotification = async (req, res) => {
         const notification = await PublicNotification.findByPk(id);
         if (!notification) {
             return res.status(404).json({ message: 'Thông báo không tồn tại' });
-        }
-
-        await notification.destroy();
+        }        await notification.destroy();
 
         res.json({ message: 'Xóa thông báo thành công' });
     } catch (error) {

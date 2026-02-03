@@ -7,33 +7,54 @@ import {
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { API_URL } from '../../constants/Config'; // Đảm bảo bạn đã tạo file Config.ts
+import * as Location from 'expo-location';
+import * as Linking from 'expo-linking';
+import { API_URL } from '../../constants/Config';
 import { Colors } from '../../constants/theme';
-import { FontAwesome } from '@expo/vector-icons';
-import QRScannerModal from '../../components/QRScannerModal';
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import QRScannerModal from '@/components/QRScannerModal';
+import PhotoCaptureModal from '@/components/PhotoCaptureModal';
+
+// Import Auth Hook
+import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  const { user, token, logout, isLoading } = useAuth();
+  const router = useRouter();
+
   const [shipments, setShipments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Default false, wait for auth
   const [refreshing, setRefreshing] = useState(false);
-  const [driverName, setDriverName] = useState('');
 
   // QR Scanner states
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
   const [scannerTitle, setScannerTitle] = useState('Quét mã QR');
+  const [scannedQRData, setScannedQRData] = useState<string | null>(null);
+
+  // Photo Capture states
+  const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
+
+  // Protect Route & Load Data
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoading) {
+        if (!user || !token) {
+          // Redirect to login if not authenticated
+          router.replace('/auth/login');
+        } else {
+          fetchMyShipments();
+        }
+      }
+    }, [user, token, isLoading])
+  );
 
   // Hàm tải dữ liệu đơn hàng của tài xế
   const fetchMyShipments = async () => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
-      const name = await AsyncStorage.getItem('driverName');
-      setDriverName(name || 'Bác tài');
-
-      if (!token) {
-        setShipments([]);
-        return;
-      }
+      if (!token) return;
+      setLoading(true);
 
       console.log(`📡 Đang tải đơn hàng tại ${API_URL}/driver/shipments`);
 
@@ -43,12 +64,31 @@ export default function HomeScreen() {
 
       setShipments(response.data.shipments || []);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi tải đơn:", error);
+      const msg = error.response?.data?.message || error.message || "Lỗi kết nối Server";
+      Alert.alert("Lỗi tải đơn", msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Đăng xuất",
+      "Bạn có chắc chắn muốn đăng xuất?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Đồng ý",
+          onPress: async () => {
+            await logout();
+            router.replace('/auth/login');
+          }
+        }
+      ]
+    );
   };
 
   const handleUpdateStatus = async (shipmentId: number, status: string) => {
@@ -66,31 +106,61 @@ export default function HomeScreen() {
     }
   };
 
+  const getLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Quyền truy cập vị trí bị từ chối');
+        return null;
+      }
+      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      return location.coords;
+    } catch (error) {
+      console.error('Lỗi lấy vị trí:', error);
+      return null;
+    }
+  };
+
+  const handleNavigate = (address: string) => {
+    if (!address) return;
+    const url = Platform.select({
+      ios: `maps:0,0?q=${encodeURIComponent(address)}`,
+      android: `geo:0,0?q=${encodeURIComponent(address)}`,
+    });
+    if (url) Linking.openURL(url);
+  };
+
   const handleQRScan = async (data: string) => {
     if (!activeShipmentId) return;
 
     try {
-      const token = await AsyncStorage.getItem('userToken');
       const shipment: any = shipments.find((s: any) => s.id === activeShipmentId);
       if (!shipment) return;
 
       const isPickup = shipment.status === 'created' || shipment.status === 'assigned';
-      const endpoint = isPickup ? '/driver/confirm-pickup' : '/driver/confirm-delivery';
 
-      console.log(`📡 Sending scan to ${API_URL}${endpoint}`);
+      if (isPickup) {
+        // Pickup flow: send immediately
+        const token = await AsyncStorage.getItem('userToken');
+        const coords = await getLocation();
+        const response = await axios.post(`${API_URL}/driver/confirm-pickup`, {
+          shipmentId: activeShipmentId,
+          qrCode: data,
+          latitude: coords?.latitude || 0,
+          longitude: coords?.longitude || 0
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      const response = await axios.post(`${API_URL}${endpoint}`, {
-        shipmentId: activeShipmentId,
-        qrCode: data,
-        latitude: 0,
-        longitude: 0
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setIsScannerVisible(false);
-      Alert.alert('Thành công', response.data.message || 'Xác nhận thành công!');
-      fetchMyShipments();
+        setIsScannerVisible(false);
+        Alert.alert('Thành công', response.data.message || 'Xác nhận nhận hàng thành công!');
+        fetchMyShipments();
+      } else {
+        // Delivery flow: need photo capture next
+        setScannedQRData(data);
+        setIsScannerVisible(false);
+        setTimeout(() => setIsPhotoModalVisible(true), 500); // Small delay for modal transition
+      }
     } catch (error: any) {
       console.error(error);
       const msg = error.response?.data?.message || 'Lỗi xử lý mã QR';
@@ -99,12 +169,41 @@ export default function HomeScreen() {
     }
   };
 
-  // Tự động tải lại mỗi khi màn hình này được focus (mở lên)
-  useFocusEffect(
-    useCallback(() => {
+  const handlePhotoCaptured = async (base64Photo: string) => {
+    if (!activeShipmentId || !scannedQRData) return;
+
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('userToken');
+      const coords = await getLocation();
+
+      console.log(`📡 Sending delivery info to ${API_URL}/driver/confirm-delivery`);
+
+      const response = await axios.post(`${API_URL}/driver/confirm-delivery`, {
+        shipmentId: activeShipmentId,
+        qrCode: scannedQRData,
+        latitude: coords?.latitude || 0,
+        longitude: coords?.longitude || 0,
+        deliveryImage: base64Photo
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setIsPhotoModalVisible(false);
+      setScannedQRData(null);
+      Alert.alert('Thành công', response.data.message || 'Xác nhận giao hàng thành công!');
       fetchMyShipments();
-    }, [])
-  );
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.message || 'Lỗi xác nhận giao hàng';
+      Alert.alert('Thất bại', msg);
+    } finally {
+      setIsPhotoModalVisible(false);
+      setLoading(false);
+    }
+  };
+
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -149,7 +248,12 @@ export default function HomeScreen() {
           <View style={styles.infoRow}>
             <FontAwesome name="circle-o" size={14} color="#EF4444" style={{ marginTop: 2 }} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Nguồn (Trại)</Text>
+              <View style={styles.rowBetween}>
+                <Text style={styles.label}>Nguồn (Trại)</Text>
+                <TouchableOpacity onPress={() => handleNavigate(item.order?.product?.farm?.address)}>
+                  <Text style={styles.navLink}>Dẫn đường</Text>
+                </TouchableOpacity>
+              </View>
               <Text style={styles.value} numberOfLines={1}>{pickupLoc}</Text>
               <Text style={styles.subValue} numberOfLines={1}>{item.order?.product?.farm?.address}</Text>
             </View>
@@ -158,7 +262,12 @@ export default function HomeScreen() {
           <View style={[styles.infoRow, { marginTop: 10 }]}>
             <FontAwesome name="map-marker" size={16} color="#10B981" style={{ marginLeft: 1 }} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Đích (Cửa hàng)</Text>
+              <View style={styles.rowBetween}>
+                <Text style={styles.label}>Đích (Cửa hàng)</Text>
+                <TouchableOpacity onPress={() => handleNavigate(item.order?.retailer?.address)}>
+                  <Text style={styles.navLink}>Dẫn đường</Text>
+                </TouchableOpacity>
+              </View>
               <Text style={styles.value} numberOfLines={1}>{deliveryLoc}</Text>
               <Text style={styles.subValue} numberOfLines={1}>{item.order?.retailer?.address}</Text>
             </View>
@@ -213,12 +322,17 @@ export default function HomeScreen() {
       {/* Header trên cùng */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Xin chào, {driverName} 👋</Text>
+          <Text style={styles.greeting}>Xin chào, {user?.fullName || 'Bác tài'} 👋</Text>
           <Text style={styles.subGreeting}>Chúc bạn vạn dặm bình an!</Text>
         </View>
-        <TouchableOpacity onPress={fetchMyShipments}>
-          <FontAwesome name="refresh" size={20} color={Colors.light.tint} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 15 }}>
+          <TouchableOpacity onPress={fetchMyShipments}>
+            <FontAwesome name="refresh" size={20} color={Colors.light.tint} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout}>
+            <FontAwesome name="sign-out" size={22} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Danh sách */}
@@ -246,6 +360,14 @@ export default function HomeScreen() {
         onClose={() => setIsScannerVisible(false)}
         onScan={handleQRScan}
         title={scannerTitle}
+      />
+
+      {/* Proof of Delivery Photo Capture */}
+      <PhotoCaptureModal
+        visible={isPhotoModalVisible}
+        onClose={() => setIsPhotoModalVisible(false)}
+        onCapture={handlePhotoCaptured}
+        title="Chụp ảnh giao hàng"
       />
     </SafeAreaView>
   );
@@ -288,7 +410,9 @@ const styles = StyleSheet.create({
 
   infoContainer: { gap: 4 },
   infoRow: { flexDirection: 'row', gap: 12 },
+  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   label: { fontSize: 12, color: '#9CA3AF', marginBottom: 2 },
+  navLink: { fontSize: 12, color: Colors.light.tint, fontWeight: 'bold', textDecorationLine: 'underline' },
   value: { fontSize: 15, color: '#1F2937', fontWeight: 'bold' },
   subValue: { fontSize: 13, color: '#6B7280', marginTop: 2 },
 

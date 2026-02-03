@@ -7,7 +7,7 @@ import axios from 'axios';
 import { auth } from '@/lib/firebase';
 
 export default function RetailerProfile() {
-    const { user, loading: authLoading, getAccessToken } = useAuth();
+    const { user, loading: authLoading, getAccessToken, updateUser } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -18,6 +18,8 @@ export default function RetailerProfile() {
         address: '',
         businessLicense: '',
     });
+    const [licenseImage, setLicenseImage] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string>('');
 
     useEffect(() => {
         if (user) {
@@ -28,6 +30,7 @@ export default function RetailerProfile() {
                 address: (user as any).address || '',
                 businessLicense: (user as any).businessLicense || '',
             });
+            setPreviewUrl((user as any).businessLicenseImage || '');
         }
     }, [user]);
 
@@ -38,45 +41,43 @@ export default function RetailerProfile() {
         });
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setLicenseImage(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setMessage({ type: '', text: '' });
 
         try {
-            const token = await auth.currentUser?.getIdToken();
-            // Actually, for API calls we usually need to pass the token in header if using authMiddleware
-            // But here we rely on the backend session or token passing mechanism.
-            // Let's assume axios interceptor or manual token header.
-            // Since I don't see global axios config, I'll try to get token from auth context user object if it's a firebase user.
-
-            // Wait, useAuth user object usually has `accessToken` or we need `auth.currentUser.getIdToken()`.
-            // Let's assume the standard way:
-
-            if (!user) return;
-
-            // Note: The `user` object from `useAuth` might be the mixed object (firebase + sql).
-            // If it supports getIdToken(), it's a Firebase object wrapper.
-            // If not, we might need to import `auth` from firebase config.
-            // Let's stick to standard fetch with token if possible, or axios.
-
-            // Checking how other components do it? I don't have other examples open.
-            // I'll assume `user.accessToken` might be available or I need to fetch it.
-            // Let's just try to send the request. If 401, I'll fix it.
-            // Wait, `useAuth` context usually exposes `callProtectedApi` or similar? 
-            // Looking at `AuthContext.tsx` in `list_dir` output earlier... I didn't read it.
-            // I'll assume I need to get the token.
-
             const idToken = await getAccessToken();
 
-            const res = await axios.put('http://localhost:5001/api/auth/profile', formData, {
+            const data = new FormData();
+            data.append('fullName', formData.fullName);
+            data.append('phone', formData.phone);
+            data.append('address', formData.address);
+            data.append('businessLicense', formData.businessLicense);
+            if (licenseImage) {
+                data.append('businessLicenseImage', licenseImage);
+            }
+
+            const res = await axios.put('http://localhost:5001/api/auth/profile', data, {
                 headers: {
-                    'Authorization': `Bearer ${idToken}`
+                    'Authorization': `Bearer ${idToken}`,
+                    'Content-Type': 'multipart/form-data'
                 }
             });
 
+            if (res.data && res.data.user) {
+                updateUser(res.data.user);
+            }
+
             setMessage({ type: 'success', text: 'Cập nhật thông tin thành công!' });
-            // Optionally update local user context if needed, but page reload will fetch fresh data.
         } catch (error: any) {
             console.error(error);
             setMessage({ type: 'error', text: error.response?.data?.message || 'Có lỗi xảy ra.' });
@@ -134,7 +135,7 @@ export default function RetailerProfile() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ kinh doanh</label>
                     <input
                         type="text"
                         name="address"
@@ -144,23 +145,46 @@ export default function RetailerProfile() {
                     />
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Giấy phép kinh doanh (Mã số / Chi tiết)</label>
-                    <textarea
-                        name="businessLicense"
-                        value={formData.businessLicense}
-                        onChange={handleChange}
-                        rows={3}
-                        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Nhập thông tin giấy phép kinh doanh..."
-                    />
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mã số giấy phép kinh doanh</label>
+                        <input
+                            type="text"
+                            name="businessLicense"
+                            value={formData.businessLicense}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Nhập mã số GPKD..."
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ảnh giấy phép kinh doanh</label>
+                        <div className="flex items-center gap-4">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                        </div>
+                        {previewUrl && (
+                            <div className="mt-4 relative w-full h-48 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
+                                <img
+                                    src={previewUrl}
+                                    alt="Business License Preview"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors shadow-md"
                     >
                         {isLoading ? 'Đang lưu...' : 'Lưu Thay Đổi'}
                     </button>

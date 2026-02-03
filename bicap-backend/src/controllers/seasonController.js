@@ -37,7 +37,7 @@ exports.createSeason = async (req, res) => {
         });
 
         // 3. Log to Blockchain (Mock)
-        const txHash = await blockchainHelper.writeToBlockchain({
+        const txHash = await blockchainHelper.writeToBlockchain(`SEASON-${newSeason.id}`, {
             type: 'START_SEASON',
             seasonId: newSeason.id,
             farmId: farmId,
@@ -92,25 +92,30 @@ exports.addProcess = async (req, res) => {
         }
 
         // 3. Create Process Record
+        console.log(`[DEBUG] addProcess: Creating DB record for Season ${seasonId}...`);
         const newProcess = await FarmingProcess.create({
-            type, // e.g., 'watering', 'fertilizing', 'harvesting'
+            type,
             description,
             imageUrl,
             seasonId
         });
+        console.log(`[DEBUG] addProcess: DB record created with ID ${newProcess.id}`);
 
         // 4. Log to Blockchain (Mock)
-        const txHash = await blockchainHelper.writeToBlockchain({
+        console.log(`[DEBUG] addProcess: Writing to blockchain...`);
+        const txHash = await blockchainHelper.writeToBlockchain(`PROCESS-${newProcess.id}`, {
             type: 'ADD_PROCESS',
             processId: newProcess.id,
             seasonId: seasonId,
             action: type,
             details: description
         });
+        console.log(`[DEBUG] addProcess: Blockchain success. TxHash: ${txHash}`);
 
         // Update txHash in DB
         newProcess.txHash = txHash;
         await newProcess.save();
+        console.log(`[DEBUG] addProcess: Final DB update complete.`);
 
         res.status(201).json({
             message: 'Ghi nhật ký hoạt động thành công!',
@@ -160,8 +165,9 @@ exports.getSeasonById = async (req, res) => {
         const { seasonId } = req.params;
         console.log(`[DEBUG] getSeasonById: Fetching seasonId = ${seasonId}`);
 
-        if (!seasonId || isNaN(seasonId)) {
-            return res.status(400).json({ message: 'Invalid Season ID' });
+        // Validate seasonId - must be a valid number, not placeholder
+        if (!seasonId || seasonId === 'XXX' || seasonId === 'null' || seasonId === 'undefined' || isNaN(seasonId)) {
+            return res.status(400).json({ message: 'ID vụ mùa không hợp lệ' });
         }
 
         const season = await FarmingSeason.findByPk(seasonId, {
@@ -211,7 +217,7 @@ exports.exportSeason = async (req, res) => {
         }
 
         // 4. Log to Blockchain (Mock)
-        const txHash = await blockchainHelper.writeToBlockchain({
+        const txHash = await blockchainHelper.writeToBlockchain(`EXPORT-${seasonId}`, {
             type: 'EXPORT_SEASON',
             seasonId: seasonId,
             status: 'completed'

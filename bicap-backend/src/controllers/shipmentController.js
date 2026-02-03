@@ -153,7 +153,7 @@ exports.createShipment = async (req, res) => {
         // await order.save();
 
         // 7. Blockchain Log (Mock)
-        const txHash = await blockchainHelper.writeToBlockchain({
+        const txHash = await blockchainHelper.writeToBlockchain(`SHIPMENT-${newShipment.id}`, {
             type: 'CREATE_SHIPMENT',
             shipmentId: newShipment.id,
             orderId,

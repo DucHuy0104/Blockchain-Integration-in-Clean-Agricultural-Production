@@ -19,9 +19,11 @@ interface Product {
         certification: string;
     };
     season: {
+        id: number;
         name: string;
     } | null;
     batchCode: string;
+    category?: string;
 }
 
 // Hàm lấy icon tự động
@@ -55,7 +57,7 @@ export default function MarketplacePage() {
     const [buying, setBuying] = useState(false);
 
     useEffect(() => {
-        axios.get('http://localhost:5001/api/products')
+        axios.get(`http://localhost:5001/api/products?t=${new Date().getTime()}`)
             .then(res => setProducts(res.data))
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
@@ -67,9 +69,9 @@ export default function MarketplacePage() {
             p.farm.address.toLowerCase().includes(searchTerm.toLowerCase());
 
         let matchesCategory = true;
-        if (selectedCategory === 'Rau củ') matchesCategory = p.name.toLowerCase().includes('rau') || p.name.toLowerCase().includes('cải') || p.name.toLowerCase().includes('cà');
-        if (selectedCategory === 'Trái cây') matchesCategory = p.name.toLowerCase().includes('dưa') || p.name.toLowerCase().includes('dâu') || p.name.toLowerCase().includes('cam') || p.name.toLowerCase().includes('xoài');
-        if (selectedCategory === 'Củ quả') matchesCategory = p.name.toLowerCase().includes('khoai') || p.name.toLowerCase().includes('sắn') || p.name.toLowerCase().includes('ngô') || p.name.toLowerCase().includes('bắp');
+        if (selectedCategory !== 'Tất cả') {
+            matchesCategory = p.category === selectedCategory;
+        }
 
         const matchesCert = selectedCertification === 'Tất cả' || (p.farm.certification || 'VietGAP') === selectedCertification;
 
@@ -312,40 +314,55 @@ export default function MarketplacePage() {
                                             </h3>
 
                                             {/* Price and Action */}
-                                            <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
-                                                <div>
-                                                    <p className="text-[#388E3C] font-extrabold text-xl mb-1">
-                                                        {product.price.toLocaleString('vi-VN')}đ
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                                        </svg>
-                                                        Còn: {product.quantity} kg
-                                                    </p>
+                                            <div className="mt-auto pt-4 space-y-2">
+                                                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                                                    <div>
+                                                        <p className="text-[#388E3C] font-extrabold text-xl mb-1">
+                                                            {product.price.toLocaleString('vi-VN')}đ
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                            </svg>
+                                                            Còn: {product.quantity} kg
+                                                        </p>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => handleBuyClick(product)}
+                                                        disabled={product.quantity <= 0}
+                                                        className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 shadow-md btn-glow relative overflow-hidden
+                                                            ${product.quantity > 0
+                                                                ? "bg-gradient-to-r from-[#388E3C] to-[#7CB342] hover:from-[#2E7D32] hover:to-[#388E3C] text-white transform hover:scale-105"
+                                                                : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                                                    >
+                                                        <span className="relative z-10 flex items-center gap-1">
+                                                            {product.quantity > 0 ? (
+                                                                <>
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                                    </svg>
+                                                                    Mua Ngay
+                                                                </>
+                                                            ) : (
+                                                                'Hết hàng'
+                                                            )}
+                                                        </span>
+                                                    </button>
                                                 </div>
 
-                                                <button
-                                                    onClick={() => handleBuyClick(product)}
-                                                    disabled={product.quantity <= 0}
-                                                    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 shadow-md btn-glow relative overflow-hidden
-                                                        ${product.quantity > 0
-                                                            ? "bg-gradient-to-r from-[#388E3C] to-[#7CB342] hover:from-[#2E7D32] hover:to-[#388E3C] text-white transform hover:scale-105"
-                                                            : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-                                                >
-                                                    <span className="relative z-10 flex items-center gap-1">
-                                                        {product.quantity > 0 ? (
-                                                            <>
-                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                                </svg>
-                                                                Mua Ngay
-                                                            </>
-                                                        ) : (
-                                                            'Hết hàng'
-                                                        )}
-                                                    </span>
-                                                </button>
+                                                {/* Traceability Link */}
+                                                {product.season && product.season.id && (
+                                                    <div className="flex justify-center">
+                                                        <Link
+                                                            href={`/traceability/${product.season.id}`}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 font-bold text-xs transition-all duration-300 hover:scale-105"
+                                                        >
+                                                            <span className="text-sm">🔍</span>
+                                                            <span>Truy xuất</span>
+                                                        </Link>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -382,8 +399,18 @@ export default function MarketplacePage() {
                         <div className="relative z-10">
                             {/* Header */}
                             <div className="text-center mb-6">
-                                <div className="inline-block p-4 bg-gradient-to-br from-[#7CB342] to-[#388E3C] rounded-2xl mb-4 shadow-lg">
-                                    <div className="text-6xl">{getProductIcon(selectedProduct.name)}</div>
+                                <div className="inline-block w-32 h-32 bg-gradient-to-br from-[#7CB342] to-[#388E3C] rounded-2xl mb-4 shadow-lg overflow-hidden relative">
+                                    {selectedProduct.image ? (
+                                        <img
+                                            src={`http://localhost:5001${selectedProduct.image}`}
+                                            alt={selectedProduct.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="text-6xl flex items-center justify-center h-full">
+                                            {getProductIcon(selectedProduct.name)}
+                                        </div>
+                                    )}
                                 </div>
                                 <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Đặt Mua Nông Sản</h2>
                                 <h3 className="font-bold text-lg text-[#388E3C] mb-1">{selectedProduct.name}</h3>
@@ -451,6 +478,24 @@ export default function MarketplacePage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Traceability Link (if available) */}
+                            {selectedProduct.season && selectedProduct.season.id && (
+                                <div className="mb-4 flex justify-center">
+                                    <Link
+                                        href={`/traceability/${selectedProduct.season.id}`}
+                                        target="_blank"
+                                        className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-bold text-sm transition-all duration-300"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <span>🔍</span>
+                                        <span className="border-b border-blue-600">Truy xuất nguồn gốc</span>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </Link>
+                                </div>
+                            )}
 
                             {/* Action Buttons */}
                             <div className="flex gap-3">
