@@ -1,87 +1,87 @@
-# BICAP: Blockchain Integration in Clean Agricultural Production
+# BICAP: Tích hợp Blockchain trong Sản xuất Nông nghiệp Sạch
 
-BICAP (Blockchain Integration in Clean Agricultural Production) is a comprehensive technological solution designed to enhance transparency in clean agricultural supply chains. The system integrates Blockchain (VeChain), IoT, and Mobile application technologies to ensure that all products traveling from farm to consumer have immutable and reliable origin records.
-
----
-
-## Core Features and Roles
-
-### Farm Management (Farm Owner)
-- **Crop Lifecycle Tracking:** Comprehensive monitoring of processes from planting to harvesting.
-- **Blockchain Transparency:** Recording cultivation logs including fertilizer and pest control data onto the VeChain network.
-- **IoT Monitoring:** Real-time environmental metrics visualization via a dedicated dashboard.
-- **Marketplace Integration:** Product listing, image management, and order fulfillment.
-
-### Logistics Management (Shipping Manager)
-- **Fleet Administration:** Management of transport vehicles, maintenance schedules, and operational status.
-- **Personnel Management:** Tracking of driver assignments and performance metrics.
-- **Deployment Coordination:** Conversion of orders into shipments and resource allocation.
-- **Incident Oversight:** Real-time reception and processing of driver incident reports.
-
-### Mobile Operations (Driver Application)
-- **Expo-powered Platform:** Dedicated mobile application featuring QR code integration.
-- **Authentication:** Verification of pickup and delivery points via high-speed scanning.
-- **Reporting System:** Standardized incident reporting with direct feedback loops.
-
-### Retail Operations (Retailer)
-- **E-commerce Access:** Direct procurement of agricultural products from source farms.
-- **Traceability Verification:** QR code scanning to access complete product history.
-- **Payment Reconciliation:** Management of delivery confirmation and Proof of Delivery (POD).
+BICAP (Blockchain Integration in Clean Agricultural Production) là giải pháp công nghệ toàn diện được thiết kế để nâng cao tính minh bạch trong chuỗi cung ứng nông sản sạch. Hệ thống tích hợp công nghệ Blockchain (VeChain), IoT và ứng dụng di động để đảm bảo mọi sản phẩm từ trang trại đến người tiêu dùng đều có hồ sơ nguồn gốc bất biến và đáng tin cậy.
 
 ---
 
-## Technical Architecture
+## Tính năng Cốt lõi & Chuyển đổi Doanh nghiệp
 
-| Component | Technology Stack | Purpose |
+### Quản lý Nông trại (Dành cho Chủ Nông trại)
+- **Theo dõi Vòng đời Cây trồng:** Giám sát toàn diện quy trình từ khi gieo trồng đến khi thu hoạch.
+- **Minh bạch Blockchain:** Ghi lại nhật ký canh tác bao gồm dữ liệu bón phân và kiểm soát sâu bệnh lên mạng lưới VeChain.
+- **Giám sát IoT:** Trực quan hóa các chỉ số môi trường theo thời gian thực thông qua bảng điều khiển chuyên dụng.
+- **Tích hợp Thị trường:** Đăng bán sản phẩm, quản lý hình ảnh và xử lý đơn hàng.
+
+### Quản lý Vận chuyển & Logistics (Dành cho Quản lý Vận chuyển)
+- **Quản trị Đội xe:** Quản lý phương tiện vận chuyển, lịch bảo trì và trạng thái hoạt động.
+- **Quản lý Nhân sự:** Theo dõi phân công tài xế và các chỉ số hiệu suất.
+- **Điều phối Vận chuyển:** Chuyển đổi đơn hàng thành các chuyến hàng và phân bổ nguồn lực.
+- **Giám sát Sự cố:** Tiếp nhận và xử lý báo cáo sự cố từ tài xế theo thời gian thực.
+
+### Vận hành Di động (Dành cho Tài xế)
+- **Nền tảng Di động Mạnh mẽ:** Ứng dụng di động chuyên dụng được xây dựng trên Expo với tính năng quét mã QR.
+- **Xác thực:** Xác minh điểm nhận và giao hàng thông qua quét mã tốc độ cao.
+- **Hệ thống Báo cáo:** Báo cáo sự cố chuẩn hóa với quy trình phản hồi trực tiếp.
+
+### Thương mại & Bán lẻ (Dành cho Nhà Bán lẻ)
+- **Tiếp cận Thương mại Điện tử:** Mua nông sản trực tiếp từ các nông trại nguồn.
+- **Truy xuất Nguồn gốc:** Quét mã QR để truy cập toàn bộ lịch sử sản phẩm.
+- **Đối soát Thanh toán:** Quản lý xác nhận giao hàng và Bằng chứng Giao hàng (POD).
+
+---
+
+## Kiến trúc Kỹ thuật
+
+| Thành phần | Công nghệ | Mục đích |
 | :--- | :--- | :--- |
-| **Frontend Web** | Next.js 14, TailwindCSS | Multi-role Administrative Dashboard |
-| **Mobile App** | React Native, Expo | Driver Operations Platform |
-| **Backend** | Node.js, Express, Sequelize | Business Logic and API Orchestration |
-| **Database** | Azure SQL Edge (MSSQL) | Centralized Data Storage |
-| **Cache & Queue** | Redis (Docker/Cloud) | API Acceleration and Background Tasking |
-| **Blockchain** | VeChainThor (Real/Solo Node) | Immortality and Transparency Layer |
-| **Containerization** | Docker & Docker Compose | Consistent Environment Deployment |
+| **Frontend Web** | Next.js 14, TailwindCSS | Bảng điều khiển quản trị đa vai trò |
+| **Mobile App** | React Native, Expo | Ứng dụng vận hành cho tài xế |
+| **Backend** | Node.js, Express, Sequelize | Xử lý nghiệp vụ và điều phối API |
+| **Cơ sở dữ liệu** | Azure SQL Edge (MSSQL) | Lưu trữ dữ liệu tập trung |
+| **Cache & Hàng đợi** | Redis (Docker/Cloud) | Tăng tốc API và xử lý tác vụ nền |
+| **Blockchain** | VeChainThor (Real/Solo Node) | Lớp minh bạch và bất biến dữ liệu |
+| **Containerization** | Docker & Docker Compose | Triển khai môi trường nhất quán |
 
 ---
 
-## Operational Performance and Security
+## Hiệu suất Vận hành & Bảo mật
 
-The system is engineered to meet industry performance and reliability standards:
+Hệ thống được thiết kế để đáp ứng các tiêu chuẩn về hiệu suất và độ tin cậy của ngành:
 
-- **Asynchronous Task Processing:** Utilization of Bull Queue and Redis for background transactions ensures stability during high data loads.
-- **Data Integrity Standards:** Product data is hashed and stored directly on VeChainThor Smart Contracts to prevent tampering.
-- **Optimized Caching:** Redis implementation ensures ultra-low latency for product and seasonal data queries.
-- **API Rate Limiting:** Protection against automated threats via a 100 requests per 15-minute policy.
-- **Transaction Security:** Secp256k1 digital signature encryption for all blockchain operations.
+- **Xử lý Tác vụ Bất đồng bộ:** Sử dụng Bull Queue và Redis cho các giao dịch nền đảm bảo sự ổn định khi tải dữ liệu cao.
+- **Tiêu chuẩn Toàn vẹn Dữ liệu:** Dữ liệu sản phẩm được băm (hashing) và lưu trữ trực tiếp trên Hợp đồng Thông minh VeChainThor để ngăn chặn giả mạo.
+- **Tối ưu hóa Caching:** Triển khai Redis đảm bảo độ trễ cực thấp cho các truy vấn dữ liệu sản phẩm và mùa vụ.
+- **Giới hạn Tốc độ API:** Bảo vệ chống lại các mối đe dọa tự động thông qua chính sách giới hạn 100 yêu cầu mỗi 15 phút.
+- **Bảo mật Giao dịch:** Mã hóa chữ ký số Secp256k1 cho tất cả các hoạt động blockchain.
 
 ---
 
-## System Operation Guide
+## Hướng dẫn Vận hành Hệ thống
 
-### 1. Global Deployment via Docker
-To initialize all services including Backend, Database, Redis, and the Blockchain Solo Node:
+### 1. Triển khai Toàn cục qua Docker (Khuyên dùng)
+Để khởi tạo tất cả các dịch vụ bao gồm Backend, Database, Redis và Blockchain Solo Node:
 
 ```bash
 docker-compose up -d --build
 ```
 
-**Service Endpoints:**
+**Các điểm truy cập dịch vụ:**
 - **Web Portal:** http://localhost:3000
 - **Backend API:** http://localhost:5001
 - **Blockchain Node:** http://localhost:8669
 
-### 2. Blockchain Verification
-Administrative scripts for blockchain validation are located in the `bicap-backend` directory:
+### 2. Xác thực Blockchain
+Các kịch bản quản trị để xác thực blockchain nằm trong thư mục `bicap-backend`:
 
 ```bash
-# Verify Administrative Wallet Balance (Solo Node)
+# Kiểm tra số dư ví quản trị (Solo Node)
 node scripts/check_balance.js
 
-# Execute Concurrency Validation (Queue Testing)
+# Thực thi xác thực đồng thời (Kiểm tra hàng đợi)
 node scripts/test_blockchain_queue.js
 ```
 
-### 3. Mobile Application Execution
+### 3. Chạy Ứng dụng Di động
 ```bash
 cd bicap-mobile-driver
 npm install
@@ -90,11 +90,12 @@ npx expo start
 
 ---
 
-## Directory Structure
-- `bicap-backend/`: API Server, Blockchain Helpers, and Background Workers.
-- `bicap-web-client/`: Core Web interface (Next.js 14).
-- `bicap-mobile-driver/`: Mobile application source (Expo).
-- `bicap-smart-contracts/`: Solidity Smart Contracts and Hardhat deployment configurations.
+## Cấu trúc Thư mục
+- `bicap-backend/`: API Server, Blockchain Helpers và Background Workers.
+- `bicap-web-client/`: Giao diện Web chính (Next.js 14).
+- `bicap-mobile-driver/`: Mã nguồn ứng dụng di động (Expo).
+- `bicap-smart-contracts/`: Smart Contracts Solidity và cấu hình triển khai Hardhat.
 
 ---
-**BICAP - Ensuring Transparency and Integrity in Agricultural Production.**
+
+**BICAP - Đảm bảo Minh bạch và Toàn vẹn trong Sản xuất Nông nghiệp.**
